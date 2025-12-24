@@ -277,7 +277,7 @@ export default function TeachersPage() {
       e.preventDefault()
       onSubmit({
         ...formData,
-        hourlyRate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined
+        hourlyRate: (formData.hourlyRate && !isNaN(parseFloat(formData.hourlyRate))) ? parseFloat(formData.hourlyRate) : undefined
       })
     }
 

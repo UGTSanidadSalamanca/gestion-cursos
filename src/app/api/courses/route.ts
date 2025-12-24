@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         isActive,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
-        teacherId
+        teacherId: teacherId || null
       },
       include: {
         teacher: true,
