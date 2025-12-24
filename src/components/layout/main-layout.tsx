@@ -1,0 +1,142 @@
+"use client"
+
+import { useState } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { 
+  BarChart3, 
+  Users, 
+  UserCheck, 
+  Truck, 
+  CreditCard, 
+  Package, 
+  FileText,
+  Menu,
+  X,
+  Home,
+  BookOpen,
+  Calendar,
+  Settings
+} from 'lucide-react'
+
+const navigation = [
+  { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Alumnos', href: '/students', icon: Users },
+  { name: 'Docentes', href: '/teachers', icon: UserCheck },
+  { name: 'Cursos', href: '/courses', icon: BookOpen },
+  { name: 'Matrículas', href: '/enrollments', icon: FileText },
+  { name: 'Pagos', href: '/payments', icon: CreditCard },
+  { name: 'Materiales', href: '/materials', icon: Package },
+  { name: 'Proveedores', href: '/suppliers', icon: Truck },
+  { name: 'Horarios', href: '/schedules', icon: Calendar },
+  { name: 'Reportes', href: '/reports', icon: BarChart3 },
+  { name: 'Estadísticas', href: '/analytics', icon: BarChart3 },
+  { name: 'Configuración', href: '/settings', icon: Settings },
+]
+
+interface SidebarProps {
+  className?: string
+}
+
+function Sidebar({ className }: SidebarProps) {
+  const pathname = usePathname()
+
+  return (
+    <div className={cn('pb-12 w-64', className)}>
+      <div className="space-y-4 py-4">
+        <div className="px-3 py-2">
+          <div className="flex items-center mb-6">
+            <BarChart3 className="h-8 w-8 text-blue-400 mr-2" />
+            <h2 className="text-lg font-semibold text-white">Gestión Cursos</h2>
+          </div>
+          <div className="space-y-1">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                  )}
+                >
+                  <item.icon className="mr-2 h-4 w-4" />
+                  {item.name}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface MainLayoutProps {
+  children: React.ReactNode
+}
+
+export function MainLayout({ children }: MainLayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  return (
+    <div className="flex h-screen">
+      {/* Sidebar para desktop */}
+      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
+        <div className="flex flex-col flex-grow bg-slate-900 border-r border-slate-700 pt-5 overflow-y-auto">
+          <Sidebar />
+        </div>
+      </div>
+
+      {/* Sidebar móvil */}
+      <div className={`lg:hidden ${sidebarOpen ? 'fixed inset-0 z-50' : 'hidden'}`}>
+        <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-slate-700 z-50">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center">
+              <BarChart3 className="h-8 w-8 text-blue-400 mr-2" />
+              <h2 className="text-lg font-semibold text-white">Gestión Cursos</h2>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)}>
+              <X className="h-4 w-4 text-white" />
+            </Button>
+          </div>
+          <Sidebar />
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="lg:pl-64 flex flex-col flex-1">
+        {/* Header móvil */}
+        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden"
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+            <div className="flex flex-1 items-center">
+              <h1 className="text-lg font-semibold">Sistema de Gestión de Cursos</h1>
+            </div>
+          </div>
+        </div>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
