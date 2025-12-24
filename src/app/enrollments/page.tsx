@@ -9,10 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MainLayout } from "@/components/layout/main-layout"
 import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
 import { CertificateGenerator } from "@/components/certificates/certificate-generator"
-import { 
-  Users, 
-  BookOpen, 
-  Calendar, 
+import {
+  Users,
+  BookOpen,
+  Calendar,
   CheckCircle,
   Clock,
   XCircle,
@@ -33,11 +33,12 @@ interface Enrollment {
   grade?: number
   certificate?: string
   student: { name: string }
-  course: { 
+  course: {
     title: string
     duration: number
     teacher?: { name: string }
   }
+  updatedAt: string
 }
 
 export default function EnrollmentsPage() {
@@ -47,74 +48,28 @@ export default function EnrollmentsPage() {
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null)
 
   useEffect(() => {
-    // Simular carga de datos con información completa
-    const mockEnrollments: Enrollment[] = [
-      {
-        id: "1",
-        studentName: "Juan Pérez",
-        courseName: "JavaScript Avanzado",
-        enrollmentDate: "2024-01-15",
-        status: "IN_PROGRESS",
-        progress: 75,
-        grade: 8.5,
-        student: { name: "Juan Pérez" },
-        course: { 
-          title: "JavaScript Avanzado",
-          duration: 40,
-          teacher: { name: "Carlos Rodríguez" }
-        }
-      },
-      {
-        id: "2",
-        studentName: "María García",
-        courseName: "UI/UX Design",
-        enrollmentDate: "2024-01-20",
-        status: "IN_PROGRESS",
-        progress: 60,
-        student: { name: "María García" },
-        course: { 
-          title: "UI/UX Design",
-          duration: 30,
-          teacher: { name: "Ana López" }
-        }
-      },
-      {
-        id: "3",
-        studentName: "Carlos López",
-        courseName: "Marketing Digital",
-        enrollmentDate: "2023-12-10",
-        status: "COMPLETED",
-        progress: 100,
-        grade: 9.2,
-        certificate: "CERT-2024-001",
-        student: { name: "Carlos López" },
-        course: { 
-          title: "Marketing Digital",
-          duration: 35,
-          teacher: { name: "Laura Martínez" }
-        }
-      },
-      {
-        id: "4",
-        studentName: "Ana Martínez",
-        courseName: "Inglés Empresarial",
-        enrollmentDate: "2024-02-01",
-        status: "DROPPED",
-        progress: 20,
-        student: { name: "Ana Martínez" },
-        course: { 
-          title: "Inglés Empresarial",
-          duration: 50,
-          teacher: { name: "John Smith" }
-        }
-      }
-    ]
-    
-    setTimeout(() => {
-      setEnrollments(mockEnrollments)
-      setLoading(false)
-    }, 1000)
+    fetchEnrollments()
   }, [])
+
+  const fetchEnrollments = async () => {
+    try {
+      const response = await fetch('/api/enrollments')
+      if (response.ok) {
+        const data = await response.json()
+        // Transformar datos si es necesario para compatibilidad con la interfaz
+        const formattedData = data.map((e: any) => ({
+          ...e,
+          studentName: e.student.name,
+          courseName: e.course.title
+        }))
+        setEnrollments(formattedData)
+      }
+    } catch (error) {
+      console.error('Error fetching enrollments:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -238,10 +193,10 @@ export default function EnrollmentsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <EnrollmentForm 
+              <EnrollmentForm
                 onSuccess={() => {
                   setShowForm(false)
-                  // Aquí podrías recargar los datos
+                  fetchEnrollments()
                 }}
                 onCancel={() => setShowForm(false)}
               />
@@ -263,8 +218,8 @@ export default function EnrollmentsPage() {
                     {selectedEnrollment.studentName} - {selectedEnrollment.courseName}
                   </CardDescription>
                 </div>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setSelectedEnrollment(null)}
                 >
                   Cerrar
@@ -291,11 +246,10 @@ export default function EnrollmentsPage() {
                     <Label className="text-sm font-medium text-muted-foreground">Progreso</Label>
                     <div className="flex items-center gap-2">
                       <div className="w-20 bg-slate-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full ${
-                            selectedEnrollment.status === 'COMPLETED' ? 'bg-green-500' : 
-                            selectedEnrollment.status === 'IN_PROGRESS' ? 'bg-blue-500' : 'bg-red-500'
-                          }`} 
+                        <div
+                          className={`h-2 rounded-full ${selectedEnrollment.status === 'COMPLETED' ? 'bg-green-500' :
+                              selectedEnrollment.status === 'IN_PROGRESS' ? 'bg-blue-500' : 'bg-red-500'
+                            }`}
                           style={{ width: `${selectedEnrollment.progress}%` }}
                         ></div>
                       </div>
@@ -315,12 +269,12 @@ export default function EnrollmentsPage() {
                 </div>
 
                 {/* Generador de Certificados */}
-                <CertificateGenerator 
+                <CertificateGenerator
                   enrollment={selectedEnrollment}
                   onCertificateGenerated={() => {
                     // Actualizar la matrícula en la lista
-                    setEnrollments(prev => prev.map(e => 
-                      e.id === selectedEnrollment.id 
+                    setEnrollments(prev => prev.map(e =>
+                      e.id === selectedEnrollment.id
                         ? { ...e, certificate: 'CERT-GENERATED' }
                         : e
                     ))
@@ -368,17 +322,16 @@ export default function EnrollmentsPage() {
                       <div className="text-right">
                         <div className="text-sm font-medium">{enrollment.progress}%</div>
                         <div className="w-20 bg-slate-200 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full ${
-                              enrollment.status === 'COMPLETED' ? 'bg-green-500' : 
-                              enrollment.status === 'IN_PROGRESS' ? 'bg-blue-500' : 'bg-red-500'
-                            }`} 
+                          <div
+                            className={`h-2 rounded-full ${enrollment.status === 'COMPLETED' ? 'bg-green-500' :
+                                enrollment.status === 'IN_PROGRESS' ? 'bg-blue-500' : 'bg-red-500'
+                              }`}
                             style={{ width: `${enrollment.progress}%` }}
                           ></div>
                         </div>
                       </div>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => setSelectedEnrollment(enrollment)}
                       >

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -26,10 +26,10 @@ import {
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { 
-  BookOpen, 
-  Plus, 
-  Search, 
+import {
+  BookOpen,
+  Plus,
+  Search,
   Filter,
   Edit,
   Eye,
@@ -103,8 +103,8 @@ export default function CoursesPage() {
 
   const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.code.toLowerCase().includes(searchTerm.toLowerCase())
+      course.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.code.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesLevel = filterLevel === "all" || course.level === filterLevel
     return matchesSearch && matchesLevel
   })
@@ -117,10 +117,10 @@ export default function CoursesPage() {
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-        
+
         <main className="flex-1 overflow-y-auto p-6">
           <div className="space-y-6">
             {/* Header */}
@@ -320,7 +320,7 @@ export default function CoursesPage() {
                             </div>
                           </TableCell>
                           <TableCell>{getLevelBadge(course.level)}</TableCell>
-                          <TableCell>{course.teacher}</TableCell>
+                          <TableCell>{course.teacher?.name || 'No asignado'}</TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-1">
                               <Clock className="h-3 w-3 text-muted-foreground" />
@@ -330,7 +330,7 @@ export default function CoursesPage() {
                           <TableCell>€{course.price.toFixed(2)}</TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2">
-                              <span>{course.enrolledStudents}</span>
+                              <span>{course._count?.enrollments || 0}</span>
                               <span className="text-sm text-muted-foreground">/ {course.maxStudents}</span>
                             </div>
                           </TableCell>

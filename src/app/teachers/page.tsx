@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -26,11 +26,11 @@ import {
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
   Eye,
   User,
   Mail,
@@ -149,12 +149,31 @@ const getContractTypeBadge = (contractType: Teacher['contractType']) => {
 }
 
 export default function TeachersPage() {
-  const [teachers, setTeachers] = useState<Teacher[]>(mockTeachers)
+  const [teachers, setTeachers] = useState<Teacher[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+
+  useEffect(() => {
+    fetchTeachers()
+  }, [])
+
+  const fetchTeachers = async () => {
+    try {
+      const response = await fetch('/api/teachers')
+      if (response.ok) {
+        const data = await response.json()
+        setTeachers(data)
+      }
+    } catch (error) {
+      console.error('Error fetching teachers:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredTeachers = teachers.filter(teacher =>
     teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -163,51 +182,83 @@ export default function TeachersPage() {
     teacher.dni?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleCreateTeacher = (teacherData: Partial<Teacher>) => {
-    const newTeacher: Teacher = {
-      id: Date.now().toString(),
-      name: teacherData.name || '',
-      email: teacherData.email || '',
-      phone: teacherData.phone,
-      address: teacherData.address,
-      dni: teacherData.dni,
-      specialty: teacherData.specialty,
-      experience: teacherData.experience,
-      cv: teacherData.cv,
-      contractType: teacherData.contractType || 'FREELANCE',
-      hourlyRate: teacherData.hourlyRate,
-      status: teacherData.status || 'ACTIVE',
-      createdAt: new Date().toISOString().split('T')[0]
+  const handleCreateTeacher = async (teacherData: Partial<Teacher>) => {
+    try {
+      const response = await fetch('/api/teachers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(teacherData),
+      })
+
+      if (response.ok) {
+        await fetchTeachers()
+        setIsCreateDialogOpen(false)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error creating teacher')
+      }
+    } catch (error) {
+      console.error('Error creating teacher:', error)
+      alert('Error creating teacher')
     }
-    setTeachers([...teachers, newTeacher])
-    setIsCreateDialogOpen(false)
   }
 
-  const handleEditTeacher = (teacherData: Partial<Teacher>) => {
+  const handleEditTeacher = async (teacherData: Partial<Teacher>) => {
     if (selectedTeacher) {
-      const updatedTeachers = teachers.map(teacher =>
-        teacher.id === selectedTeacher.id
-          ? { ...teacher, ...teacherData }
-          : teacher
-      )
-      setTeachers(updatedTeachers)
-      setIsEditDialogOpen(false)
-      setSelectedTeacher(null)
+      try {
+        const response = await fetch(`/api/teachers/${selectedTeacher.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(teacherData),
+        })
+
+        if (response.ok) {
+          await fetchTeachers()
+          setIsEditDialogOpen(false)
+          setSelectedTeacher(null)
+        } else {
+          const error = await response.json()
+          alert(error.error || 'Error updating teacher')
+        }
+      } catch (error) {
+        console.error('Error updating teacher:', error)
+        alert('Error updating teacher')
+      }
     }
   }
 
-  const handleDeleteTeacher = (teacherId: string) => {
-    setTeachers(teachers.filter(teacher => teacher.id !== teacherId))
+  const handleDeleteTeacher = async (teacherId: string) => {
+    if (confirm('Are you sure you want to delete this teacher?')) {
+      try {
+        const response = await fetch(`/api/teachers/${teacherId}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          await fetchTeachers()
+        } else {
+          const error = await response.json()
+          alert(error.error || 'Error deleting teacher')
+        }
+      } catch (error) {
+        console.error('Error deleting teacher:', error)
+        alert('Error deleting teacher')
+      }
+    }
   }
 
-  const TeacherForm = ({ 
-    teacher, 
-    onSubmit, 
-    onCancel 
-  }: { 
+  const TeacherForm = ({
+    teacher,
+    onSubmit,
+    onCancel
+  }: {
     teacher?: Teacher | null
     onSubmit: (data: Partial<Teacher>) => void
-    onCancel: () => void 
+    onCancel: () => void
   }) => {
     const [formData, setFormData] = useState({
       name: teacher?.name || '',
@@ -355,7 +406,7 @@ export default function TeachersPage() {
           <p className="text-sm text-muted-foreground">{teacher.email}</p>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div className="flex items-center space-x-2">
           <Phone className="h-4 w-4 text-muted-foreground" />
@@ -374,7 +425,7 @@ export default function TeachersPage() {
           <span className="text-sm">{teacher.specialty || 'No especificado'}</span>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <span className="text-sm font-medium">Tipo de Contrato:</span>
@@ -388,14 +439,14 @@ export default function TeachersPage() {
           </div>
         </div>
       </div>
-      
+
       {teacher.experience && (
         <div className="p-4 bg-muted rounded-lg">
           <h4 className="font-medium mb-2">Experiencia</h4>
           <p className="text-sm">{teacher.experience}</p>
         </div>
       )}
-      
+
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
           Registrado el: {teacher.createdAt}
@@ -512,7 +563,7 @@ export default function TeachersPage() {
                             {selectedTeacher && <TeacherDetails teacher={selectedTeacher} />}
                           </DialogContent>
                         </Dialog>
-                        
+
                         <Dialog open={isEditDialogOpen && selectedTeacher?.id === teacher.id} onOpenChange={(open) => {
                           setIsEditDialogOpen(open)
                           if (open) setSelectedTeacher(teacher)
@@ -538,7 +589,7 @@ export default function TeachersPage() {
                             )}
                           </DialogContent>
                         </Dialog>
-                        
+
                         <Button
                           variant="ghost"
                           size="sm"

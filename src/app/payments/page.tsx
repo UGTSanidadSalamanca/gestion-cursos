@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -26,11 +26,11 @@ import {
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
   Eye,
   CreditCard,
   Calendar,
@@ -229,75 +229,122 @@ const getPaymentMethodBadge = (method: Payment['paymentMethod']) => {
 }
 
 export default function PaymentsPage() {
-  const [payments, setPayments] = useState<Payment[]>(mockPayments)
+  const [payments, setPayments] = useState<Payment[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  useEffect(() => {
+    fetchPayments()
+  }, [])
+
+  const fetchPayments = async () => {
+    try {
+      const response = await fetch('/api/payments')
+      if (response.ok) {
+        const data = await response.json()
+        setPayments(data)
+      }
+    } catch (error) {
+      console.error('Error fetching payments:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredPayments = payments.filter(payment => {
-    const matchesSearch = 
+    const matchesSearch =
       payment.student?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.course?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase())
-    
+
     const matchesStatus = statusFilter === 'all' || payment.status === statusFilter
-    
+
     return matchesSearch && matchesStatus
   })
 
-  const handleCreatePayment = (paymentData: Partial<Payment>) => {
-    const newPayment: Payment = {
-      id: Date.now().toString(),
-      studentId: paymentData.studentId,
-      courseId: paymentData.courseId,
-      amount: paymentData.amount || 0,
-      currency: paymentData.currency || 'EUR',
-      paymentDate: paymentData.paymentDate || new Date().toISOString().split('T')[0],
-      paymentMethod: paymentData.paymentMethod || 'BANK_TRANSFER',
-      reference: paymentData.reference,
-      description: paymentData.description,
-      status: paymentData.status || 'PENDING',
-      dueDate: paymentData.dueDate,
-      paidDate: paymentData.paidDate,
-      invoiceNumber: paymentData.invoiceNumber,
-      createdAt: new Date().toISOString().split('T')[0],
-      student: paymentData.student,
-      course: paymentData.course
+  const handleCreatePayment = async (paymentData: Partial<Payment>) => {
+    try {
+      const response = await fetch('/api/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData),
+      })
+
+      if (response.ok) {
+        await fetchPayments()
+        setIsCreateDialogOpen(false)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error creating payment')
+      }
+    } catch (error) {
+      console.error('Error creating payment:', error)
+      alert('Error creating payment')
     }
-    setPayments([...payments, newPayment])
-    setIsCreateDialogOpen(false)
   }
 
-  const handleEditPayment = (paymentData: Partial<Payment>) => {
+  const handleEditPayment = async (paymentData: Partial<Payment>) => {
     if (selectedPayment) {
-      const updatedPayments = payments.map(payment =>
-        payment.id === selectedPayment.id
-          ? { ...payment, ...paymentData }
-          : payment
-      )
-      setPayments(updatedPayments)
-      setIsEditDialogOpen(false)
-      setSelectedPayment(null)
+      try {
+        const response = await fetch(`/api/payments/${selectedPayment.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(paymentData),
+        })
+
+        if (response.ok) {
+          await fetchPayments()
+          setIsEditDialogOpen(false)
+          setSelectedPayment(null)
+        } else {
+          const error = await response.json()
+          alert(error.error || 'Error updating payment')
+        }
+      } catch (error) {
+        console.error('Error updating payment:', error)
+        alert('Error updating payment')
+      }
     }
   }
 
-  const handleDeletePayment = (paymentId: string) => {
-    setPayments(payments.filter(payment => payment.id !== paymentId))
+  const handleDeletePayment = async (paymentId: string) => {
+    if (confirm('Are you sure you want to delete this payment?')) {
+      try {
+        const response = await fetch(`/api/payments/${paymentId}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          await fetchPayments()
+        } else {
+          const error = await response.json()
+          alert(error.error || 'Error deleting payment')
+        }
+      } catch (error) {
+        console.error('Error deleting payment:', error)
+        alert('Error deleting payment')
+      }
+    }
   }
 
-  const PaymentForm = ({ 
-    payment, 
-    onSubmit, 
-    onCancel 
-  }: { 
+  const PaymentForm = ({
+    payment,
+    onSubmit,
+    onCancel
+  }: {
     payment?: Payment | null
     onSubmit: (data: Partial<Payment>) => void
-    onCancel: () => void 
+    onCancel: () => void
   }) => {
     const [formData, setFormData] = useState({
       studentId: payment?.studentId || '',
@@ -469,7 +516,7 @@ export default function PaymentsPage() {
           <div className="text-sm text-muted-foreground">{getPaymentMethodBadge(payment.paymentMethod)}</div>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <span className="text-sm font-medium">Alumno:</span>
@@ -512,7 +559,7 @@ export default function PaymentsPage() {
           </div>
         </div>
       </div>
-      
+
       {payment.reference && (
         <div className="p-4 bg-muted rounded-lg">
           <h4 className="font-medium mb-2">Información de Referencia</h4>
@@ -522,14 +569,14 @@ export default function PaymentsPage() {
           </div>
         </div>
       )}
-      
+
       {payment.description && (
         <div className="p-4 bg-muted rounded-lg">
           <h4 className="font-medium mb-2">Descripción</h4>
           <p className="text-sm">{payment.description}</p>
         </div>
       )}
-      
+
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
           Registrado el: {payment.createdAt}
@@ -590,7 +637,7 @@ export default function PaymentsPage() {
               </p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pendiente</CardTitle>
@@ -603,7 +650,7 @@ export default function PaymentsPage() {
               </p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Vencido</CardTitle>
@@ -616,7 +663,7 @@ export default function PaymentsPage() {
               </p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Pagos</CardTitle>
@@ -723,7 +770,7 @@ export default function PaymentsPage() {
                             {selectedPayment && <PaymentDetails payment={selectedPayment} />}
                           </DialogContent>
                         </Dialog>
-                        
+
                         <Dialog open={isEditDialogOpen && selectedPayment?.id === payment.id} onOpenChange={(open) => {
                           setIsEditDialogOpen(open)
                           if (open) setSelectedPayment(payment)
@@ -749,7 +796,7 @@ export default function PaymentsPage() {
                             )}
                           </DialogContent>
                         </Dialog>
-                        
+
                         <Button
                           variant="ghost"
                           size="sm"
