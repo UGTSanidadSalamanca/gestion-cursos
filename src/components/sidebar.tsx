@@ -6,20 +6,21 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { 
-  BarChart3, 
-  BookOpen, 
-  Users, 
-  UserCheck, 
-  Truck, 
-  CreditCard, 
-  Package, 
-  Calendar, 
+import {
+  BarChart3,
+  BookOpen,
+  Users,
+  UserCheck,
+  Truck,
+  CreditCard,
+  Package,
+  Calendar,
   Settings,
   Home,
   FileText,
   Phone,
-  Monitor
+  Monitor,
+  Database
 } from "lucide-react"
 
 const navItems = [
@@ -82,6 +83,11 @@ const navItems = [
     title: "Reportes",
     href: "/reports",
     icon: BarChart3,
+  },
+  {
+    title: "Importar Datos",
+    href: "/import",
+    icon: Database,
   },
   {
     title: "Configuración",
