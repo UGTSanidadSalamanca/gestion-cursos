@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -25,18 +25,19 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
   Eye,
   User,
   Mail,
   Phone,
   MapPin,
   Calendar,
-  CreditCard
+  CreditCard,
+  Download
 } from 'lucide-react'
 
 interface Student {
@@ -156,6 +157,30 @@ export default function StudentsPage() {
     }
   }
 
+  const exportToCSV = () => {
+    const headers = ['Nombre', 'Email', 'Telefono', 'DNI', 'Afiliado', 'Estado', 'Fecha Registro']
+    const csvRows = students.map(s => [
+      `"${s.name}"`,
+      `"${s.email}"`,
+      `"${s.phone || ''}"`,
+      `"${s.dni || ''}"`,
+      s.isAffiliated ? 'Si' : 'No',
+      s.status,
+      s.createdAt
+    ])
+
+    const csvContent = [headers.join(','), ...csvRows.map(row => row.join(','))].join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `alumnos_${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const filteredStudents = students.filter(student =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -231,14 +256,14 @@ export default function StudentsPage() {
     }
   }
 
-  const StudentForm = ({ 
-    student, 
-    onSubmit, 
-    onCancel 
-  }: { 
+  const StudentForm = ({
+    student,
+    onSubmit,
+    onCancel
+  }: {
     student?: Student | null
     onSubmit: (data: Partial<Student>) => void
-    onCancel: () => void 
+    onCancel: () => void
   }) => {
     const [formData, setFormData] = useState({
       name: student?.name || '',
@@ -377,7 +402,7 @@ export default function StudentsPage() {
           <p className="text-sm text-muted-foreground">{student.email}</p>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div className="flex items-center space-x-2">
           <Phone className="h-4 w-4 text-muted-foreground" />
@@ -398,7 +423,7 @@ export default function StudentsPage() {
           </span>
         </div>
       </div>
-      
+
       {student.emergencyContact && (
         <div className="p-4 bg-muted rounded-lg">
           <h4 className="font-medium mb-2">Contacto de Emergencia</h4>
@@ -408,7 +433,7 @@ export default function StudentsPage() {
           </div>
         </div>
       )}
-      
+
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
           Registrado el: {student.createdAt}
@@ -429,26 +454,32 @@ export default function StudentsPage() {
               Administra los alumnos del sistema, afiliados y no afiliados
             </p>
           </div>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo Alumno
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Crear Nuevo Alumno</DialogTitle>
-                <DialogDescription>
-                  Ingresa los datos del nuevo alumno en el sistema
-                </DialogDescription>
-              </DialogHeader>
-              <StudentForm
-                onSubmit={handleCreateStudent}
-                onCancel={() => setIsCreateDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={exportToCSV}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar Excel
+            </Button>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo Alumno
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Crear Nuevo Alumno</DialogTitle>
+                  <DialogDescription>
+                    Ingresa los datos del nuevo alumno en el sistema
+                  </DialogDescription>
+                </DialogHeader>
+                <StudentForm
+                  onSubmit={handleCreateStudent}
+                  onCancel={() => setIsCreateDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Search and Stats */}
@@ -532,7 +563,7 @@ export default function StudentsPage() {
                               {selectedStudent && <StudentDetails student={selectedStudent} />}
                             </DialogContent>
                           </Dialog>
-                          
+
                           <Dialog open={isEditDialogOpen && selectedStudent?.id === student.id} onOpenChange={(open) => {
                             setIsEditDialogOpen(open)
                             if (open) setSelectedStudent(student)
@@ -558,7 +589,7 @@ export default function StudentsPage() {
                               )}
                             </DialogContent>
                           </Dialog>
-                          
+
                           <Button
                             variant="ghost"
                             size="sm"
