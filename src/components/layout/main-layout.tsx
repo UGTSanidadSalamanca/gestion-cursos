@@ -6,20 +6,21 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { 
-  BarChart3, 
-  Users, 
-  UserCheck, 
-  Truck, 
-  CreditCard, 
-  Package, 
+import {
+  BarChart3,
+  Users,
+  UserCheck,
+  Truck,
+  CreditCard,
+  Package,
   FileText,
   Menu,
   X,
   Home,
   BookOpen,
   Calendar,
-  Settings
+  Settings,
+  Database
 } from 'lucide-react'
 
 const navigation = [
@@ -33,7 +34,7 @@ const navigation = [
   { name: 'Proveedores', href: '/suppliers', icon: Truck },
   { name: 'Horarios', href: '/schedules', icon: Calendar },
   { name: 'Reportes', href: '/reports', icon: BarChart3 },
-  { name: 'Estadísticas', href: '/analytics', icon: BarChart3 },
+  { name: 'Importar Datos', href: '/import', icon: Database },
   { name: 'Configuración', href: '/settings', icon: Settings },
 ]
 
