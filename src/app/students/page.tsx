@@ -37,8 +37,11 @@ import {
   MapPin,
   Calendar,
   CreditCard,
-  Download
+  Download,
+  Upload,
+  FileSpreadsheet
 } from 'lucide-react'
+import * as XLSX from 'xlsx'
 
 interface Student {
   id: string
@@ -179,6 +182,61 @@ export default function StudentsPage() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = async (event) => {
+      try {
+        const data = new Uint8Array(event.target?.result as ArrayBuffer)
+        const workbook = XLSX.read(data, { type: 'array' })
+        const sheetName = workbook.SheetNames[0]
+        const worksheet = workbook.Sheets[sheetName]
+        const jsonData = XLSX.utils.sheet_to_json(worksheet)
+
+        setLoading(true)
+        let successCount = 0
+        let errorCount = 0
+
+        for (const row of jsonData as any[]) {
+          // Mapear campos del Excel a los de la API
+          const studentData = {
+            name: row.Nombre || row.name || '',
+            email: row.Email || row.email || '',
+            phone: row.Telefono || row.phone || '',
+            dni: row.DNI || row.dni || '',
+            isAffiliated: !!(row.Afiliado || row.affiliated)
+          }
+
+          if (!studentData.name || !studentData.email) continue
+
+          try {
+            const response = await fetch('/api/students', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(studentData),
+            })
+            if (response.ok) successCount++
+            else errorCount++
+          } catch (err) {
+            errorCount++
+          }
+        }
+
+        alert(`Importación finalizada.\nÉxito: ${successCount}\nErrores: ${errorCount}`)
+        await fetchStudents()
+      } catch (error) {
+        console.error('Error parsing excel:', error)
+        alert('Error al leer el archivo Excel. Asegúrate de que sea un formato válido.')
+      } finally {
+        setLoading(false)
+        if (e.target) e.target.value = ''
+      }
+    }
+    reader.readAsArrayBuffer(file)
   }
 
   const filteredStudents = students.filter(student =>
@@ -455,6 +513,19 @@ export default function StudentsPage() {
             </p>
           </div>
           <div className="flex space-x-2">
+            <div className="relative">
+              <Button variant="outline" onClick={() => document.getElementById('excel-upload')?.click()}>
+                <Upload className="h-4 w-4 mr-2" />
+                Importar Excel
+              </Button>
+              <input
+                id="excel-upload"
+                type="file"
+                accept=".xlsx, .xls, .csv"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+            </div>
             <Button variant="outline" onClick={exportToCSV}>
               <Download className="h-4 w-4 mr-2" />
               Exportar Excel
