@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -14,21 +14,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { 
-  Package, 
-  Plus, 
-  Search, 
+import {
+  Package,
+  Plus,
+  Search,
   Filter,
   Edit,
   Eye,
@@ -36,75 +37,124 @@ import {
   Euro,
   AlertTriangle,
   CheckCircle,
-  Box
+  Box,
+  Trash2
 } from "lucide-react"
 
+interface Material {
+  id: string
+  name: string
+  description?: string
+  type: string
+  quantity: number
+  unitPrice: number
+  location?: string
+  providerId?: string
+  provider?: {
+    id: string
+    name: string
+  }
+  isAvailable: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+interface Provider {
+  id: string
+  name: string
+}
+
 export default function MaterialsPage() {
+  const [materials, setMaterials] = useState<Material[]>([])
+  const [providers, setProviders] = useState<Provider[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterType, setFilterType] = useState("all")
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    type: '',
+    quantity: '',
+    unitPrice: '',
+    location: '',
+    providerId: '',
+    isAvailable: true
+  })
 
-  const materials = [
-    {
-      id: 1,
-      name: "Libro JavaScript Avanzado",
-      description: "Libro de texto para el curso de JavaScript Avanzado",
-      type: "BOOK",
-      quantity: 25,
-      unitPrice: 45.00,
-      location: "Almacén A - Estantería 3",
-      provider: "TechBooks S.L.",
-      isAvailable: true,
-      lastUpdated: "2024-01-10"
-    },
-    {
-      id: 2,
-      name: "Licencia Adobe Creative Cloud",
-      description: "Licencia anual para diseño gráfico",
-      type: "SOFTWARE",
-      quantity: 10,
-      unitPrice: 299.00,
-      location: "Digital - Licencias",
-      provider: "Software Educativo Pro",
-      isAvailable: true,
-      lastUpdated: "2024-01-15"
-    },
-    {
-      id: 3,
-      name: "Portátiles Dell Latitude",
-      description: "Portátiles para uso en clase",
-      type: "EQUIPMENT",
-      quantity: 15,
-      unitPrice: 899.00,
-      location: "Aula Informática 1",
-      provider: "Equipos Tecnológicos S.A.",
-      isAvailable: true,
-      lastUpdated: "2024-01-08"
-    },
-    {
-      id: 4,
-      name: "Kit de Programación Arduino",
-      description: "Kits completos para prácticas de electrónica",
-      type: "TOOL",
-      quantity: 8,
-      unitPrice: 75.00,
-      location: "Laboratorio de Electrónica",
-      provider: "TechBooks S.L.",
-      isAvailable: false,
-      lastUpdated: "2024-01-12"
-    },
-    {
-      id: 5,
-      name: "Papel y Material de Oficina",
-      description: "Papel, bolígrafos, cuadernos, etc.",
-      type: "CONSUMABLE",
-      quantity: 200,
-      unitPrice: 0.50,
-      location: "Almacén B",
-      provider: "Suministros Oficina S.L.",
-      isAvailable: true,
-      lastUpdated: "2024-01-05"
+  useEffect(() => {
+    fetchMaterials()
+    fetchProviders()
+  }, [])
+
+  const fetchMaterials = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/materials')
+      if (response.ok) {
+        const data = await response.json()
+        setMaterials(data)
+      }
+    } catch (error) {
+      console.error('Error fetching materials:', error)
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
+
+  const fetchProviders = async () => {
+    try {
+      const response = await fetch('/api/suppliers')
+      if (response.ok) {
+        const data = await response.json()
+        setProviders(data)
+      }
+    } catch (error) {
+      console.error('Error fetching providers:', error)
+    }
+  }
+
+  const handleCreateMaterial = async () => {
+    try {
+      if (!formData.name || !formData.type || !formData.quantity || !formData.unitPrice) {
+        alert('Por favor completa los campos requeridos')
+        return
+      }
+
+      const response = await fetch('/api/materials', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (response.ok) {
+        await fetchMaterials()
+        setIsCreateDialogOpen(false)
+        resetForm()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error creating material')
+      }
+    } catch (error) {
+      console.error('Error creating material:', error)
+      alert('Error creating material')
+    }
+  }
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      type: '',
+      quantity: '',
+      unitPrice: '',
+      location: '',
+      providerId: '',
+      isAvailable: true
+    })
+  }
 
   const getTypeBadge = (type: string) => {
     switch (type) {
@@ -137,12 +187,13 @@ export default function MaterialsPage() {
 
   const filteredMaterials = materials.filter(material => {
     const matchesSearch = material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         material.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         material.provider.toLowerCase().includes(searchTerm.toLowerCase())
+      material.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      material.provider?.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesType = filterType === "all" || material.type === filterType
     return matchesSearch && matchesType
   })
 
+  // Calculate summary stats
   const totalMaterials = materials.length
   const availableMaterials = materials.filter(m => m.isAvailable).length
   const lowStockMaterials = materials.filter(m => m.quantity < 5).length
@@ -160,9 +211,9 @@ export default function MaterialsPage() {
             </p>
           </div>
           <div className="mt-4 flex items-center space-x-2 md:mt-0">
-            <Dialog>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button onClick={() => setIsCreateDialogOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
                   Nuevo Material
                 </Button>
@@ -177,58 +228,90 @@ export default function MaterialsPage() {
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="name" className="text-right">
-                      Nombre
+                      Nombre *
                     </Label>
-                    <Input id="name" className="col-span-3" />
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="col-span-3"
+                    />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="type" className="text-right">
-                      Tipo
+                      Tipo *
                     </Label>
-                    <Select className="col-span-3">
-                      <SelectTrigger>
+                    <Select
+                      value={formData.type}
+                      onValueChange={(value) => setFormData({ ...formData, type: value })}
+                    >
+                      <SelectTrigger className="col-span-3">
                         <SelectValue placeholder="Seleccionar tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="book">Libro</SelectItem>
-                        <SelectItem value="software">Software</SelectItem>
-                        <SelectItem value="equipment">Equipo</SelectItem>
-                        <SelectItem value="tool">Herramienta</SelectItem>
-                        <SelectItem value="consumable">Consumible</SelectItem>
-                        <SelectItem value="digital">Recurso Digital</SelectItem>
+                        <SelectItem value="BOOK">Libro</SelectItem>
+                        <SelectItem value="SOFTWARE">Software</SelectItem>
+                        <SelectItem value="EQUIPMENT">Equipo</SelectItem>
+                        <SelectItem value="TOOL">Herramienta</SelectItem>
+                        <SelectItem value="CONSUMABLE">Consumible</SelectItem>
+                        <SelectItem value="DIGITAL_RESOURCE">Recurso Digital</SelectItem>
+                        <SelectItem value="OTHER">Otro</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="quantity" className="text-right">
-                      Cantidad
+                      Cantidad *
                     </Label>
-                    <Input id="quantity" type="number" className="col-span-3" />
+                    <Input
+                      id="quantity"
+                      type="number"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                      className="col-span-3"
+                    />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="price" className="text-right">
-                      Precio Unit.
+                      Precio Unit. *
                     </Label>
-                    <Input id="price" type="number" placeholder="0.00" className="col-span-3" />
+                    <Input
+                      id="price"
+                      type="number"
+                      value={formData.unitPrice}
+                      onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
+                      placeholder="0.00"
+                      className="col-span-3"
+                    />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="location" className="text-right">
                       Ubicación
                     </Label>
-                    <Input id="location" className="col-span-3" />
+                    <Input
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      className="col-span-3"
+                    />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="provider" className="text-right">
                       Proveedor
                     </Label>
-                    <Select className="col-span-3">
-                      <SelectTrigger>
+                    <Select
+                      value={formData.providerId}
+                      onValueChange={(value) => setFormData({ ...formData, providerId: value })}
+                    >
+                      <SelectTrigger className="col-span-3">
                         <SelectValue placeholder="Seleccionar proveedor" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="techbooks">TechBooks S.L.</SelectItem>
-                        <SelectItem value="software">Software Educativo Pro</SelectItem>
-                        <SelectItem value="equipos">Equipos Tecnológicos S.A.</SelectItem>
+                        {providers.map((provider) => (
+                          <SelectItem key={provider.id} value={provider.id}>
+                            {provider.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -236,13 +319,18 @@ export default function MaterialsPage() {
                     <Label htmlFor="description" className="text-right">
                       Descripción
                     </Label>
-                    <Textarea id="description" className="col-span-3" />
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="col-span-3"
+                    />
                   </div>
                 </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline">Cancelar</Button>
-                  <Button>Guardar</Button>
-                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancelar</Button>
+                  <Button onClick={handleCreateMaterial}>Guardar</Button>
+                </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
@@ -323,6 +411,7 @@ export default function MaterialsPage() {
                     <SelectItem value="TOOL">Herramientas</SelectItem>
                     <SelectItem value="CONSUMABLE">Consumibles</SelectItem>
                     <SelectItem value="DIGITAL_RESOURCE">Recursos Digitales</SelectItem>
+                    <SelectItem value="OTHER">Otros</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -343,42 +432,50 @@ export default function MaterialsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredMaterials.map((material) => (
-                    <TableRow key={material.id}>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{material.name}</span>
-                          <span className="text-sm text-muted-foreground">{material.description}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getTypeBadge(material.type)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Box className="h-4 w-4 text-muted-foreground" />
-                          <span>{material.quantity}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>€{material.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-1">
-                          <MapPin className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-sm">{material.location}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{material.provider}</TableCell>
-                      <TableCell>{getAvailabilityBadge(material.isAvailable, material.quantity)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
+                  {filteredMaterials.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-4">
+                        No se encontraron materiales
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredMaterials.map((material) => (
+                      <TableRow key={material.id}>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{material.name}</span>
+                            <span className="text-sm text-muted-foreground">{material.description}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{getTypeBadge(material.type)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Box className="h-4 w-4 text-muted-foreground" />
+                            <span>{material.quantity}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>€{Number(material.unitPrice).toFixed(2)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-1">
+                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm">{material.location || '-'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{material.provider?.name || '-'}</TableCell>
+                        <TableCell>{getAvailabilityBadge(material.isAvailable, material.quantity)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
