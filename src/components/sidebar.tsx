@@ -42,7 +42,7 @@ const navItems = [
   },
   {
     title: "Proveedores",
-    href: "/providers",
+    href: "/suppliers",
     icon: Truck,
   },
   {
