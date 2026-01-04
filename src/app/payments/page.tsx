@@ -70,6 +70,16 @@ interface Payment {
   }
 }
 
+interface StudentOption {
+  id: string
+  name: string
+}
+
+interface CourseOption {
+  id: string
+  title: string
+}
+
 const mockPayments: Payment[] = [
   {
     id: '1',
@@ -230,6 +240,8 @@ const getPaymentMethodBadge = (method: Payment['paymentMethod']) => {
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([])
+  const [students, setStudents] = useState<StudentOption[]>([])
+  const [courses, setCourses] = useState<CourseOption[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -239,7 +251,33 @@ export default function PaymentsPage() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   useEffect(() => {
     fetchPayments()
+    fetchStudents()
+    fetchCourses()
   }, [])
+
+  const fetchStudents = async () => {
+    try {
+      const response = await fetch('/api/students')
+      if (response.ok) {
+        const data = await response.json()
+        setStudents(data)
+      }
+    } catch (error) {
+      console.error('Error fetching students:', error)
+    }
+  }
+
+  const fetchCourses = async () => {
+    try {
+      const response = await fetch('/api/courses')
+      if (response.ok) {
+        const data = await response.json()
+        setCourses(data)
+      }
+    } catch (error) {
+      console.error('Error fetching courses:', error)
+    }
+  }
 
   const fetchPayments = async () => {
     try {
@@ -352,6 +390,7 @@ export default function PaymentsPage() {
       amount: payment?.amount?.toString() || '',
       currency: payment?.currency || 'EUR',
       paymentMethod: payment?.paymentMethod || 'BANK_TRANSFER',
+      paymentDate: payment?.paymentDate || new Date().toISOString().split('T')[0],
       reference: payment?.reference || '',
       description: payment?.description || '',
       status: payment?.status || 'PENDING',
@@ -371,6 +410,36 @@ export default function PaymentsPage() {
     return (
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="student">Alumno</Label>
+            <Select value={formData.studentId} onValueChange={(value) => setFormData({ ...formData, studentId: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar alumno" />
+              </SelectTrigger>
+              <SelectContent>
+                {students.map((student) => (
+                  <SelectItem key={student.id} value={student.id}>
+                    {student.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="course">Curso</Label>
+            <Select value={formData.courseId} onValueChange={(value) => setFormData({ ...formData, courseId: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar curso" />
+              </SelectTrigger>
+              <SelectContent>
+                {courses.map((course) => (
+                  <SelectItem key={course.id} value={course.id}>
+                    {course.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="amount">Importe</Label>
             <div className="relative">

@@ -268,6 +268,7 @@ export default function TeachersPage() {
       dni: teacher?.dni || '',
       specialty: teacher?.specialty || '',
       experience: teacher?.experience || '',
+      cv: teacher?.cv || '',
       contractType: teacher?.contractType || 'FREELANCE',
       hourlyRate: teacher?.hourlyRate?.toString() || '',
       status: teacher?.status || 'ACTIVE'
@@ -320,11 +321,19 @@ export default function TeachersPage() {
             />
           </div>
           <div className="space-y-2 col-span-2">
-            <Label htmlFor="address">Dirección</Label>
             <Input
               id="address"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2 col-span-2">
+            <Label htmlFor="cv">Enlace al CV</Label>
+            <Input
+              id="cv"
+              value={formData.cv}
+              onChange={(e) => setFormData({ ...formData, cv: e.target.value })}
+              placeholder="https://..."
             />
           </div>
           <div className="space-y-2">
@@ -444,6 +453,20 @@ export default function TeachersPage() {
         <div className="p-4 bg-muted rounded-lg">
           <h4 className="font-medium mb-2">Experiencia</h4>
           <p className="text-sm">{teacher.experience}</p>
+        </div>
+      )}
+
+      {teacher.cv && (
+        <div className="p-4 bg-muted rounded-lg">
+          <h4 className="font-medium mb-2">Curriculum Vitae</h4>
+          <a
+            href={teacher.cv}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-primary hover:underline flex items-center"
+          >
+            Ver CV <Eye className="ml-2 h-4 w-4" />
+          </a>
         </div>
       )}
 
