@@ -19,10 +19,17 @@ export const metadata: Metadata = {
   description: "Sistema integral de gestión académica para centros educativos",
   keywords: ["Gestión de Cursos", "Educación", "Académico", "Next.js", "TypeScript"],
   authors: [{ name: "Centro Educativo" }],
+  manifest: "/manifest.json",
+  themeColor: "#0ea5e9",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Gestión Cursos",
+  },
   openGraph: {
     title: "Sistema de Gestión de Cursos",
     description: "Sistema integral de gestión académica para centros educativos",
-    url: "https://centro-educativo.com",
+    url: "https://gestion-cursos-ashy.vercel.app",
     siteName: "Centro Educativo",
     type: "website",
   },
@@ -32,6 +39,8 @@ export const metadata: Metadata = {
     description: "Sistema integral de gestión académica para centros educativos",
   },
 };
+
+import { AuthProvider } from "@/components/providers/session-provider";
 
 export default function RootLayout({
   children,
@@ -43,15 +52,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster />
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster />
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

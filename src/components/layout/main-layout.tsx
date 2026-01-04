@@ -44,12 +44,15 @@ interface SidebarProps {
   className?: string
 }
 
+import { signOut } from 'next-auth/react'
+import { LogOut } from 'lucide-react'
+
 function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
 
   return (
-    <div className={cn('pb-12 w-64', className)}>
-      <div className="space-y-4 py-4">
+    <div className={cn('pb-12 w-64 flex flex-col h-full', className)}>
+      <div className="space-y-4 py-4 flex-1">
         <div className="px-3 py-2">
           <div className="flex items-center mb-6">
             <BarChart3 className="h-8 w-8 text-blue-400 mr-2" />
@@ -76,6 +79,16 @@ function Sidebar({ className }: SidebarProps) {
             })}
           </div>
         </div>
+      </div>
+
+      <div className="px-3 py-4 border-t border-slate-800">
+        <button
+          onClick={() => signOut()}
+          className="flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-red-900/20 hover:text-red-400 transition-colors"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Cerrar Sesión
+        </button>
       </div>
     </div>
   )
