@@ -70,6 +70,7 @@ export default function MaterialsPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterType, setFilterType] = useState("all")
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -140,6 +141,26 @@ export default function MaterialsPage() {
     } catch (error) {
       console.error('Error creating material:', error)
       alert('Error creating material')
+    }
+  }
+
+  const handleDeleteMaterial = async (materialId: string) => {
+    if (confirm('¿Estás seguro de que deseas eliminar este material?')) {
+      try {
+        const response = await fetch(`/api/materials/${materialId}`, {
+          method: 'DELETE'
+        })
+
+        if (response.ok) {
+          await fetchMaterials()
+        } else {
+          const error = await response.json()
+          alert(error.error || 'Error deleting material')
+        }
+      } catch (error) {
+        console.error('Error deleting material:', error)
+        alert('Error deleting material')
+      }
     }
   }
 
@@ -470,6 +491,13 @@ export default function MaterialsPage() {
                             </Button>
                             <Button variant="ghost" size="sm">
                               <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteMaterial(material.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>

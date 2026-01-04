@@ -117,8 +117,8 @@ export async function DELETE(
     }
 
     // Delete related contacts
-    await db.supplierContact.deleteMany({
-      where: { supplierId: params.id }
+    await db.contact.deleteMany({
+      where: { providerId: params.id }
     })
 
     // Then delete the supplier

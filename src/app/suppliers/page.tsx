@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -26,11 +26,11 @@ import {
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
   Eye,
   Building,
   Mail,
@@ -54,61 +54,6 @@ interface Supplier {
   status: 'ACTIVE' | 'INACTIVE' | 'BLACKLISTED'
   createdAt: string
 }
-
-const mockSuppliers: Supplier[] = [
-  {
-    id: '1',
-    name: 'Tech Supplies S.L.',
-    email: 'info@techsupplies.es',
-    phone: '+34 912 345 678',
-    address: 'Calle Tecnología 123, Madrid',
-    taxId: 'B12345678',
-    category: 'MATERIALS',
-    description: 'Proveedor de materiales informáticos y electrónicos',
-    website: 'https://techsupplies.es',
-    status: 'ACTIVE',
-    createdAt: '2024-01-10'
-  },
-  {
-    id: '2',
-    name: 'Software Solutions Ltd',
-    email: 'contact@softwaresolutions.com',
-    phone: '+34 923 456 789',
-    address: 'Avenida Innovación 456, Barcelona',
-    taxId: 'B87654321',
-    category: 'SOFTWARE',
-    description: 'Desarrollo y licenciamiento de software educativo',
-    website: 'https://softwaresolutions.com',
-    status: 'ACTIVE',
-    createdAt: '2024-01-12'
-  },
-  {
-    id: '3',
-    name: 'Equipos Profesionales S.A.',
-    email: 'ventas@equiposprofesionales.es',
-    phone: '+34 934 567 890',
-    address: 'Polígono Industrial 789, Valencia',
-    taxId: 'B11223344',
-    category: 'EQUIPMENT',
-    description: 'Equipos y maquinaria para formación profesional',
-    website: 'https://equiposprofesionales.es',
-    status: 'INACTIVE',
-    createdAt: '2024-01-08'
-  },
-  {
-    id: '4',
-    name: 'Mantenimiento Rápido',
-    email: 'info@mantenimientorapido.com',
-    phone: '+34 945 678 901',
-    address: 'Calle Servicio 321, Sevilla',
-    taxId: 'B44332211',
-    category: 'MAINTENANCE',
-    description: 'Servicios de mantenimiento y reparación de equipos',
-    website: 'https://mantenimientorapido.com',
-    status: 'BLACKLISTED',
-    createdAt: '2024-01-05'
-  }
-]
 
 const getStatusBadge = (status: Supplier['status']) => {
   switch (status) {
@@ -162,12 +107,31 @@ const getCategoryIcon = (category: Supplier['category']) => {
 }
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers)
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+
+  useEffect(() => {
+    fetchSuppliers()
+  }, [])
+
+  const fetchSuppliers = async () => {
+    try {
+      const response = await fetch('/api/suppliers')
+      if (response.ok) {
+        const data = await response.json()
+        setSuppliers(data)
+      }
+    } catch (error) {
+      console.error('Error fetching suppliers:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredSuppliers = suppliers.filter(supplier =>
     supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -176,49 +140,79 @@ export default function SuppliersPage() {
     supplier.taxId?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleCreateSupplier = (supplierData: Partial<Supplier>) => {
-    const newSupplier: Supplier = {
-      id: Date.now().toString(),
-      name: supplierData.name || '',
-      email: supplierData.email,
-      phone: supplierData.phone,
-      address: supplierData.address,
-      taxId: supplierData.taxId,
-      category: supplierData.category || 'OTHER',
-      description: supplierData.description,
-      website: supplierData.website,
-      status: supplierData.status || 'ACTIVE',
-      createdAt: new Date().toISOString().split('T')[0]
+  const handleCreateSupplier = async (supplierData: Partial<Supplier>) => {
+    try {
+      const response = await fetch('/api/suppliers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(supplierData)
+      })
+
+      if (response.ok) {
+        await fetchSuppliers()
+        setIsCreateDialogOpen(false)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error al crear proveedor')
+      }
+    } catch (error) {
+      console.error('Error creating supplier:', error)
+      alert('Error al crear proveedor')
     }
-    setSuppliers([...suppliers, newSupplier])
-    setIsCreateDialogOpen(false)
   }
 
-  const handleEditSupplier = (supplierData: Partial<Supplier>) => {
+  const handleEditSupplier = async (supplierData: Partial<Supplier>) => {
     if (selectedSupplier) {
-      const updatedSuppliers = suppliers.map(supplier =>
-        supplier.id === selectedSupplier.id
-          ? { ...supplier, ...supplierData }
-          : supplier
-      )
-      setSuppliers(updatedSuppliers)
-      setIsEditDialogOpen(false)
-      setSelectedSupplier(null)
+      try {
+        const response = await fetch(`/api/suppliers/${selectedSupplier.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(supplierData)
+        })
+
+        if (response.ok) {
+          await fetchSuppliers()
+          setIsEditDialogOpen(false)
+          setSelectedSupplier(null)
+        } else {
+          const error = await response.json()
+          alert(error.error || 'Error al actualizar proveedor')
+        }
+      } catch (error) {
+        console.error('Error updating supplier:', error)
+        alert('Error al actualizar proveedor')
+      }
     }
   }
 
-  const handleDeleteSupplier = (supplierId: string) => {
-    setSuppliers(suppliers.filter(supplier => supplier.id !== supplierId))
+  const handleDeleteSupplier = async (supplierId: string) => {
+    if (confirm('¿Estás seguro de que deseas eliminar este proveedor?')) {
+      try {
+        const response = await fetch(`/api/suppliers/${supplierId}`, {
+          method: 'DELETE'
+        })
+
+        if (response.ok) {
+          await fetchSuppliers()
+        } else {
+          const error = await response.json()
+          alert(error.error || 'Error al eliminar proveedor')
+        }
+      } catch (error) {
+        console.error('Error deleting supplier:', error)
+        alert('Error al eliminar proveedor')
+      }
+    }
   }
 
-  const SupplierForm = ({ 
-    supplier, 
-    onSubmit, 
-    onCancel 
-  }: { 
+  const SupplierForm = ({
+    supplier,
+    onSubmit,
+    onCancel
+  }: {
     supplier?: Supplier | null
     onSubmit: (data: Partial<Supplier>) => void
-    onCancel: () => void 
+    onCancel: () => void
   }) => {
     const [formData, setFormData] = useState({
       name: supplier?.name || '',
@@ -241,7 +235,7 @@ export default function SuppliersPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nombre del Proveedor</Label>
+            <Label htmlFor="name">Nombre del Proveedor *</Label>
             <Input
               id="name"
               value={formData.name}
@@ -355,7 +349,7 @@ export default function SuppliersPage() {
           <p className="text-sm text-muted-foreground">{supplier.email}</p>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div className="flex items-center space-x-2">
           <Phone className="h-4 w-4 text-muted-foreground" />
@@ -380,7 +374,7 @@ export default function SuppliersPage() {
           </span>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <span className="text-sm font-medium">Categoría:</span>
@@ -391,14 +385,14 @@ export default function SuppliersPage() {
           <div className="mt-1">{getStatusBadge(supplier.status)}</div>
         </div>
       </div>
-      
+
       {supplier.description && (
         <div className="p-4 bg-muted rounded-lg">
           <h4 className="font-medium mb-2">Descripción</h4>
           <p className="text-sm">{supplier.description}</p>
         </div>
       )}
-      
+
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
           Registrado el: {supplier.createdAt}
@@ -482,81 +476,89 @@ export default function SuppliersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSuppliers.map((supplier) => (
-                  <TableRow key={supplier.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center space-x-2">
-                        {getCategoryIcon(supplier.category)}
-                        <div>
-                          <div>{supplier.name}</div>
-                          {supplier.taxId && (
-                            <div className="text-xs text-muted-foreground">{supplier.taxId}</div>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getCategoryBadge(supplier.category)}</TableCell>
-                    <TableCell>{supplier.phone || '-'}</TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {supplier.email || '-'}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(supplier.status)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Dialog open={isViewDialogOpen && selectedSupplier?.id === supplier.id} onOpenChange={(open) => {
-                          setIsViewDialogOpen(open)
-                          if (open) setSelectedSupplier(supplier)
-                        }}>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Detalles del Proveedor</DialogTitle>
-                            </DialogHeader>
-                            {selectedSupplier && <SupplierDetails supplier={selectedSupplier} />}
-                          </DialogContent>
-                        </Dialog>
-                        
-                        <Dialog open={isEditDialogOpen && selectedSupplier?.id === supplier.id} onOpenChange={(open) => {
-                          setIsEditDialogOpen(open)
-                          if (open) setSelectedSupplier(supplier)
-                        }}>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle>Editar Proveedor</DialogTitle>
-                              <DialogDescription>
-                                Actualiza los datos del proveedor
-                              </DialogDescription>
-                            </DialogHeader>
-                            {selectedSupplier && (
-                              <SupplierForm
-                                supplier={selectedSupplier}
-                                onSubmit={handleEditSupplier}
-                                onCancel={() => setIsEditDialogOpen(false)}
-                              />
-                            )}
-                          </DialogContent>
-                        </Dialog>
-                        
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteSupplier(supplier.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                {filteredSuppliers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-4">
+                      No se encontraron proveedores
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredSuppliers.map((supplier) => (
+                    <TableRow key={supplier.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center space-x-2">
+                          {getCategoryIcon(supplier.category)}
+                          <div>
+                            <div>{supplier.name}</div>
+                            {supplier.taxId && (
+                              <div className="text-xs text-muted-foreground">{supplier.taxId}</div>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getCategoryBadge(supplier.category)}</TableCell>
+                      <TableCell>{supplier.phone || '-'}</TableCell>
+                      <TableCell className="max-w-xs truncate">
+                        {supplier.email || '-'}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(supplier.status)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Dialog open={isViewDialogOpen && selectedSupplier?.id === supplier.id} onOpenChange={(open) => {
+                            setIsViewDialogOpen(open)
+                            if (open) setSelectedSupplier(supplier)
+                          }}>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Detalles del Proveedor</DialogTitle>
+                              </DialogHeader>
+                              {selectedSupplier && <SupplierDetails supplier={selectedSupplier} />}
+                            </DialogContent>
+                          </Dialog>
+
+                          <Dialog open={isEditDialogOpen && selectedSupplier?.id === supplier.id} onOpenChange={(open) => {
+                            setIsEditDialogOpen(open)
+                            if (open) setSelectedSupplier(supplier)
+                          }}>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                              <DialogHeader>
+                                <DialogTitle>Editar Proveedor</DialogTitle>
+                                <DialogDescription>
+                                  Actualiza los datos del proveedor
+                                </DialogDescription>
+                              </DialogHeader>
+                              {selectedSupplier && (
+                                <SupplierForm
+                                  supplier={selectedSupplier}
+                                  onSubmit={handleEditSupplier}
+                                  onCancel={() => setIsEditDialogOpen(false)}
+                                />
+                              )}
+                            </DialogContent>
+                          </Dialog>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteSupplier(supplier.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>
