@@ -65,25 +65,24 @@ export async function POST(request: NextRequest) {
       status = 'ACTIVE'
     } = body
 
-    // Check if teacher with email or DNI already exists
-    const existingTeacher = await db.teacher.findFirst({
+    const teacher = await db.teacher.upsert({
       where: {
-        OR: [
-          { email: email },
-          { dni: dni }
-        ]
-      }
-    })
-
-    if (existingTeacher) {
-      return NextResponse.json(
-        { error: 'Teacher with this email or DNI already exists' },
-        { status: 400 }
-      )
-    }
-
-    const teacher = await db.teacher.create({
-      data: {
+        email: email
+      },
+      update: {
+        name,
+        phone,
+        address,
+        dni,
+        specialty,
+        experience,
+        cv,
+        contractType,
+        hourlyRate,
+        status: status || 'ACTIVE'
+      },
+      create: {
+        id: body.id || undefined,
         name,
         email,
         phone,
@@ -94,7 +93,7 @@ export async function POST(request: NextRequest) {
         cv,
         contractType,
         hourlyRate,
-        status
+        status: status || 'ACTIVE'
       },
       include: {
         courses: true,

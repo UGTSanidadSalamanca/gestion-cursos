@@ -69,25 +69,24 @@ export async function POST(request: NextRequest) {
       status = 'ACTIVE'
     } = body
 
-    // Check if student with email or DNI already exists
-    const existingStudent = await db.student.findFirst({
+    const student = await db.student.upsert({
       where: {
-        OR: [
-          { email: email },
-          { dni: dni }
-        ]
-      }
-    })
-
-    if (existingStudent) {
-      return NextResponse.json(
-        { error: 'Student with this email or DNI already exists' },
-        { status: 400 }
-      )
-    }
-
-    const student = await db.student.create({
-      data: {
+        email: email
+      },
+      update: {
+        name,
+        phone,
+        address,
+        dni,
+        isAffiliated: isAffiliated !== undefined ? isAffiliated : false,
+        affiliateNumber: isAffiliated ? affiliateNumber : null,
+        emergencyContact,
+        emergencyPhone,
+        medicalInfo,
+        status: status || 'ACTIVE'
+      },
+      create: {
+        id: body.id || undefined,
         name,
         email,
         phone,
@@ -98,7 +97,7 @@ export async function POST(request: NextRequest) {
         emergencyContact,
         emergencyPhone,
         medicalInfo,
-        status
+        status: status || 'ACTIVE'
       },
       include: {
         enrollments: {

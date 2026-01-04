@@ -57,25 +57,24 @@ export async function POST(request: NextRequest) {
       teacherId
     } = body
 
-    // Check if course with same code already exists
-    const existingCourse = await db.course.findFirst({
+    const course = await db.course.upsert({
       where: {
-        OR: [
-          { code: code },
-          { title: title }
-        ]
-      }
-    })
-
-    if (existingCourse) {
-      return NextResponse.json(
-        { error: 'Course with this title or code already exists' },
-        { status: 400 }
-      )
-    }
-
-    const course = await db.course.create({
-      data: {
+        code: code
+      },
+      update: {
+        title,
+        description,
+        level,
+        duration,
+        maxStudents,
+        price,
+        isActive: isActive !== undefined ? isActive : true,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
+        teacherId: teacherId || null
+      },
+      create: {
+        id: body.id || undefined,
         title,
         description,
         code,
@@ -83,7 +82,7 @@ export async function POST(request: NextRequest) {
         duration,
         maxStudents,
         price,
-        isActive,
+        isActive: isActive !== undefined ? isActive : true,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         teacherId: teacherId || null

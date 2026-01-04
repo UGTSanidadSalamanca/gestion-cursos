@@ -54,21 +54,28 @@ export async function POST(request: NextRequest) {
             isAvailable = true
         } = body
 
-        const material = await db.material.create({
-            data: {
-                name,
-                description,
-                type,
-                quantity: parseInt(quantity),
-                unitPrice: parseFloat(unitPrice),
-                location,
-                providerId: providerId || null,
-                isAvailable
-            },
-            include: {
-                provider: true
-            }
-        })
+        const materialData = {
+            name,
+            description,
+            type,
+            quantity: typeof quantity === 'string' ? parseInt(quantity) : quantity,
+            unitPrice: typeof unitPrice === 'string' ? parseFloat(unitPrice) : unitPrice,
+            location,
+            providerId: providerId || null,
+            isAvailable: isAvailable !== undefined ? isAvailable : true
+        }
+
+        const material = body.id
+            ? await db.material.upsert({
+                where: { id: body.id },
+                update: materialData,
+                create: { id: body.id, ...materialData },
+                include: { provider: true }
+            })
+            : await db.material.create({
+                data: materialData,
+                include: { provider: true }
+            })
 
         return NextResponse.json(material, { status: 201 })
     } catch (error) {

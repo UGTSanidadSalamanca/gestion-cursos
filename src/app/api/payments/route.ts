@@ -75,40 +75,32 @@ export async function POST(request: NextRequest) {
       invoiceNumber
     } = body
 
-    // Check if invoice number already exists
-    if (invoiceNumber) {
-      const existingPayment = await db.payment.findFirst({
-        where: { invoiceNumber: invoiceNumber }
-      })
-
-      if (existingPayment) {
-        return NextResponse.json(
-          { error: 'Payment with this invoice number already exists' },
-          { status: 400 }
-        )
-      }
+    const paymentData = {
+      studentId: studentId || null,
+      courseId: courseId || null,
+      amount: typeof amount === 'string' ? parseFloat(amount) : amount,
+      currency: currency || 'EUR',
+      paymentDate: paymentDate ? new Date(paymentDate) : new Date(),
+      paymentMethod,
+      reference,
+      description,
+      status: status || 'PENDING',
+      dueDate: dueDate ? new Date(dueDate) : null,
+      paidDate: paidDate ? new Date(paidDate) : null,
+      invoiceNumber
     }
 
-    const payment = await db.payment.create({
-      data: {
-        studentId,
-        courseId,
-        amount,
-        currency,
-        paymentDate: paymentDate || new Date(),
-        paymentMethod,
-        reference,
-        description,
-        status,
-        dueDate,
-        paidDate,
-        invoiceNumber
-      },
-      include: {
-        student: true,
-        course: true
-      }
-    })
+    const payment = body.id
+      ? await db.payment.upsert({
+        where: { id: body.id },
+        update: paymentData,
+        create: { id: body.id, ...paymentData },
+        include: { student: true, course: true }
+      })
+      : await db.payment.create({
+        data: paymentData,
+        include: { student: true, course: true }
+      })
 
     return NextResponse.json(payment, { status: 201 })
   } catch (error) {

@@ -63,26 +63,22 @@ export async function POST(request: NextRequest) {
       status = 'ACTIVE'
     } = body
 
-    // Check if supplier with name, email or tax ID already exists
-    const existingSupplier = await db.provider.findFirst({
+    const supplier = await db.provider.upsert({
       where: {
-        OR: [
-          { name: name },
-          { email: email },
-          { taxId: taxId }
-        ]
-      }
-    })
-
-    if (existingSupplier) {
-      return NextResponse.json(
-        { error: 'Supplier with this name, email or tax ID already exists' },
-        { status: 400 }
-      )
-    }
-
-    const supplier = await db.provider.create({
-      data: {
+        taxId: taxId || `temp-${name}` // Fallback if taxId is missing
+      },
+      update: {
+        name,
+        email,
+        phone,
+        address,
+        category,
+        description,
+        website,
+        status: status || 'ACTIVE'
+      },
+      create: {
+        id: body.id || undefined,
         name,
         email,
         phone,
@@ -91,7 +87,7 @@ export async function POST(request: NextRequest) {
         category,
         description,
         website,
-        status
+        status: status || 'ACTIVE'
       },
       include: {
         materials: true,

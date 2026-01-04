@@ -52,84 +52,26 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { studentId, courseId } = body
 
-    // Check if student exists
-    const student = await db.student.findUnique({
-      where: { id: studentId }
-    })
-
-    if (!student) {
-      return NextResponse.json(
-        { error: 'Student not found' },
-        { status: 404 }
-      )
+    const enrollmentData = {
+      studentId,
+      courseId,
+      status: body.status || 'ENROLLED',
+      enrollmentDate: body.enrollmentDate ? new Date(body.enrollmentDate) : new Date()
     }
 
-    // Check if course exists
-    const course = await db.course.findUnique({
-      where: { id: courseId },
-      include: {
-        _count: {
-          select: { enrollments: true }
-        }
-      }
-    })
-
-    if (!course) {
-      return NextResponse.json(
-        { error: 'Course not found' },
-        { status: 404 }
-      )
-    }
-
-    // Check if course is active
-    if (!course.isActive) {
-      return NextResponse.json(
-        { error: 'Course is not active' },
-        { status: 400 }
-      )
-    }
-
-    // Check if course has available slots
-    if (course._count.enrollments >= course.maxStudents) {
-      return NextResponse.json(
-        { error: 'Course is full' },
-        { status: 400 }
-      )
-    }
-
-    // Check if student is already enrolled
-    const existingEnrollment = await db.enrollment.findUnique({
-      where: {
-        studentId_courseId: {
-          studentId,
-          courseId
-        }
-      }
-    })
-
-    if (existingEnrollment) {
-      return NextResponse.json(
-        { error: 'Student is already enrolled in this course' },
-        { status: 400 }
-      )
-    }
-
-    // Create enrollment
-    const enrollment = await db.enrollment.create({
-      data: {
-        studentId,
-        courseId,
-        status: 'ENROLLED'
-      },
-      include: {
-        student: true,
-        course: {
-          include: {
-            teacher: true
-          }
-        }
-      }
-    })
+    const enrollment = body.id
+      ? await db.enrollment.upsert({
+        where: { id: body.id },
+        update: enrollmentData,
+        create: { id: body.id, ...enrollmentData },
+        include: { student: true, course: { include: { teacher: true } } }
+      })
+      : await db.enrollment.upsert({
+        where: { studentId_courseId: { studentId, courseId } },
+        update: enrollmentData,
+        create: enrollmentData,
+        include: { student: true, course: { include: { teacher: true } } }
+      })
 
     return NextResponse.json(enrollment, { status: 201 })
   } catch (error) {
