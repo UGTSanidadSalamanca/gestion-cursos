@@ -20,7 +20,8 @@ import {
   BookOpen,
   Calendar,
   Settings,
-  Database
+  Database,
+  Download
 } from 'lucide-react'
 
 const navigation = [
@@ -35,6 +36,7 @@ const navigation = [
   { name: 'Horarios', href: '/schedules', icon: Calendar },
   { name: 'Reportes', href: '/reports', icon: BarChart3 },
   { name: 'Importar Datos', href: '/import', icon: Database },
+  { name: 'Exportar Datos', href: '/export', icon: Download },
   { name: 'Configuración', href: '/settings', icon: Settings },
 ]
 
