@@ -1,0 +1,48 @@
+Category,Name,Path,Description
+Frontend Page,Dashboard,/src/app/page.tsx,Main entry point and dashboard overview
+Frontend Page,Settings,/src/app/settings/page.tsx,Application settings
+Frontend Page,Payments,/src/app/payments/page.tsx,Payment management interface
+Frontend Page,Materials,/src/app/materials/page.tsx,Material/Inventory management
+Frontend Page,Enrollments,/src/app/enrollments/page.tsx,Student course enrollments
+Frontend Page,Calendar,/src/app/calendar/page.tsx,Calendar view for schedules
+Frontend Page,Suppliers,/src/app/suppliers/page.tsx,Supplier/Provider management
+Frontend Page,Teachers,/src/app/teachers/page.tsx,Teacher/Instructor management
+Frontend Page,Schedules,/src/app/schedules/page.tsx,Class/Course scheduling
+Frontend Page,Students,/src/app/students/page.tsx,Student management
+Frontend Page,Courses,/src/app/courses/page.tsx,Course management
+Frontend Page,Import,/src/app/import/page.tsx,Data import functionality
+Frontend Page,Notifications,/src/app/notifications/page.tsx,User notifications center
+Frontend Page,Analytics,/src/app/analytics/page.tsx,Data analytics and visualization
+Frontend Page,Reports,/src/app/reports/page.tsx,Reporting capabilities
+API Route,Payments API,/src/app/api/payments/route.ts,GET/POST for payments
+API Route,Materials API,/src/app/api/materials/route.ts,GET/POST for materials
+API Route,Materials Detail API,/src/app/api/materials/[id]/route.ts,GET/PUT/DELETE for specific material
+API Route,Enrollments API,/src/app/api/enrollments/route.ts,GET/POST for enrollments
+API Route,Suppliers API,/src/app/api/suppliers/route.ts,GET/POST for suppliers
+API Route,Suppliers Detail API,/src/app/api/suppliers/[id]/route.ts,GET/PUT/DELETE for specific supplier
+API Route,Teachers API,/src/app/api/teachers/route.ts,GET/POST for teachers
+API Route,Teachers Detail API,/src/app/api/teachers/[id]/route.ts,Operations for specific teacher
+API Route,Students API,/src/app/api/students/route.ts,GET/POST for students
+API Route,Students Detail API,/src/app/api/students/[id]/route.ts,Operations for specific student
+API Route,Courses API,/src/app/api/courses/route.ts,GET/POST for courses
+API Route,Notifications API,/src/app/api/notifications/route.ts,Notification management endpoints
+API Route,Certificates API,/src/app/api/certificates/route.ts,Certificate generation
+Core Component,Sidebar,/src/components/sidebar.tsx,Main navigation sidebar
+Core Component,Header,/src/components/header.tsx,Top navigation header
+Core Component,MainLayout,/src/components/layout/main-layout.tsx,Wrapper layout for authenticated pages
+Feature Component,Dashboard Stats,/src/components/dashboard/stats-card.tsx,Statistics display cards
+Feature Component,Enrollment Form,/src/components/enrollment/enrollment-form.tsx,Form for enrolling students
+Feature Component,Certificate Generator,/src/components/certificates/certificate-generator.tsx,Component to create certificates
+Feature Component,Reports,/src/components/reports/*,Financial and academic reporting components
+UI Component,UI Library,/src/components/ui/*,"Reusable ShadcnUI components (Buttons, Inputs, Dialogs, etc.)"
+Database Model,User,prisma/schema.prisma,System users
+Database Model,Student,prisma/schema.prisma,Student records
+Database Model,Teacher,prisma/schema.prisma,Instructor records
+Database Model,Course,prisma/schema.prisma,Course definitions
+Database Model,Enrollment,prisma/schema.prisma,Student-Course associations
+Database Model,Payment,prisma/schema.prisma,Financial records
+Database Model,Material,prisma/schema.prisma,Inventory items
+Database Model,Provider,prisma/schema.prisma,Suppliers and Providers
+Database Model,Contact,prisma/schema.prisma,Contact details
+Database Model,Schedule,prisma/schema.prisma,Class schedules
+Database Model,Notification,prisma/schema.prisma,System notifications

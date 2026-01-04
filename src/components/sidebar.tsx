@@ -20,7 +20,8 @@ import {
   FileText,
   Phone,
   Monitor,
-  Database
+  Database,
+  Download
 } from "lucide-react"
 
 const navItems = [
@@ -88,6 +89,11 @@ const navItems = [
     title: "Importar Datos",
     href: "/import",
     icon: Database,
+  },
+  {
+    title: "Exportar Datos",
+    href: "/export",
+    icon: Download,
   },
   {
     title: "Configuración",

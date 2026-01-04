@@ -1,0 +1,312 @@
+HOJA: RESUMEN DE TABLAS
+Tabla,Nombre en BD,Descripción,Campos Principales,Relaciones
+User,users,Usuarios del sistema (administradores y personal),id | email | name | role,→ Contact | → Notification | → NotificationPreference
+Student,students,Alumnos afiliados y no afiliados,id | name | email | dni | isAffiliated | status,→ Enrollment | → Payment | → Contact
+Teacher,teachers,Docentes e instructores,id | name | email | dni | specialty | contractType | status,→ Course | → Contact
+Provider,providers,Proveedores de materiales y servicios,id | name | email | taxId | category | status,→ Material | → Contact
+Course,courses,Cursos ofrecidos,id | title | code | level | duration | price | teacherId,← Teacher | → Enrollment | → CourseMaterial | → Schedule | → Payment
+Enrollment,enrollments,Matrículas de estudiantes en cursos,id | studentId | courseId | status | progress | grade,← Student | ← Course
+Payment,payments,Pagos y transacciones,id | studentId | courseId | amount | paymentMethod | status,← Student | ← Course
+Material,materials,Materiales y recursos educativos,id | name | type | quantity | unitPrice | providerId,← Provider | → CourseMaterial
+CourseMaterial,course_materials,Relación entre cursos y materiales,id | courseId | materialId | quantity | isRequired,← Course | ← Material
+Schedule,schedules,Horarios de clases,id | courseId | dayOfWeek | startTime | endTime | classroom,← Course
+Contact,contacts,Contactos de estudiantes/profesores/proveedores,id | name | email | phone | category | studentId | teacherId | providerId,← Student | ← Teacher | ← Provider | ← User
+Software,software,Software y plataformas online,id | name | type | license | expiryDate | maxUsers,Sin relaciones
+Notification,notifications,Notificaciones del sistema,id | title | message | type | priority | targetUser,← User
+NotificationPreference,notification_preferences,Preferencias de notificación por usuario,id | userId | category | enabled | email | inApp,← User
+
+HOJA: TABLA USER (users)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único del usuario,Clave Primaria
+email,String,Sí,Sí,-,Correo electrónico del usuario,-
+name,String,No,No,-,Nombre completo del usuario,-
+role,Enum UserRole,Sí,No,ADMIN,Rol del usuario (ADMIN | TEACHER | STAFF),-
+createdAt,DateTime,Sí,No,now(),Fecha de creación,-
+updatedAt,DateTime,Sí,No,auto,Fecha de última actualización,-
+contacts,Contact[],No,No,-,Contactos asociados,Uno a Muchos → Contact
+notifications,Notification[],No,No,-,Notificaciones del usuario,Uno a Muchos → Notification
+notificationPreferences,NotificationPreference[],No,No,-,Preferencias de notificación,Uno a Muchos → NotificationPreference
+
+HOJA: TABLA STUDENT (students)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único del estudiante,Clave Primaria
+name,String,Sí,No,-,Nombre completo del estudiante,-
+email,String,Sí,Sí,-,Correo electrónico,-
+phone,String,No,No,-,Teléfono de contacto,-
+address,String,No,No,-,Dirección física,-
+dni,String,No,Sí,-,DNI/Documento de identidad,-
+birthDate,DateTime,No,No,-,Fecha de nacimiento,-
+isAffiliated,Boolean,Sí,No,false,Indica si es afiliado,-
+affiliateNumber,String,No,Sí,-,Número de afiliado,-
+emergencyContact,String,No,No,-,Contacto de emergencia,-
+emergencyPhone,String,No,No,-,Teléfono de emergencia,-
+medicalInfo,String,No,No,-,Información médica relevante,-
+status,Enum StudentStatus,Sí,No,ACTIVE,Estado (ACTIVE | INACTIVE | SUSPENDED | GRADUATED),-
+createdAt,DateTime,Sí,No,now(),Fecha de creación,-
+updatedAt,DateTime,Sí,No,auto,Fecha de última actualización,-
+enrollments,Enrollment[],No,No,-,Matrículas del estudiante,Uno a Muchos → Enrollment
+payments,Payment[],No,No,-,Pagos realizados,Uno a Muchos → Payment
+contacts,Contact[],No,No,-,Contactos asociados,Uno a Muchos → Contact
+
+HOJA: TABLA TEACHER (teachers)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único del docente,Clave Primaria
+name,String,Sí,No,-,Nombre completo del docente,-
+email,String,Sí,Sí,-,Correo electrónico,-
+phone,String,No,No,-,Teléfono de contacto,-
+address,String,No,No,-,Dirección física,-
+dni,String,No,Sí,-,DNI/Documento de identidad,-
+specialty,String,No,No,-,Especialidad o área de expertise,-
+experience,String,No,No,-,Experiencia profesional,-
+cv,String,No,No,-,URL del archivo CV,-
+contractType,Enum ContractType,Sí,No,FREELANCE,Tipo de contrato (FREELANCE | PART_TIME | FULL_TIME | HOURLY),-
+hourlyRate,Float,No,No,-,Tarifa por hora,-
+status,Enum TeacherStatus,Sí,No,ACTIVE,Estado (ACTIVE | INACTIVE | ON_LEAVE),-
+createdAt,DateTime,Sí,No,now(),Fecha de creación,-
+updatedAt,DateTime,Sí,No,auto,Fecha de última actualización,-
+courses,Course[],No,No,-,Cursos impartidos,Uno a Muchos → Course
+contacts,Contact[],No,No,-,Contactos asociados,Uno a Muchos → Contact
+
+HOJA: TABLA PROVIDER (providers)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único del proveedor,Clave Primaria
+name,String,Sí,No,-,Nombre del proveedor,-
+email,String,No,No,-,Correo electrónico,-
+phone,String,No,No,-,Teléfono de contacto,-
+address,String,No,No,-,Dirección física,-
+taxId,String,No,Sí,-,NIF/CIF del proveedor,-
+category,Enum ProviderCategory,Sí,No,-,Categoría (MATERIALS | SOFTWARE | EQUIPMENT | SERVICES | MAINTENANCE | OTHER),-
+description,String,No,No,-,Descripción de productos/servicios,-
+website,String,No,No,-,Sitio web del proveedor,-
+status,Enum ProviderStatus,Sí,No,ACTIVE,Estado (ACTIVE | INACTIVE | BLACKLISTED),-
+createdAt,DateTime,Sí,No,now(),Fecha de creación,-
+updatedAt,DateTime,Sí,No,auto,Fecha de última actualización,-
+materials,Material[],No,No,-,Materiales suministrados,Uno a Muchos → Material
+contacts,Contact[],No,No,-,Contactos asociados,Uno a Muchos → Contact
+
+HOJA: TABLA COURSE (courses)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único del curso,Clave Primaria
+title,String,Sí,No,-,Título del curso,-
+description,String,No,No,-,Descripción detallada,-
+code,String,Sí,Sí,-,Código único del curso,-
+level,Enum CourseLevel,Sí,No,-,Nivel (BEGINNER | INTERMEDIATE | ADVANCED | EXPERT),-
+duration,Int,Sí,No,-,Duración en horas,-
+maxStudents,Int,No,No,-,Número máximo de estudiantes,-
+price,Float,Sí,No,-,Precio del curso,-
+isActive,Boolean,Sí,No,true,Indica si el curso está activo,-
+startDate,DateTime,No,No,-,Fecha de inicio,-
+endDate,DateTime,No,No,-,Fecha de finalización,-
+teacherId,String,No,No,-,ID del docente asignado,Clave Foránea → Teacher
+createdAt,DateTime,Sí,No,now(),Fecha de creación,-
+updatedAt,DateTime,Sí,No,auto,Fecha de última actualización,-
+teacher,Teacher,No,No,-,Docente del curso,Muchos a Uno ← Teacher
+enrollments,Enrollment[],No,No,-,Matrículas del curso,Uno a Muchos → Enrollment
+materials,CourseMaterial[],No,No,-,Materiales del curso,Uno a Muchos → CourseMaterial
+schedules,Schedule[],No,No,-,Horarios del curso,Uno a Muchos → Schedule
+payments,Payment[],No,No,-,Pagos asociados,Uno a Muchos → Payment
+
+HOJA: TABLA ENROLLMENT (enrollments)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único de la matrícula,Clave Primaria
+studentId,String,Sí,No,-,ID del estudiante,Clave Foránea → Student
+courseId,String,Sí,No,-,ID del curso,Clave Foránea → Course
+enrollmentDate,DateTime,Sí,No,now(),Fecha de matrícula,-
+status,Enum EnrollmentStatus,Sí,No,ENROLLED,Estado (ENROLLED | IN_PROGRESS | COMPLETED | DROPPED | FAILED),-
+progress,Float,Sí,No,0,Progreso del curso (0-100),-
+grade,Float,No,No,-,Calificación final,-
+certificate,String,No,No,-,URL del certificado,-
+notes,String,No,No,-,Notas adicionales,-
+createdAt,DateTime,Sí,No,now(),Fecha de creación,-
+updatedAt,DateTime,Sí,No,auto,Fecha de última actualización,-
+student,Student,Sí,No,-,Estudiante matriculado,Muchos a Uno ← Student (Cascade)
+course,Course,Sí,No,-,Curso matriculado,Muchos a Uno ← Course (Cascade)
+UNIQUE,[studentId + courseId],Sí,Sí,-,Un estudiante solo puede matricularse una vez por curso,-
+
+HOJA: TABLA PAYMENT (payments)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único del pago,Clave Primaria
+studentId,String,No,No,-,ID del estudiante,Clave Foránea → Student
+courseId,String,No,No,-,ID del curso,Clave Foránea → Course
+amount,Float,Sí,No,-,Monto del pago,-
+currency,String,Sí,No,EUR,Moneda del pago,-
+paymentDate,DateTime,Sí,No,now(),Fecha del pago,-
+paymentMethod,Enum PaymentMethod,Sí,No,-,Método (CASH | BANK_TRANSFER | CREDIT_CARD | DEBIT_CARD | PAYPAL | OTHER),-
+reference,String,No,Sí,-,Referencia del pago,-
+description,String,No,No,-,Descripción del pago,-
+status,Enum PaymentStatus,Sí,No,PENDING,Estado (PENDING | PAID | OVERDUE | CANCELLED | REFUNDED),-
+dueDate,DateTime,No,No,-,Fecha de vencimiento,-
+paidDate,DateTime,No,No,-,Fecha de pago efectivo,-
+invoiceNumber,String,No,Sí,-,Número de factura,-
+createdAt,DateTime,Sí,No,now(),Fecha de creación,-
+updatedAt,DateTime,Sí,No,auto,Fecha de última actualización,-
+student,Student,No,No,-,Estudiante que realiza el pago,Muchos a Uno ← Student (SetNull)
+course,Course,No,No,-,Curso asociado al pago,Muchos a Uno ← Course (SetNull)
+
+HOJA: TABLA MATERIAL (materials)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único del material,Clave Primaria
+name,String,Sí,No,-,Nombre del material,-
+description,String,No,No,-,Descripción del material,-
+type,Enum MaterialType,Sí,No,-,Tipo (BOOK | SOFTWARE | EQUIPMENT | TOOL | CONSUMABLE | DIGITAL_RESOURCE | OTHER),-
+quantity,Int,Sí,No,0,Cantidad disponible,-
+unitPrice,Float,No,No,-,Precio unitario,-
+location,String,No,No,-,Ubicación física del material,-
+providerId,String,No,No,-,ID del proveedor,Clave Foránea → Provider
+isAvailable,Boolean,Sí,No,true,Indica si está disponible,-
+createdAt,DateTime,Sí,No,now(),Fecha de creación,-
+updatedAt,DateTime,Sí,No,auto,Fecha de última actualización,-
+provider,Provider,No,No,-,Proveedor del material,Muchos a Uno ← Provider (SetNull)
+courses,CourseMaterial[],No,No,-,Cursos que usan este material,Uno a Muchos → CourseMaterial
+
+HOJA: TABLA COURSEMATERIAL (course_materials)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único,Clave Primaria
+courseId,String,Sí,No,-,ID del curso,Clave Foránea → Course
+materialId,String,Sí,No,-,ID del material,Clave Foránea → Material
+quantity,Int,Sí,No,1,Cantidad necesaria,-
+isRequired,Boolean,Sí,No,true,Indica si es obligatorio,-
+notes,String,No,No,-,Notas adicionales,-
+course,Course,Sí,No,-,Curso asociado,Muchos a Uno ← Course (Cascade)
+material,Material,Sí,No,-,Material asociado,Muchos a Uno ← Material (Cascade)
+UNIQUE,[courseId + materialId],Sí,Sí,-,Un material solo puede asociarse una vez por curso,-
+
+HOJA: TABLA SCHEDULE (schedules)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único del horario,Clave Primaria
+courseId,String,Sí,No,-,ID del curso,Clave Foránea → Course
+dayOfWeek,Enum DayOfWeek,Sí,No,-,Día de la semana (MONDAY | TUESDAY | WEDNESDAY | THURSDAY | FRIDAY | SATURDAY | SUNDAY),-
+startTime,DateTime,Sí,No,-,Hora de inicio,-
+endTime,DateTime,Sí,No,-,Hora de finalización,-
+classroom,String,No,No,-,Aula o salón,-
+isRecurring,Boolean,Sí,No,true,Indica si es recurrente,-
+notes,String,No,No,-,Notas adicionales,-
+createdAt,DateTime,Sí,No,now(),Fecha de creación,-
+updatedAt,DateTime,Sí,No,auto,Fecha de última actualización,-
+course,Course,Sí,No,-,Curso asociado,Muchos a Uno ← Course (Cascade)
+
+HOJA: TABLA CONTACT (contacts)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único del contacto,Clave Primaria
+name,String,Sí,No,-,Nombre del contacto,-
+email,String,No,No,-,Correo electrónico,-
+phone,String,No,No,-,Teléfono fijo,-
+mobile,String,No,No,-,Teléfono móvil,-
+address,String,No,No,-,Dirección,-
+company,String,No,No,-,Empresa,-
+position,String,No,No,-,Cargo o posición,-
+category,Enum ContactCategory,Sí,No,-,Categoría (PERSONAL | WORK | EMERGENCY | ACADEMIC | ADMINISTRATIVE | TECHNICAL | OTHER),-
+notes,String,No,No,-,Notas adicionales,-
+isPrimary,Boolean,Sí,No,false,Indica si es contacto principal,-
+studentId,String,No,No,-,ID del estudiante (si aplica),Clave Foránea → Student
+teacherId,String,No,No,-,ID del docente (si aplica),Clave Foránea → Teacher
+providerId,String,No,No,-,ID del proveedor (si aplica),Clave Foránea → Provider
+userId,String,No,No,-,ID del usuario (si aplica),Clave Foránea → User
+createdAt,DateTime,Sí,No,now(),Fecha de creación,-
+updatedAt,DateTime,Sí,No,auto,Fecha de última actualización,-
+student,Student,No,No,-,Estudiante asociado,Muchos a Uno ← Student (SetNull)
+teacher,Teacher,No,No,-,Docente asociado,Muchos a Uno ← Teacher (SetNull)
+provider,Provider,No,No,-,Proveedor asociado,Muchos a Uno ← Provider (SetNull)
+user,User,No,No,-,Usuario asociado,Muchos a Uno ← User (SetNull)
+
+HOJA: TABLA SOFTWARE (software)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único del software,Clave Primaria
+name,String,Sí,No,-,Nombre del software,-
+version,String,No,No,-,Versión,-
+type,Enum SoftwareType,Sí,No,-,Tipo (LMS | VIDEO_CONFERENCE | PRODUCTIVITY | DESIGN | PROGRAMMING | ACCOUNTING | OTHER),-
+license,String,No,No,-,Tipo de licencia,-
+licenseKey,String,No,No,-,Clave de licencia,-
+expiryDate,DateTime,No,No,-,Fecha de expiración,-
+provider,String,No,No,-,Proveedor del software,-
+description,String,No,No,-,Descripción,-
+isActive,Boolean,Sí,No,true,Indica si está activo,-
+maxUsers,Int,No,No,-,Número máximo de usuarios,-
+currentUsers,Int,Sí,No,0,Usuarios actuales,-
+url,String,No,No,-,URL de acceso,-
+createdAt,DateTime,Sí,No,now(),Fecha de creación,-
+updatedAt,DateTime,Sí,No,auto,Fecha de última actualización,-
+
+HOJA: TABLA NOTIFICATION (notifications)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único de la notificación,Clave Primaria
+title,String,Sí,No,-,Título de la notificación,-
+message,String,Sí,No,-,Mensaje de la notificación,-
+type,Enum NotificationType,Sí,No,-,Tipo (INFO | SUCCESS | WARNING | ERROR | ALERT),-
+priority,Enum NotificationPriority,Sí,No,MEDIUM,Prioridad (LOW | MEDIUM | HIGH | URGENT),-
+category,Enum NotificationCategory,Sí,No,-,Categoría (PAYMENT | COURSE | STUDENT | TEACHER | SYSTEM | SECURITY | MAINTENANCE),-
+isRead,Boolean,Sí,No,false,Indica si fue leída,-
+targetUser,String,No,No,-,ID del usuario destinatario (null = todos),Clave Foránea → User
+targetRole,Enum UserRole,No,No,-,Rol destinatario (ADMIN | TEACHER | STAFF),-
+actionUrl,String,No,No,-,URL de acción relacionada,-
+expiresAt,DateTime,No,No,-,Fecha de expiración,-
+createdAt,DateTime,Sí,No,now(),Fecha de creación,-
+updatedAt,DateTime,Sí,No,auto,Fecha de última actualización,-
+user,User,No,No,-,Usuario destinatario,Muchos a Uno ← User (SetNull)
+
+HOJA: TABLA NOTIFICATIONPREFERENCE (notification_preferences)
+Campo,Tipo,Obligatorio,Único,Valor por Defecto,Descripción,Relación
+id,String (cuid),Sí,Sí,auto-generado,Identificador único,Clave Primaria
+userId,String,Sí,No,-,ID del usuario,Clave Foránea → User
+category,Enum NotificationCategory,Sí,No,-,Categoría de notificación,-
+enabled,Boolean,Sí,No,true,Indica si está habilitada,-
+email,Boolean,Sí,No,true,Notificación por email,-
+inApp,Boolean,Sí,No,true,Notificación en la app,-
+push,Boolean,Sí,No,false,Notificación push,-
+createdAt,DateTime,Sí,No,now(),Fecha de creación,-
+updatedAt,DateTime,Sí,No,auto,Fecha de última actualización,-
+user,User,Sí,No,-,Usuario asociado,Muchos a Uno ← User (Cascade)
+UNIQUE,[userId + category],Sí,Sí,-,Un usuario solo puede tener una preferencia por categoría,-
+
+HOJA: RELACIONES
+Tabla Origen,Campo,Tipo Relación,Tabla Destino,Campo Destino,Acción al Eliminar
+User,contacts,Uno a Muchos,Contact,userId,SetNull
+User,notifications,Uno a Muchos,Notification,targetUser,SetNull
+User,notificationPreferences,Uno a Muchos,NotificationPreference,userId,Cascade
+Student,enrollments,Uno a Muchos,Enrollment,studentId,Cascade
+Student,payments,Uno a Muchos,Payment,studentId,SetNull
+Student,contacts,Uno a Muchos,Contact,studentId,SetNull
+Teacher,courses,Uno a Muchos,Course,teacherId,SetNull
+Teacher,contacts,Uno a Muchos,Contact,teacherId,SetNull
+Provider,materials,Uno a Muchos,Material,providerId,SetNull
+Provider,contacts,Uno a Muchos,Contact,providerId,SetNull
+Course,teacher,Muchos a Uno,Teacher,id,SetNull
+Course,enrollments,Uno a Muchos,Enrollment,courseId,Cascade
+Course,materials,Uno a Muchos,CourseMaterial,courseId,Cascade
+Course,schedules,Uno a Muchos,Schedule,courseId,Cascade
+Course,payments,Uno a Muchos,Payment,courseId,SetNull
+Enrollment,student,Muchos a Uno,Student,id,Cascade
+Enrollment,course,Muchos a Uno,Course,id,Cascade
+Payment,student,Muchos a Uno,Student,id,SetNull
+Payment,course,Muchos a Uno,Course,id,SetNull
+Material,provider,Muchos a Uno,Provider,id,SetNull
+Material,courses,Uno a Muchos,CourseMaterial,materialId,Cascade
+CourseMaterial,course,Muchos a Uno,Course,id,Cascade
+CourseMaterial,material,Muchos a Uno,Material,id,Cascade
+Schedule,course,Muchos a Uno,Course,id,Cascade
+Contact,student,Muchos a Uno,Student,id,SetNull
+Contact,teacher,Muchos a Uno,Teacher,id,SetNull
+Contact,provider,Muchos a Uno,Provider,id,SetNull
+Contact,user,Muchos a Uno,User,id,SetNull
+Notification,user,Muchos a Uno,User,id,SetNull
+NotificationPreference,user,Muchos a Uno,User,id,Cascade
+
+HOJA: ENUMERACIONES
+Enum,Valores Posibles,Descripción
+UserRole,ADMIN | TEACHER | STAFF,Roles de usuario del sistema
+StudentStatus,ACTIVE | INACTIVE | SUSPENDED | GRADUATED,Estados de estudiantes
+ContractType,FREELANCE | PART_TIME | FULL_TIME | HOURLY,Tipos de contrato de docentes
+TeacherStatus,ACTIVE | INACTIVE | ON_LEAVE,Estados de docentes
+ProviderCategory,MATERIALS | SOFTWARE | EQUIPMENT | SERVICES | MAINTENANCE | OTHER,Categorías de proveedores
+ProviderStatus,ACTIVE | INACTIVE | BLACKLISTED,Estados de proveedores
+CourseLevel,BEGINNER | INTERMEDIATE | ADVANCED | EXPERT,Niveles de cursos
+EnrollmentStatus,ENROLLED | IN_PROGRESS | COMPLETED | DROPPED | FAILED,Estados de matrículas
+PaymentMethod,CASH | BANK_TRANSFER | CREDIT_CARD | DEBIT_CARD | PAYPAL | OTHER,Métodos de pago
+PaymentStatus,PENDING | PAID | OVERDUE | CANCELLED | REFUNDED,Estados de pagos
+MaterialType,BOOK | SOFTWARE | EQUIPMENT | TOOL | CONSUMABLE | DIGITAL_RESOURCE | OTHER,Tipos de materiales
+DayOfWeek,MONDAY | TUESDAY | WEDNESDAY | THURSDAY | FRIDAY | SATURDAY | SUNDAY,Días de la semana
+ContactCategory,PERSONAL | WORK | EMERGENCY | ACADEMIC | ADMINISTRATIVE | TECHNICAL | OTHER,Categorías de contactos
+SoftwareType,LMS | VIDEO_CONFERENCE | PRODUCTIVITY | DESIGN | PROGRAMMING | ACCOUNTING | OTHER,Tipos de software
+NotificationType,INFO | SUCCESS | WARNING | ERROR | ALERT,Tipos de notificaciones
+NotificationPriority,LOW | MEDIUM | HIGH | URGENT,Prioridades de notificaciones
+NotificationCategory,PAYMENT | COURSE | STUDENT | TEACHER | SYSTEM | SECURITY | MAINTENANCE,Categorías de notificaciones
