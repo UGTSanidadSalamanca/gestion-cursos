@@ -19,6 +19,8 @@ export async function GET(
                 isActive: true,
                 startDate: true,
                 endDate: true,
+                publicDescription: true,
+                benefits: true,
                 teacher: {
                     select: {
                         name: true

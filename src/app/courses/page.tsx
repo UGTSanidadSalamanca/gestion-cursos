@@ -40,7 +40,8 @@ import {
   Download,
   Loader2,
   ExternalLink,
-  MessageSquare
+  MessageSquare,
+  UserCheck
 } from "lucide-react"
 import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
 import { toast } from "sonner"
@@ -60,6 +61,8 @@ interface Course {
   isActive: boolean
   startDate?: string
   endDate?: string
+  publicDescription?: string
+  benefits?: string
   teacher?: {
     id: string
     name: string
@@ -88,6 +91,8 @@ export default function CoursesPage() {
     price: '',
     teacherId: '',
     description: '',
+    publicDescription: '',
+    benefits: '',
     isActive: true,
     maxStudents: '30'
   })
@@ -197,6 +202,8 @@ export default function CoursesPage() {
       price: '',
       teacherId: '',
       description: '',
+      publicDescription: '',
+      benefits: '',
       isActive: true,
       maxStudents: '30'
     })
@@ -212,6 +219,8 @@ export default function CoursesPage() {
       price: course.price.toString(),
       teacherId: (course as any).teacherId || (course.teacher?.id) || '',
       description: course.description || '',
+      publicDescription: course.publicDescription || '',
+      benefits: course.benefits || '',
       isActive: course.isActive,
       maxStudents: course.maxStudents.toString()
     })
@@ -224,16 +233,31 @@ export default function CoursesPage() {
   }
 
   const handleExportPDF = async (course: Course) => {
+    const toastId = toast.loading("Preparando ficha técnica...")
+
+    // Pequeño retardo para asegurar que el DOM está estable
+    await new Promise(resolve => setTimeout(resolve, 500))
+
     const element = document.getElementById('course-details-print')
-    if (!element) return
+    if (!element) {
+      toast.error("Error: Elemento visual no encontrado", { id: toastId })
+      return
+    }
 
     try {
+      toast.loading("Capturando diseño...", { id: toastId })
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
       })
 
       const imgData = canvas.toDataURL('image/png')
+      if (imgData === 'data:,') {
+        throw new Error("Imagen generada vacía")
+      }
+
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -247,18 +271,17 @@ export default function CoursesPage() {
       pdf.setFontSize(22)
       pdf.setTextColor(14, 165, 233)
       pdf.text('FICHA DEL CURSO', 10, 20)
-
       pdf.addImage(imgData, 'PNG', 10, 30, pdfWidth, pdfHeight)
 
       pdf.setFontSize(10)
       pdf.setTextColor(128, 128, 128)
       pdf.text(`Generado el: ${new Date().toLocaleString()} - UGT Sanidad Salamanca`, 10, 285)
 
-      pdf.save(`informacion_curso_${course.code}.pdf`)
-      toast.success("PDF generado con éxito")
+      pdf.save(`FICHA-${course.code}.pdf`)
+      toast.success("PDF descargado correctamente", { id: toastId })
     } catch (error) {
-      console.error("Error generating PDF:", error)
-      toast.error("Error al generar el PDF")
+      console.error("Error al generar PDF:", error)
+      toast.error("Error al exportar. Inténtalo de nuevo.", { id: toastId })
     }
   }
 
@@ -393,13 +416,37 @@ export default function CoursesPage() {
                       </Select>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="description" className="text-right">Descripción</Label>
+                      <Label htmlFor="description" className="text-right">Descripción Interna</Label>
                       <Textarea
                         id="description"
-                        className="col-span-3"
+                        className="col-span-3 h-20"
                         value={courseFormData.description}
                         onChange={(e) => setCourseFormData({ ...courseFormData, description: e.target.value })}
+                        placeholder="Solo visible para el personal"
                       />
+                    </div>
+                    <div className="border-t pt-4 mt-2">
+                      <p className="text-sm font-bold text-blue-600 mb-4 px-2 uppercase tracking-wider">Información para Landing Page</p>
+                      <div className="grid grid-cols-4 items-center gap-4 mb-4">
+                        <Label htmlFor="publicDescription" className="text-right">Desc. Pública</Label>
+                        <Textarea
+                          id="publicDescription"
+                          className="col-span-3 h-24 bg-blue-50/30"
+                          value={courseFormData.publicDescription}
+                          onChange={(e) => setCourseFormData({ ...courseFormData, publicDescription: e.target.value })}
+                          placeholder="Esta descripción aparecerá en el enlace público"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="benefits" className="text-right">Beneficios</Label>
+                        <Textarea
+                          id="benefits"
+                          className="col-span-3 h-20 bg-blue-50/30"
+                          value={courseFormData.benefits}
+                          onChange={(e) => setCourseFormData({ ...courseFormData, benefits: e.target.value })}
+                          placeholder="Ej: Certificado oficial, Prácticas en empresa, Material incluido (separar por comas)"
+                        />
+                      </div>
                     </div>
                   </div>
                   <DialogFooter>
@@ -755,13 +802,35 @@ export default function CoursesPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-description" className="text-right">Descripción</Label>
+                  <Label htmlFor="edit-description" className="text-right">Descripción Interna</Label>
                   <Textarea
                     id="edit-description"
-                    className="col-span-3"
+                    className="col-span-3 h-20"
                     value={courseFormData.description}
                     onChange={(e) => setCourseFormData({ ...courseFormData, description: e.target.value })}
                   />
+                </div>
+                <div className="border-t pt-4 mt-2">
+                  <p className="text-sm font-bold text-blue-600 mb-4 px-2 uppercase tracking-wider">Información para Landing Page</p>
+                  <div className="grid grid-cols-4 items-center gap-4 mb-4">
+                    <Label htmlFor="edit-publicDescription" className="text-right">Desc. Pública</Label>
+                    <Textarea
+                      id="edit-publicDescription"
+                      className="col-span-3 h-24 bg-blue-50/20"
+                      value={courseFormData.publicDescription}
+                      onChange={(e) => setCourseFormData({ ...courseFormData, publicDescription: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-benefits" className="text-right">Beneficios</Label>
+                    <Textarea
+                      id="edit-benefits"
+                      className="col-span-3 h-20 bg-blue-50/20"
+                      value={courseFormData.benefits}
+                      onChange={(e) => setCourseFormData({ ...courseFormData, benefits: e.target.value })}
+                      placeholder="Separar beneficios por comas"
+                    />
+                  </div>
                 </div>
               </div>
               <DialogFooter>
@@ -775,5 +844,3 @@ export default function CoursesPage() {
     </MainLayout>
   )
 }
-
-import { UserCheck } from "lucide-react"

@@ -43,6 +43,8 @@ export async function PUT(
             isActive,
             startDate,
             endDate,
+            publicDescription,
+            benefits,
             teacherId
         } = body
 
@@ -59,6 +61,8 @@ export async function PUT(
                 isActive,
                 startDate: startDate ? new Date(startDate) : null,
                 endDate: endDate ? new Date(endDate) : null,
+                publicDescription,
+                benefits,
                 teacherId: teacherId || null
             }
         })

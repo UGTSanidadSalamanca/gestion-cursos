@@ -54,6 +54,8 @@ export async function POST(request: NextRequest) {
       isActive = true,
       startDate,
       endDate,
+      publicDescription,
+      benefits,
       teacherId
     } = body
 
@@ -71,6 +73,8 @@ export async function POST(request: NextRequest) {
         isActive: isActive !== undefined ? isActive : true,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
+        publicDescription,
+        benefits,
         teacherId: teacherId || null
       },
       create: {
@@ -85,6 +89,8 @@ export async function POST(request: NextRequest) {
         isActive: isActive !== undefined ? isActive : true,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
+        publicDescription,
+        benefits,
         teacherId: teacherId || null
       },
       include: {

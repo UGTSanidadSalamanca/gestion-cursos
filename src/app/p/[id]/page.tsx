@@ -10,6 +10,8 @@ import { BookOpen, Clock, Users, Euro, Calendar, CheckCircle, MessageSquare } fr
 interface PublicCourse {
     title: string
     description?: string
+    publicDescription?: string
+    benefits?: string
     code: string
     level: string
     duration: number
@@ -75,19 +77,27 @@ export default function PublicCoursePage() {
         window.open(`https://wa.me/34600000000?text=${encodeURIComponent(message)}`, '_blank')
     }
 
+    const benefitsList = course.benefits ? course.benefits.split(/,|\n/).map(b => b.trim()).filter(b => b !== "") : []
+
     return (
         <div className="min-h-screen bg-slate-50 pb-12">
             {/* Header Visual */}
-            <div className="bg-gradient-to-br from-blue-700 to-indigo-800 text-white h-64 flex items-end relative overflow-hidden">
+            <div className="bg-gradient-to-br from-blue-700 to-indigo-800 text-white h-72 flex items-end relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <BookOpen className="h-64 w-64" />
+                    <BookOpen className="h-80 w-80" />
                 </div>
-                <div className="container mx-auto px-4 pb-8 relative z-10">
+                <div className="container mx-auto px-4 pb-12 relative z-10">
                     <Badge className="bg-blue-400/30 text-white border-blue-400/50 mb-3 px-3 py-1 text-xs">
                         INFORMACIÓN DEL CURSO
                     </Badge>
-                    <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">{course.title}</h1>
-                    <p className="text-blue-100 text-lg mt-2 font-mono uppercase tracking-widest">{course.code}</p>
+                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight max-w-4xl leading-tight">
+                        {course.title}
+                    </h1>
+                    <p className="text-blue-100 text-lg mt-3 font-mono uppercase tracking-widest flex items-center gap-2">
+                        <Badge variant="outline" className="border-blue-300/30 text-blue-100 font-bold">{course.code}</Badge>
+                        <span className="opacity-70">|</span>
+                        <span className="font-semibold">{course.level}</span>
+                    </p>
                 </div>
             </div>
 
@@ -98,15 +108,32 @@ export default function PublicCoursePage() {
                         <Card className="border-none shadow-xl shadow-slate-200/60 overflow-hidden">
                             <CardHeader className="bg-white border-b border-slate-50">
                                 <div className="flex items-center gap-2 text-slate-400 text-sm font-bold uppercase tracking-wider">
-                                    <CheckCircle className="h-4 w-4 text-green-500" /> Detalles del programa
+                                    <CheckCircle className="h-4 w-4 text-green-500" /> Descripción del programa
                                 </div>
                             </CardHeader>
                             <CardContent className="p-8">
                                 <p className="text-slate-600 text-lg leading-relaxed whitespace-pre-wrap">
-                                    {course.description || "Este programa formativo ofrece una capacitación completa y actualizada para profesionales del sector. Contacta con nosotros para recibir el temario detallado."}
+                                    {course.publicDescription || course.description || "Este programa formativo ofrece una capacitación completa y actualizada para profesionales del sector. Contacta con nosotros para recibir el temario detallado."}
                                 </p>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-12">
+                                {benefitsList.length > 0 && (
+                                    <div className="mt-12">
+                                        <h3 className="text-slate-900 font-bold text-xl mb-6 flex items-center gap-2">
+                                            <div className="h-8 w-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">✓</div>
+                                            ¿Qué aprenderás con este curso?
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {benefitsList.map((benefit, i) => (
+                                                <div key={i} className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                                    <CheckCircle className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                                                    <span className="text-slate-700 text-sm font-medium">{benefit}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-12 pt-8 border-t border-slate-100">
                                     <div className="flex items-start space-x-4">
                                         <div className="p-3 bg-blue-50 rounded-2xl"><Clock className="h-6 w-6 text-blue-600" /></div>
                                         <div>
