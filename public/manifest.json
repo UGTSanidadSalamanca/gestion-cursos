@@ -1,11 +1,11 @@
 {
-    "name": "Gestión Cursos",
-    "short_name": "Gestión Cursos",
-    "description": "Sistema de Gestión de Cursos Profesional",
+    "name": "Formación UGT Salamanca",
+    "short_name": "UGT Formación",
+    "description": "Sistema Integral de Gestión de Cursos - UGT Sanidad Salamanca",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#0ea5e9",
+    "theme_color": "#2563eb",
     "icons": [
         {
             "src": "/icon-192x192.png",

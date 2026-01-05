@@ -15,28 +15,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sistema de Gestión de Cursos",
-  description: "Sistema integral de gestión académica para centros educativos",
-  keywords: ["Gestión de Cursos", "Educación", "Académico", "Next.js", "TypeScript"],
-  authors: [{ name: "Centro Educativo" }],
+  title: "Formación UGT Salamanca - Gestión de Cursos",
+  description: "Sistema integral de gestión de cursos para UGT Sanidad Salamanca",
+  keywords: ["Gestión de Cursos", "UGT", "Salamanca", "Formación", "Sanidad"],
+  authors: [{ name: "Formación UGT Salamanca" }],
   manifest: "/manifest.json",
-  themeColor: "#0ea5e9",
+  themeColor: "#2563eb",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Gestión Cursos",
+    title: "UGT Formación",
   },
   openGraph: {
-    title: "Sistema de Gestión de Cursos",
-    description: "Sistema integral de gestión académica para centros educativos",
+    title: "Formación UGT Salamanca",
+    description: "Gestión Académica Integral",
     url: "https://gestion-cursos-ashy.vercel.app",
-    siteName: "Centro Educativo",
+    siteName: "Formación UGT Salamanca",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sistema de Gestión de Cursos",
-    description: "Sistema integral de gestión académica para centros educativos",
+    title: "Formación UGT Salamanca",
+    description: "Gestión Académica Integral",
   },
 };
 
