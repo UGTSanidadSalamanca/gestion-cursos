@@ -258,27 +258,30 @@ export default function CoursesPage() {
 
       const element = document.getElementById('course-details-print')
       if (!element) {
-        toast.error("Error: Elemento visual no encontrado", { id: toastId })
+        toast.error("Error: Abre la vista del curso antes de descargar", { id: toastId })
         return
       }
 
       toast.loading("Procesando diseño para impresión...", { id: toastId })
       const canvas = await html2canvas(element, {
-        scale: 3,
+        scale: 2, // Reducido de 3 a 2 para mayor compatibilidad
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
-        windowWidth: 1200,
+        windowWidth: 1000,
         onclone: (clonedDoc) => {
           const el = clonedDoc.getElementById('course-details-print')
           if (el) {
             const all = el.getElementsByTagName('*')
             for (let i = 0; i < all.length; i++) {
               const item = all[i] as HTMLElement
-              const computed = window.getComputedStyle(item)
               item.style.fontFamily = 'Arial, sans-serif'
-              if (computed.color.includes('oklch')) item.style.color = '#1e293b'
-              if (computed.backgroundColor.includes('oklch')) item.style.backgroundColor = 'transparent'
+
+              // Limpieza de colores oklch si existen
+              const styles = window.getComputedStyle(item)
+              if (styles.color.includes('oklch')) item.style.color = '#1e293b'
+              if (styles.backgroundColor.includes('oklch')) item.style.backgroundColor = 'transparent'
+
               if (item.classList.contains('text-blue-600')) item.style.color = '#2563eb'
               if (item.classList.contains('bg-blue-600')) item.style.backgroundColor = '#2563eb'
               if (item.classList.contains('text-green-600')) item.style.color = '#16a34a'
@@ -289,7 +292,11 @@ export default function CoursesPage() {
         }
       })
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95)
+      const imgData = canvas.toDataURL('image/png')
+      if (imgData === 'data:,' || imgData.length < 100) {
+        throw new Error("La captura de pantalla falló (imagen vacía)")
+      }
+
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -302,23 +309,24 @@ export default function CoursesPage() {
       const targetWidth = pdfWidth - 20
       const targetHeight = (imgProps.height * targetWidth) / imgProps.width
 
+      // Encabezado
       pdf.setFillColor(37, 99, 235)
       pdf.rect(0, 0, pdfWidth, 15, 'F')
       pdf.setFontSize(10)
       pdf.setTextColor(255, 255, 255)
       pdf.text('Formación UGT Salamanca - Ficha Técnica de Curso', 10, 10)
 
-      pdf.addImage(imgData, 'JPEG', 10, 25, targetWidth, targetHeight)
+      pdf.addImage(imgData, 'PNG', 10, 25, targetWidth, targetHeight)
 
       pdf.setFontSize(8)
       pdf.setTextColor(150, 150, 150)
       pdf.text(`Documento generado automáticamente el ${new Date().toLocaleString()}`, 10, pdfHeight - 10)
 
       pdf.save(`FICHA-CURSO-${course.code}.pdf`)
-      toast.success("PDF generado y descargado con éxito", { id: toastId })
+      toast.success("PDF descargado con éxito", { id: toastId })
     } catch (error) {
       console.error("Error crítico al generar PDF:", error)
-      toast.error("Error de renderizado. Por favor, intenta de nuevo.", { id: toastId })
+      toast.error("Error al generar el PDF. Prueba a cerrar y abrir la vista del curso.", { id: toastId })
     }
   }
 

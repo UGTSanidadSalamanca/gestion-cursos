@@ -77,7 +77,7 @@ export default function PublicCoursePage() {
 
     const handleInterest = () => {
         const message = `¡Hola! Estoy interesado en el curso: ${course.title} (${course.code}). ¿Podríais enviarme más información?`
-        window.open(`https://wa.me/34600000000?text=${encodeURIComponent(message)}`, '_blank')
+        window.open(`https://wa.me/34600437134?text=${encodeURIComponent(message)}`, '_blank')
     }
 
     const benefitsList = course.benefits ? course.benefits.split(/,|\n/).map(b => b.trim()).filter(b => b !== "") : []
@@ -220,7 +220,22 @@ export default function PublicCoursePage() {
                                     <MessageSquare className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Reservar Plaza
                                 </Button>
 
-                                <p className="text-center text-[10px] uppercase font-bold text-slate-400 mt-6 tracking-tighter">
+                                <div className="mt-8 pt-6 border-t border-slate-100 space-y-3">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Contacto de Formación</p>
+                                    <div className="flex flex-col gap-2">
+                                        <a href="mailto:formacion.salamanca@ugt-sp.ugt.org" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1">
+                                            formacion.salamanca@ugt-sp.ugt.org
+                                        </a>
+                                        <a href="mailto:fespugtsalamanca@gmail.com" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1">
+                                            fespugtsalamanca@gmail.com
+                                        </a>
+                                        <p className="text-xs text-slate-700 font-bold flex items-center gap-1">
+                                            Tel: <span className="text-slate-900">+34 600 43 71 34</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <p className="text-center text-[10px] uppercase font-bold text-slate-400 mt-8 tracking-tighter">
                                     Formación UGT Salamanca
                                 </p>
                             </CardContent>
