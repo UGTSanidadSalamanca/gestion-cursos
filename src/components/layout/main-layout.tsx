@@ -21,7 +21,9 @@ import {
   Calendar,
   Settings,
   Database,
-  Download
+  Download,
+  Phone,
+  Monitor
 } from 'lucide-react'
 
 const navigation = [
@@ -34,6 +36,8 @@ const navigation = [
   { name: 'Materiales', href: '/materials', icon: Package },
   { name: 'Proveedores', href: '/suppliers', icon: Truck },
   { name: 'Horarios', href: '/schedules', icon: Calendar },
+  { name: 'Contactos', href: '/contacts', icon: Phone },
+  { name: 'Software', href: '/software', icon: Monitor },
   { name: 'Reportes', href: '/reports', icon: BarChart3 },
   { name: 'Importar Datos', href: '/import', icon: Database },
   { name: 'Exportar Datos', href: '/export', icon: Download },

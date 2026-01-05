@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Sidebar } from "@/components/sidebar"
-import { Header } from "@/components/header"
+import { MainLayout } from "@/components/layout/main-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,9 +37,13 @@ import {
   Users,
   Euro,
   Calendar,
-  UserPlus
+  Download,
+  Loader2
 } from "lucide-react"
 import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
+import { toast } from "sonner"
+import { jsPDF } from "jspdf"
+import html2canvas from "html2canvas"
 
 interface Course {
   id: string
@@ -55,6 +58,7 @@ interface Course {
   startDate?: string
   endDate?: string
   teacher?: {
+    id: string
     name: string
   }
   _count?: {
@@ -63,13 +67,16 @@ interface Course {
 }
 
 export default function CoursesPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterLevel, setFilterLevel] = useState("all")
   const [courses, setCourses] = useState<Course[]>([])
   const [teachers, setTeachers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
+
   const [courseFormData, setCourseFormData] = useState({
     title: '',
     code: '',
@@ -78,7 +85,8 @@ export default function CoursesPage() {
     price: '',
     teacherId: '',
     description: '',
-    isActive: true
+    isActive: true,
+    maxStudents: '30'
   })
 
   useEffect(() => {
@@ -99,6 +107,7 @@ export default function CoursesPage() {
   }
 
   const fetchCourses = async () => {
+    setLoading(true)
     try {
       const response = await fetch('/api/courses')
       if (response.ok) {
@@ -107,6 +116,7 @@ export default function CoursesPage() {
       }
     } catch (error) {
       console.error('Error fetching courses:', error)
+      toast.error("Error al cargar los cursos")
     } finally {
       setLoading(false)
     }
@@ -124,30 +134,128 @@ export default function CoursesPage() {
           ...courseFormData,
           duration: courseFormData.duration ? parseInt(courseFormData.duration) : 0,
           price: courseFormData.price ? parseFloat(courseFormData.price) : 0,
-          maxStudents: 30, // Default value
+          maxStudents: parseInt(courseFormData.maxStudents),
         }),
       })
 
       if (response.ok) {
+        toast.success("Curso creado con éxito")
         await fetchCourses()
         setIsCreateDialogOpen(false)
-        setCourseFormData({
-          title: '',
-          code: '',
-          level: 'BEGINNER',
-          duration: '',
-          price: '',
-          teacherId: '',
-          description: '',
-          isActive: true
-        })
+        resetForm()
       } else {
         const error = await response.json()
-        alert(error.error || 'Error al crear el curso')
+        toast.error(error.error || 'Error al crear el curso')
       }
     } catch (error) {
-      console.error('Error creating course:', error)
-      alert('Error al crear el curso')
+      toast.error('Error al crear el curso')
+    }
+  }
+
+  const handleUpdateCourse = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedCourse) return
+
+    try {
+      const response = await fetch(`/api/courses/${selectedCourse.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...courseFormData,
+          duration: courseFormData.duration ? parseInt(courseFormData.duration) : 0,
+          price: courseFormData.price ? parseFloat(courseFormData.price) : 0,
+          maxStudents: parseInt(courseFormData.maxStudents),
+        }),
+      })
+
+      if (response.ok) {
+        toast.success("Curso actualizado con éxito")
+        await fetchCourses()
+        setIsEditDialogOpen(false)
+        setSelectedCourse(null)
+        resetForm()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Error al actualizar el curso')
+      }
+    } catch (error) {
+      toast.error('Error al actualizar el curso')
+    }
+  }
+
+  const resetForm = () => {
+    setCourseFormData({
+      title: '',
+      code: '',
+      level: 'BEGINNER',
+      duration: '',
+      price: '',
+      teacherId: '',
+      description: '',
+      isActive: true,
+      maxStudents: '30'
+    })
+  }
+
+  const handleEditClick = (course: Course) => {
+    setSelectedCourse(course)
+    setCourseFormData({
+      title: course.title,
+      code: course.code,
+      level: course.level,
+      duration: course.duration.toString(),
+      price: course.price.toString(),
+      teacherId: (course as any).teacherId || (course.teacher?.id) || '',
+      description: course.description || '',
+      isActive: course.isActive,
+      maxStudents: course.maxStudents.toString()
+    })
+    setIsEditDialogOpen(true)
+  }
+
+  const handleViewClick = (course: Course) => {
+    setSelectedCourse(course)
+    setIsViewDialogOpen(true)
+  }
+
+  const handleExportPDF = async (course: Course) => {
+    const element = document.getElementById('course-details-print')
+    if (!element) return
+
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+      })
+
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      })
+
+      const imgProps = pdf.getImageProperties(imgData)
+      const pdfWidth = pdf.internal.pageSize.getWidth() - 20
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+
+      pdf.setFontSize(22)
+      pdf.setTextColor(14, 165, 233)
+      pdf.text('FICHA DEL CURSO', 10, 20)
+
+      pdf.addImage(imgData, 'PNG', 10, 30, pdfWidth, pdfHeight)
+
+      pdf.setFontSize(10)
+      pdf.setTextColor(128, 128, 128)
+      pdf.text(`Generado el: ${new Date().toLocaleString()} - UGT Sanidad Salamanca`, 10, 285)
+
+      pdf.save(`informacion_curso_${course.code}.pdf`)
+      toast.success("PDF generado con éxito")
+    } catch (error) {
+      console.error("Error generating PDF:", error)
+      toast.error("Error al generar el PDF")
     }
   }
 
@@ -174,302 +282,449 @@ export default function CoursesPage() {
     return matchesSearch && matchesLevel
   })
 
-  const totalCourses = courses.length
-  const activeCourses = courses.filter(c => c.isActive).length
-  const totalEnrollments = courses.reduce((sum, course) => sum + (course._count?.enrollments || 0), 0)
-  const totalRevenue = courses.reduce((sum, course) => sum + ((course._count?.enrollments || 0) * course.price), 0)
-
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight">Gestión de Cursos</h1>
-                <p className="text-muted-foreground">
-                  Administra todos los cursos y asignaturas del centro educativo
-                </p>
-              </div>
-              <div className="mt-4 flex items-center space-x-2 md:mt-0">
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Nuevo Curso
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[525px]">
-                    <form onSubmit={handleCreateCourse}>
-                      <DialogHeader>
-                        <DialogTitle>Crear Nuevo Curso</DialogTitle>
-                        <DialogDescription>
-                          Completa los datos del nuevo curso para agregarlo al sistema.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="title" className="text-right">
-                            Título
-                          </Label>
-                          <Input
-                            id="title"
-                            className="col-span-3"
-                            value={courseFormData.title}
-                            onChange={(e) => setCourseFormData({ ...courseFormData, title: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="code" className="text-right">
-                            Código
-                          </Label>
-                          <Input
-                            id="code"
-                            className="col-span-3"
-                            value={courseFormData.code}
-                            onChange={(e) => setCourseFormData({ ...courseFormData, code: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="level" className="text-right">
-                            Nivel
-                          </Label>
-                          <Select
-                            value={courseFormData.level}
-                            onValueChange={(value) => setCourseFormData({ ...courseFormData, level: value })}
-                          >
-                            <SelectTrigger className="col-span-3">
-                              <SelectValue placeholder="Seleccionar nivel" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="BEGINNER">Principiante</SelectItem>
-                              <SelectItem value="INTERMEDIATE">Intermedio</SelectItem>
-                              <SelectItem value="ADVANCED">Avanzado</SelectItem>
-                              <SelectItem value="EXPERT">Experto</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="duration" className="text-right">
-                            Duración (h)
-                          </Label>
-                          <Input
-                            id="duration"
-                            type="number"
-                            className="col-span-3"
-                            value={courseFormData.duration}
-                            onChange={(e) => setCourseFormData({ ...courseFormData, duration: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="price" className="text-right">
-                            Precio
-                          </Label>
-                          <Input
-                            id="price"
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            className="col-span-3"
-                            value={courseFormData.price}
-                            onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="teacher" className="text-right">
-                            Profesor
-                          </Label>
-                          <Select
-                            value={courseFormData.teacherId}
-                            onValueChange={(value) => setCourseFormData({ ...courseFormData, teacherId: value })}
-                          >
-                            <SelectTrigger className="col-span-3">
-                              <SelectValue placeholder="Seleccionar profesor" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {teachers.map((teacher) => (
-                                <SelectItem key={teacher.id} value={teacher.id}>
-                                  {teacher.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="description" className="text-right">
-                            Descripción
-                          </Label>
-                          <Textarea
-                            id="description"
-                            className="col-span-3"
-                            value={courseFormData.description}
-                            onChange={(e) => setCourseFormData({ ...courseFormData, description: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancelar</Button>
-                        <Button type="submit">Guardar</Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Cursos</CardTitle>
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{totalCourses}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Activos</CardTitle>
-                  <BookOpen className="h-4 w-4 text-green-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{activeCourses}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Alumnos Inscritos</CardTitle>
-                  <Users className="h-4 w-4 text-blue-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{totalEnrollments}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Ingresos Potenciales</CardTitle>
-                  <Euro className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">€{totalRevenue.toFixed(2)}</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Filters and Search */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Lista de Cursos</CardTitle>
-                <CardDescription>
-                  Todos los cursos disponibles en el sistema
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4 mb-4">
-                  <div className="flex-1 max-w-sm">
-                    <div className="relative">
-                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+    <MainLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Gestión de Cursos</h1>
+            <p className="text-muted-foreground">
+              Administra todos los cursos y asignaturas del centro educativo
+            </p>
+          </div>
+          <div className="mt-4 flex items-center space-x-2 md:mt-0">
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nuevo Curso
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[525px]">
+                <form onSubmit={handleCreateCourse}>
+                  <DialogHeader>
+                    <DialogTitle>Crear Nuevo Curso</DialogTitle>
+                    <DialogDescription>
+                      Completa los datos del nuevo curso para agregarlo al sistema.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="title" className="text-right">Título</Label>
                       <Input
-                        placeholder="Buscar por título, descripción o código..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-8"
+                        id="title"
+                        className="col-span-3"
+                        value={courseFormData.title}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, title: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="code" className="text-right">Código</Label>
+                      <Input
+                        id="code"
+                        className="col-span-3"
+                        value={courseFormData.code}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, code: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="level" className="text-right">Nivel</Label>
+                      <Select
+                        value={courseFormData.level}
+                        onValueChange={(value) => setCourseFormData({ ...courseFormData, level: value })}
+                      >
+                        <SelectTrigger className="col-span-3">
+                          <SelectValue placeholder="Seleccionar nivel" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="BEGINNER">Principiante</SelectItem>
+                          <SelectItem value="INTERMEDIATE">Intermedio</SelectItem>
+                          <SelectItem value="ADVANCED">Avanzado</SelectItem>
+                          <SelectItem value="EXPERT">Experto</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="duration" className="text-right">Duración (h)</Label>
+                      <Input
+                        id="duration"
+                        type="number"
+                        className="col-span-3"
+                        value={courseFormData.duration}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, duration: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="price" className="text-right">Precio</Label>
+                      <Input
+                        id="price"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        className="col-span-3"
+                        value={courseFormData.price}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="teacher" className="text-right">Profesor</Label>
+                      <Select
+                        value={courseFormData.teacherId}
+                        onValueChange={(value) => setCourseFormData({ ...courseFormData, teacherId: value })}
+                      >
+                        <SelectTrigger className="col-span-3">
+                          <SelectValue placeholder="Seleccionar profesor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {teachers.map((teacher) => (
+                            <SelectItem key={teacher.id} value={teacher.id}>
+                              {teacher.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="description" className="text-right">Descripción</Label>
+                      <Textarea
+                        id="description"
+                        className="col-span-3"
+                        value={courseFormData.description}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, description: e.target.value })}
                       />
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Filter className="h-4 w-4 text-muted-foreground" />
-                    <Select value={filterLevel} onValueChange={setFilterLevel}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Filtrar por nivel" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos los niveles</SelectItem>
-                        <SelectItem value="BEGINNER">Principiante</SelectItem>
-                        <SelectItem value="INTERMEDIATE">Intermedio</SelectItem>
-                        <SelectItem value="ADVANCED">Avanzado</SelectItem>
-                        <SelectItem value="EXPERT">Experto</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancelar</Button>
+                    <Button type="submit">Guardar</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        {/* Courses Table */}
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+              <div>
+                <CardTitle>Cursos Disponibles</CardTitle>
+                <CardDescription>Visualiza y gestiona todos los programas educativos.</CardDescription>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar curso..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-8 w-64"
+                  />
+                </div>
+                <Select value={filterLevel} onValueChange={setFilterLevel}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Nivel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="BEGINNER">Principiante</SelectItem>
+                    <SelectItem value="INTERMEDIATE">Intermedio</SelectItem>
+                    <SelectItem value="ADVANCED">Avanzado</SelectItem>
+                    <SelectItem value="EXPERT">Experto</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border border-slate-200">
+              <Table>
+                <TableHeader className="bg-slate-50">
+                  <TableRow>
+                    <TableHead className="font-bold">Curso</TableHead>
+                    <TableHead className="font-bold">Nivel</TableHead>
+                    <TableHead className="font-bold">Profesor</TableHead>
+                    <TableHead className="font-bold">Duración</TableHead>
+                    <TableHead className="font-bold">Precio</TableHead>
+                    <TableHead className="font-bold text-center">Inscritos</TableHead>
+                    <TableHead className="font-bold">Estado</TableHead>
+                    <TableHead className="font-bold text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="h-24 text-center">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-500" />
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredCourses.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="h-24 text-center text-slate-500">
+                        No se encontraron cursos.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCourses.map((course) => (
+                      <TableRow key={course.id} className="hover:bg-slate-50/50 transition-colors">
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-slate-900">{course.title}</span>
+                            <span className="text-xs text-slate-500">{course.code}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{getLevelBadge(course.level)}</TableCell>
+                        <TableCell className="text-slate-600">{course.teacher?.name || '---'}</TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs font-medium">
+                            <Clock className="w-3 h-3 mr-1" />
+                            {course.duration}h
+                          </span>
+                        </TableCell>
+                        <TableCell className="font-medium text-slate-900">€{course.price.toFixed(2)}</TableCell>
+                        <TableCell className="text-center">
+                          <span className="font-bold text-blue-600">{course._count?.enrollments || 0}</span>
+                          <span className="text-slate-400"> / {course.maxStudents}</span>
+                        </TableCell>
+                        <TableCell>
+                          {course.isActive ? (
+                            <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100 shadow-none">Activo</Badge>
+                          ) : (
+                            <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-slate-200 shadow-none">Inactivo</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600" onClick={() => handleViewClick(course)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-orange-600" onClick={() => handleEditClick(course)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <EnrollmentForm courseId={course.id} onSuccess={fetchCourses} />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dialogs */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="sm:max-w-[600px] border-none shadow-2xl overflow-hidden p-0">
+            {selectedCourse && (
+              <div id="course-details-print" className="bg-white">
+                <div className="bg-blue-600 h-2 w-full" />
+                <div className="p-8">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h2 className="text-3xl font-bold text-slate-900 leading-tight">{selectedCourse.title}</h2>
+                      <p className="text-slate-500 font-mono mt-1">{selectedCourse.code}</p>
+                    </div>
+                    <Badge className={selectedCourse.isActive ? 'bg-green-500 px-3 py-1 text-sm' : 'bg-slate-400 px-3 py-1 text-sm'}>
+                      {selectedCourse.isActive ? 'Activo' : 'Inactivo'}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-8 mb-8">
+                    <div className="space-y-4">
+                      <div className="flex items-start space-x-3">
+                        <div className="p-2 bg-slate-100 rounded-lg"><BookOpen className="h-5 w-5 text-blue-600" /></div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-400 uppercase">Nivel</p>
+                          <p className="font-semibold text-slate-700">{getLevelBadge(selectedCourse.level)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="p-2 bg-slate-100 rounded-lg"><Clock className="h-5 w-5 text-blue-600" /></div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-400 uppercase">Duración</p>
+                          <p className="font-semibold text-slate-700">{selectedCourse.duration} horas</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-start space-x-3">
+                        <div className="p-2 bg-slate-100 rounded-lg"><UserCheck className="h-5 w-5 text-blue-600" /></div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-400 uppercase">Profesor</p>
+                          <p className="font-semibold text-slate-700">{selectedCourse.teacher?.name || 'Por asignar'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="p-2 bg-slate-100 rounded-lg"><Euro className="h-5 w-5 text-green-600" /></div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-400 uppercase">Precio</p>
+                          <p className="font-semibold text-slate-900 text-lg">€{selectedCourse.price.toFixed(2)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8">
+                    <p className="text-xs font-bold text-slate-400 uppercase mb-3">Descripción del Curso</p>
+                    <p className="text-slate-600 leading-relaxed italic">
+                      {selectedCourse.description || 'Este curso no dispone de una descripción detallada en este momento.'}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t pt-6 text-sm">
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <Users className="h-4 w-4" />
+                      <span>{selectedCourse._count?.enrollments || 0} alumnos inscritos de {selectedCourse.maxStudents}</span>
+                    </div>
+                    <div className="text-slate-400 italic">UGT Sanidad Salamanca</div>
                   </div>
                 </div>
-
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Curso</TableHead>
-                        <TableHead>Nivel</TableHead>
-                        <TableHead>Profesor</TableHead>
-                        <TableHead>Duración</TableHead>
-                        <TableHead>Precio</TableHead>
-                        <TableHead>Alumnos</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead>Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredCourses.map((course) => (
-                        <TableRow key={course.id}>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{course.title}</span>
-                              <span className="text-sm text-muted-foreground">{course.code}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{getLevelBadge(course.level)}</TableCell>
-                          <TableCell>{course.teacher?.name || 'No asignado'}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-1">
-                              <Clock className="h-3 w-3 text-muted-foreground" />
-                              <span>{course.duration}h</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>€{course.price.toFixed(2)}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <span>{course._count?.enrollments || 0}</span>
-                              <span className="text-sm text-muted-foreground">/ {course.maxStudents}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {course.isActive ? (
-                              <Badge className="bg-green-500 hover:bg-green-600">Activo</Badge>
-                            ) : (
-                              <Badge variant="secondary">Inactivo</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Button variant="ghost" size="sm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <EnrollmentForm courseId={course.id} onSuccess={fetchCourses} />
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                <div className="bg-slate-50 px-8 py-4 flex justify-end gap-3 no-print">
+                  <Button variant="outline" onClick={() => handleExportPDF(selectedCourse)}>
+                    <Download className="mr-2 h-4 w-4" /> Descargar Ficha
+                  </Button>
+                  <Button onClick={() => setIsViewDialogOpen(false)}>Cerrar</Button>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[525px]">
+            <form onSubmit={handleUpdateCourse}>
+              <DialogHeader>
+                <DialogTitle>Editar Curso</DialogTitle>
+                <DialogDescription>Actualiza los detalles del programa informativo.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-title" className="text-right">Título</Label>
+                  <Input
+                    id="edit-title"
+                    className="col-span-3"
+                    value={courseFormData.title}
+                    onChange={(e) => setCourseFormData({ ...courseFormData, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-code" className="text-right">Código</Label>
+                  <Input
+                    id="edit-code"
+                    className="col-span-3"
+                    value={courseFormData.code}
+                    onChange={(e) => setCourseFormData({ ...courseFormData, code: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-level" className="text-right">Nivel</Label>
+                  <Select
+                    value={courseFormData.level}
+                    onValueChange={(value) => setCourseFormData({ ...courseFormData, level: value as any })}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BEGINNER">Principiante</SelectItem>
+                      <SelectItem value="INTERMEDIATE">Intermedio</SelectItem>
+                      <SelectItem value="ADVANCED">Avanzado</SelectItem>
+                      <SelectItem value="EXPERT">Experto</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-duration" className="text-right">Duración (h)</Label>
+                  <Input
+                    id="edit-duration"
+                    type="number"
+                    className="col-span-3"
+                    value={courseFormData.duration}
+                    onChange={(e) => setCourseFormData({ ...courseFormData, duration: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-price" className="text-right">Precio</Label>
+                  <Input
+                    id="edit-price"
+                    type="number"
+                    step="0.01"
+                    className="col-span-3"
+                    value={courseFormData.price}
+                    onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-price" className="text-right">Cupo Máx.</Label>
+                  <Input
+                    type="number"
+                    className="col-span-3"
+                    value={courseFormData.maxStudents}
+                    onChange={(e) => setCourseFormData({ ...courseFormData, maxStudents: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-teacher" className="text-right">Profesor</Label>
+                  <Select
+                    value={courseFormData.teacherId}
+                    onValueChange={(value) => setCourseFormData({ ...courseFormData, teacherId: value })}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teachers.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Estado</Label>
+                  <div className="col-span-3 flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="edit-isActive"
+                      checked={courseFormData.isActive}
+                      onChange={(e) => setCourseFormData({ ...courseFormData, isActive: e.target.checked })}
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <Label htmlFor="edit-isActive" className="text-sm font-normal">Curso Activo</Label>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-description" className="text-right">Descripción</Label>
+                  <Textarea
+                    id="edit-description"
+                    className="col-span-3"
+                    value={courseFormData.description}
+                    onChange={(e) => setCourseFormData({ ...courseFormData, description: e.target.value })}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">Guardar Cambios</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
-    </div>
+    </MainLayout>
   )
 }
+
+import { UserCheck } from "lucide-react"
