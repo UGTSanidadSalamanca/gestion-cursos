@@ -57,6 +57,8 @@ export async function POST(request: NextRequest) {
       endDate,
       publicDescription,
       benefits,
+      hasCertificate,
+      hasMaterials,
       teacherId
     } = body
 
@@ -77,6 +79,8 @@ export async function POST(request: NextRequest) {
         endDate: endDate ? new Date(endDate) : null,
         publicDescription,
         benefits,
+        hasCertificate,
+        hasMaterials,
         teacherId: teacherId || null
       },
       create: {
@@ -94,6 +98,8 @@ export async function POST(request: NextRequest) {
         endDate: endDate ? new Date(endDate) : null,
         publicDescription,
         benefits,
+        hasCertificate,
+        hasMaterials,
         teacherId: teacherId || null
       },
       include: {

@@ -64,6 +64,8 @@ interface Course {
   endDate?: string
   publicDescription?: string
   benefits?: string
+  hasCertificate: boolean
+  hasMaterials: boolean
   teacher?: {
     id: string
     name: string
@@ -97,6 +99,8 @@ export default function CoursesPage() {
     publicDescription: '',
     benefits: '',
     isActive: true,
+    hasCertificate: true,
+    hasMaterials: true,
     maxStudents: '30'
   })
 
@@ -212,6 +216,8 @@ export default function CoursesPage() {
       publicDescription: '',
       benefits: '',
       isActive: true,
+      hasCertificate: true,
+      hasMaterials: true,
       maxStudents: '30'
     })
   }
@@ -231,6 +237,8 @@ export default function CoursesPage() {
       publicDescription: course.publicDescription || '',
       benefits: course.benefits || '',
       isActive: course.isActive,
+      hasCertificate: course.hasCertificate ?? true,
+      hasMaterials: course.hasMaterials ?? true,
       maxStudents: (course.maxStudents || 0).toString()
     })
     setIsEditDialogOpen(true)
@@ -244,66 +252,73 @@ export default function CoursesPage() {
   const handleExportPDF = async (course: Course) => {
     const toastId = toast.loading("Preparando ficha técnica...")
 
-    // Pequeño retardo para asegurar que el DOM está estable
-    await new Promise(resolve => setTimeout(resolve, 800))
-
-    const element = document.getElementById('course-details-print')
-    if (!element) {
-      toast.error("Error: Elemento visual no encontrado", { id: toastId })
-      return
-    }
-
     try {
-      toast.loading("Capturando diseño (evitando oklch)...", { id: toastId })
+      // Pequeño retardo para asegurar que el DOM está estable
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      const element = document.getElementById('course-details-print')
+      if (!element) {
+        toast.error("Error: Elemento visual no encontrado", { id: toastId })
+        return
+      }
+
+      toast.loading("Procesando diseño para impresión...", { id: toastId })
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
+        windowWidth: 1200,
         onclone: (clonedDoc) => {
           const el = clonedDoc.getElementById('course-details-print')
           if (el) {
-            // Forzamos colores estándar en el clon para evitar errores con oklch
-            const allElements = el.getElementsByTagName('*')
-            for (let i = 0; i < allElements.length; i++) {
-              const target = allElements[i] as HTMLElement
-              target.style.color = '#1e293b'
-              if (target.classList.contains('bg-blue-600')) target.style.backgroundColor = '#2563eb'
-              if (target.classList.contains('text-blue-600')) target.style.color = '#2563eb'
+            const all = el.getElementsByTagName('*')
+            for (let i = 0; i < all.length; i++) {
+              const item = all[i] as HTMLElement
+              const computed = window.getComputedStyle(item)
+              item.style.fontFamily = 'Arial, sans-serif'
+              if (computed.color.includes('oklch')) item.style.color = '#1e293b'
+              if (computed.backgroundColor.includes('oklch')) item.style.backgroundColor = 'transparent'
+              if (item.classList.contains('text-blue-600')) item.style.color = '#2563eb'
+              if (item.classList.contains('bg-blue-600')) item.style.backgroundColor = '#2563eb'
+              if (item.classList.contains('text-green-600')) item.style.color = '#16a34a'
+              if (item.classList.contains('bg-blue-50')) item.style.backgroundColor = '#eff6ff'
+              if (item.classList.contains('no-print')) item.style.display = 'none'
             }
           }
         }
       })
 
-      const imgData = canvas.toDataURL('image/png')
-      if (imgData === 'data:,') {
-        throw new Error("Imagen generada vacía")
-      }
-
+      const imgData = canvas.toDataURL('image/jpeg', 0.95)
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       })
 
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
       const imgProps = pdf.getImageProperties(imgData)
-      const pdfWidth = pdf.internal.pageSize.getWidth() - 20
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+      const targetWidth = pdfWidth - 20
+      const targetHeight = (imgProps.height * targetWidth) / imgProps.width
 
-      pdf.setFontSize(22)
-      pdf.setTextColor(30, 41, 59)
-      pdf.text('FICHA DEL CURSO', 10, 20)
-      pdf.addImage(imgData, 'PNG', 10, 30, pdfWidth, pdfHeight)
-
+      pdf.setFillColor(37, 99, 235)
+      pdf.rect(0, 0, pdfWidth, 15, 'F')
       pdf.setFontSize(10)
-      pdf.setTextColor(128, 128, 128)
-      pdf.text(`Generado el: ${new Date().toLocaleString()} - Formación UGT Salamanca`, 10, 285)
+      pdf.setTextColor(255, 255, 255)
+      pdf.text('Formación UGT Salamanca - Ficha Técnica de Curso', 10, 10)
 
-      pdf.save(`FICHA-${course.code}.pdf`)
-      toast.success("PDF descargado correctamente", { id: toastId })
+      pdf.addImage(imgData, 'JPEG', 10, 25, targetWidth, targetHeight)
+
+      pdf.setFontSize(8)
+      pdf.setTextColor(150, 150, 150)
+      pdf.text(`Documento generado automáticamente el ${new Date().toLocaleString()}`, 10, pdfHeight - 10)
+
+      pdf.save(`FICHA-CURSO-${course.code}.pdf`)
+      toast.success("PDF generado y descargado con éxito", { id: toastId })
     } catch (error) {
-      console.error("Error al generar PDF:", error)
-      toast.error("Error técnico: Problema de compatibilidad de colores. Inténtalo de nuevo.", { id: toastId })
+      console.error("Error crítico al generar PDF:", error)
+      toast.error("Error de renderizado. Por favor, intenta de nuevo.", { id: toastId })
     }
   }
 
@@ -458,6 +473,31 @@ export default function CoursesPage() {
                         value={courseFormData.startDate}
                         onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })}
                       />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label className="text-right">Características</Label>
+                      <div className="col-span-3 flex flex-col gap-2">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="hasCertificate"
+                            checked={courseFormData.hasCertificate}
+                            onChange={(e) => setCourseFormData({ ...courseFormData, hasCertificate: e.target.checked })}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <Label htmlFor="hasCertificate" className="text-sm font-medium">Ofrece Certificado oficial</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="hasMaterials"
+                            checked={courseFormData.hasMaterials}
+                            onChange={(e) => setCourseFormData({ ...courseFormData, hasMaterials: e.target.checked })}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <Label htmlFor="hasMaterials" className="text-sm font-medium">Materiales incluidos</Label>
+                        </div>
+                      </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="description" className="text-right">Descripción Interna</Label>
@@ -864,16 +904,38 @@ export default function CoursesPage() {
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Estado</Label>
-                  <div className="col-span-3 flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="edit-isActive"
-                      checked={courseFormData.isActive}
-                      onChange={(e) => setCourseFormData({ ...courseFormData, isActive: e.target.checked })}
-                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <Label htmlFor="edit-isActive" className="text-sm font-normal">Curso Activo</Label>
+                  <Label className="text-right">Ajustes Públicos</Label>
+                  <div className="col-span-3 flex flex-col gap-2">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="edit-hasCertificate"
+                        checked={courseFormData.hasCertificate}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, hasCertificate: e.target.checked })}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <Label htmlFor="edit-hasCertificate" className="text-sm font-normal">Ofrece Certificado oficial</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="edit-hasMaterials"
+                        checked={courseFormData.hasMaterials}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, hasMaterials: e.target.checked })}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <Label htmlFor="edit-hasMaterials" className="text-sm font-normal">Materiales incluidos</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 mt-1 pt-1 border-t border-slate-100">
+                      <input
+                        type="checkbox"
+                        id="edit-isActive"
+                        checked={courseFormData.isActive}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, isActive: e.target.checked })}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <Label htmlFor="edit-isActive" className="text-sm font-normal font-bold text-slate-700">Curso Activo (Visible)</Label>
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">

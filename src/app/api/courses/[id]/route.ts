@@ -46,6 +46,8 @@ export async function PUT(
             endDate,
             publicDescription,
             benefits,
+            hasCertificate,
+            hasMaterials,
             teacherId
         } = body
 
@@ -65,6 +67,8 @@ export async function PUT(
                 endDate: endDate ? new Date(endDate) : null,
                 publicDescription,
                 benefits,
+                hasCertificate,
+                hasMaterials,
                 teacherId: teacherId || null
             }
         })
