@@ -58,6 +58,7 @@ interface Course {
   duration: number
   maxStudents: number
   price: number
+  affiliatePrice?: number
   isActive: boolean
   startDate?: string
   endDate?: string
@@ -89,6 +90,8 @@ export default function CoursesPage() {
     level: 'BEGINNER',
     duration: '',
     price: '',
+    affiliatePrice: '',
+    startDate: '',
     teacherId: '',
     description: '',
     publicDescription: '',
@@ -142,6 +145,7 @@ export default function CoursesPage() {
           ...courseFormData,
           duration: courseFormData.duration ? parseInt(courseFormData.duration) : 0,
           price: courseFormData.price ? parseFloat(courseFormData.price) : 0,
+          affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
           maxStudents: parseInt(courseFormData.maxStudents),
         }),
       })
@@ -174,6 +178,7 @@ export default function CoursesPage() {
           ...courseFormData,
           duration: courseFormData.duration ? parseInt(courseFormData.duration) : 0,
           price: courseFormData.price ? parseFloat(courseFormData.price) : 0,
+          affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
           maxStudents: parseInt(courseFormData.maxStudents),
         }),
       })
@@ -200,6 +205,8 @@ export default function CoursesPage() {
       level: 'BEGINNER',
       duration: '',
       price: '',
+      affiliatePrice: '',
+      startDate: '',
       teacherId: '',
       description: '',
       publicDescription: '',
@@ -217,12 +224,14 @@ export default function CoursesPage() {
       level: course.level,
       duration: course.duration.toString(),
       price: course.price.toString(),
+      affiliatePrice: course.affiliatePrice?.toString() || '',
+      startDate: course.startDate ? (typeof course.startDate === 'string' ? course.startDate.split('T')[0] : (course.startDate as any).toISOString().split('T')[0]) : '',
       teacherId: (course as any).teacherId || (course.teacher?.id) || '',
       description: course.description || '',
       publicDescription: course.publicDescription || '',
       benefits: course.benefits || '',
       isActive: course.isActive,
-      maxStudents: course.maxStudents.toString()
+      maxStudents: (course.maxStudents || 0).toString()
     })
     setIsEditDialogOpen(true)
   }
@@ -288,7 +297,7 @@ export default function CoursesPage() {
 
       pdf.setFontSize(10)
       pdf.setTextColor(128, 128, 128)
-      pdf.text(`Generado el: ${new Date().toLocaleString()} - UGT Sanidad Salamanca`, 10, 285)
+      pdf.text(`Generado el: ${new Date().toLocaleString()} - Formación UGT Salamanca`, 10, 285)
 
       pdf.save(`FICHA-${course.code}.pdf`)
       toast.success("PDF descargado correctamente", { id: toastId })
@@ -398,7 +407,7 @@ export default function CoursesPage() {
                       />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="price" className="text-right">Precio</Label>
+                      <Label htmlFor="price" className="text-right whitespace-nowrap">Precio No Afiliado</Label>
                       <Input
                         id="price"
                         type="number"
@@ -408,6 +417,18 @@ export default function CoursesPage() {
                         value={courseFormData.price}
                         onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })}
                         required
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="affiliatePrice" className="text-right whitespace-nowrap">Precio Afiliado</Label>
+                      <Input
+                        id="affiliatePrice"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        className="col-span-3"
+                        value={courseFormData.affiliatePrice}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, affiliatePrice: e.target.value })}
                       />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -427,6 +448,16 @@ export default function CoursesPage() {
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="startDate" className="text-right">Fecha Inicio</Label>
+                      <Input
+                        id="startDate"
+                        type="date"
+                        className="col-span-3"
+                        value={courseFormData.startDate}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })}
+                      />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="description" className="text-right">Descripción Interna</Label>
@@ -626,13 +657,23 @@ export default function CoursesPage() {
                       </div>
                       <div className="flex items-start space-x-3">
                         <div className="p-2 bg-slate-100 rounded-lg"><Euro className="h-5 w-5 text-green-600" /></div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-400 uppercase">Precio</p>
-                          <p className="font-semibold text-slate-900 text-lg">€{selectedCourse.price.toFixed(2)}</p>
+                        <div className="flex flex-col">
+                          <p className="text-xs font-bold text-slate-400 uppercase">Precios</p>
+                          <p className="font-semibold text-slate-700 text-sm">Gral: €{selectedCourse.price.toFixed(2)}</p>
+                          {selectedCourse.affiliatePrice && (
+                            <p className="font-bold text-green-600 text-sm">Afiliado: €{selectedCourse.affiliatePrice.toFixed(2)}</p>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
+
+                  {selectedCourse.startDate && (
+                    <div className="mb-8 flex items-center gap-2 bg-blue-50 p-3 rounded-xl border border-blue-100">
+                      <Calendar className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-bold text-blue-800">Fecha de inicio: {new Date(selectedCourse.startDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
 
                   <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8">
                     <p className="text-xs font-bold text-slate-400 uppercase mb-3">Descripción del Curso</p>
@@ -648,7 +689,7 @@ export default function CoursesPage() {
                           <Users className="h-4 w-4" />
                           <span>{selectedCourse._count?.enrollments || 0} alumnos inscritos de {selectedCourse.maxStudents}</span>
                         </div>
-                        <div className="text-slate-400 italic font-medium">UGT Sanidad Salamanca</div>
+                        <div className="text-slate-400 italic font-medium">Formación UGT Salamanca</div>
                       </div>
 
                       <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col md:flex-row items-center gap-6">
@@ -764,7 +805,7 @@ export default function CoursesPage() {
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-price" className="text-right">Precio</Label>
+                  <Label htmlFor="edit-price" className="text-right whitespace-nowrap">Precio No Afiliado</Label>
                   <Input
                     id="edit-price"
                     type="number"
@@ -773,6 +814,17 @@ export default function CoursesPage() {
                     value={courseFormData.price}
                     onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })}
                     required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-affiliatePrice" className="text-right whitespace-nowrap">Precio Afiliado</Label>
+                  <Input
+                    id="edit-affiliatePrice"
+                    type="number"
+                    step="0.01"
+                    className="col-span-3"
+                    value={courseFormData.affiliatePrice}
+                    onChange={(e) => setCourseFormData({ ...courseFormData, affiliatePrice: e.target.value })}
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -800,6 +852,16 @@ export default function CoursesPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-startDate" className="text-right">Fecha Inicio</Label>
+                  <Input
+                    id="edit-startDate"
+                    type="date"
+                    className="col-span-3"
+                    value={courseFormData.startDate}
+                    onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })}
+                  />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label className="text-right">Estado</Label>

@@ -5,7 +5,7 @@ import { useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { BookOpen, Clock, Users, Euro, Calendar, CheckCircle, MessageSquare } from "lucide-react"
+import { BookOpen, Clock, Users, Euro, Calendar, CheckCircle, MessageSquare, ShieldCheck } from "lucide-react"
 
 interface PublicCourse {
     title: string
@@ -16,6 +16,7 @@ interface PublicCourse {
     level: string
     duration: number
     price: number
+    affiliatePrice?: number
     startDate?: string
     teacher?: { name: string }
 }
@@ -73,7 +74,7 @@ export default function PublicCoursePage() {
     }
 
     const handleInterest = () => {
-        const message = `Hola! Estoy interesado en el curso: ${course.title} (${course.code}). ¿Podríais darme más información?`
+        const message = `¡Hola! Estoy interesado en el curso: ${course.title} (${course.code}). ¿Podríais enviarme más información?`
         window.open(`https://wa.me/34600000000?text=${encodeURIComponent(message)}`, '_blank')
     }
 
@@ -88,16 +89,29 @@ export default function PublicCoursePage() {
                 </div>
                 <div className="container mx-auto px-4 pb-12 relative z-10">
                     <Badge className="bg-blue-400/30 text-white border-blue-400/50 mb-3 px-3 py-1 text-xs">
-                        INFORMACIÓN DEL CURSO
+                        PROGRAMA FORMATIVO
                     </Badge>
                     <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight max-w-4xl leading-tight">
                         {course.title}
                     </h1>
-                    <p className="text-blue-100 text-lg mt-3 font-mono uppercase tracking-widest flex items-center gap-2">
-                        <Badge variant="outline" className="border-blue-300/30 text-blue-100 font-bold">{course.code}</Badge>
-                        <span className="opacity-70">|</span>
-                        <span className="font-semibold">{course.level}</span>
-                    </p>
+                    <div className="flex flex-wrap items-center gap-3 mt-4">
+                        <Badge variant="outline" className="border-blue-300/30 text-blue-100 font-bold px-3 py-1">
+                            CODE: {course.code}
+                        </Badge>
+                        <span className="text-blue-200/50">|</span>
+                        <Badge className="bg-white/10 hover:bg-white/20 text-white border-transparent backdrop-blur-sm">
+                            NIVEL {course.level}
+                        </Badge>
+                        {course.startDate && (
+                            <>
+                                <span className="text-blue-200/50">|</span>
+                                <div className="flex items-center gap-2 text-blue-100 text-sm font-medium">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>Inicio: {new Date(course.startDate).toLocaleDateString()}</span>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -108,7 +122,7 @@ export default function PublicCoursePage() {
                         <Card className="border-none shadow-xl shadow-slate-200/60 overflow-hidden">
                             <CardHeader className="bg-white border-b border-slate-50">
                                 <div className="flex items-center gap-2 text-slate-400 text-sm font-bold uppercase tracking-wider">
-                                    <CheckCircle className="h-4 w-4 text-green-500" /> Descripción del programa
+                                    <ShieldCheck className="h-4 w-4 text-blue-500" /> Descripción del programa
                                 </div>
                             </CardHeader>
                             <CardContent className="p-8">
@@ -157,12 +171,27 @@ export default function PublicCoursePage() {
 
                     {/* Sidebar CTA */}
                     <div className="space-y-6">
-                        <Card className="border-none shadow-2xl bg-white sticky top-6">
+                        <Card className="border-none shadow-2xl bg-white sticky top-6 overflow-hidden">
+                            <div className="bg-blue-600 h-2 w-full" />
                             <CardContent className="p-8">
                                 <div className="text-center mb-6">
-                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Inversión del curso</p>
-                                    <div className="flex items-center justify-center mt-1">
-                                        <span className="text-4xl font-extrabold text-slate-900 mx-2">€{course.price.toFixed(2)}</span>
+                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">Inversión del curso</p>
+
+                                    <div className="space-y-4">
+                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                            <p className="text-slate-500 text-[10px] font-bold uppercase mb-1">General</p>
+                                            <span className="text-3xl font-extrabold text-slate-900">€{course.price.toFixed(2)}</span>
+                                        </div>
+
+                                        {course.affiliatePrice && (
+                                            <div className="bg-green-50 p-4 rounded-2xl border border-green-100 relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 p-1">
+                                                    <Badge className="bg-green-500 text-[8px] font-bold">DTO. AFILIADOS</Badge>
+                                                </div>
+                                                <p className="text-green-600 text-[10px] font-bold uppercase mb-1">Afiliados UGT</p>
+                                                <span className="text-3xl font-extrabold text-green-700">€{course.affiliatePrice.toFixed(2)}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -181,12 +210,12 @@ export default function PublicCoursePage() {
                                     </div>
                                 </div>
 
-                                <Button className="w-full h-14 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98]" onClick={handleInterest}>
-                                    <MessageSquare className="mr-2 h-5 w-5" /> Consultar por WhatsApp
+                                <Button className="w-full h-14 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98] group" onClick={handleInterest}>
+                                    <MessageSquare className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Reservar Plaza
                                 </Button>
 
-                                <p className="text-center text-xs text-slate-400 mt-6">
-                                    UGT Sanidad Salamanca - Formación para el empleo
+                                <p className="text-center text-[10px] uppercase font-bold text-slate-400 mt-6 tracking-tighter">
+                                    Formación UGT Salamanca
                                 </p>
                             </CardContent>
                         </Card>

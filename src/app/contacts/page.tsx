@@ -26,7 +26,7 @@ export default function ContactsPage() {
                         </div>
                         <CardTitle className="text-xl">Módulo en Desarrollo</CardTitle>
                         <CardDescription className="max-w-md mx-auto mt-2">
-                            Estamos preparando un sistema completo de CRM para que puedas gestionar todas las relaciones externas de UGT Sanidad Salamanca en un solo lugar.
+                            Estamos preparando un sistema completo de CRM para que puedas gestionar todas las relaciones externas de Formación UGT Salamanca en un solo lugar.
                         </CardDescription>
                         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-2xl text-left">
                             <div className="p-4 bg-white rounded-xl shadow-sm border border-slate-100">

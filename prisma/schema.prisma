@@ -149,7 +149,8 @@ model Course {
   level       CourseLevel
   duration    Int           // duración en horas
   maxStudents Int?
-  price       Float
+  price       Float         // Precio para no afiliados
+  affiliatePrice Float?    // Precio para afiliados
   isActive    Boolean       @default(true)
   startDate   DateTime?
   endDate     DateTime?
