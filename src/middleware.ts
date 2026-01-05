@@ -6,9 +6,9 @@ export default withAuth({
     },
 })
 
-// Protege todas las rutas excepto login y recursos estáticos
+// Protege todas las rutas excepto login, recursos estáticos y rutas públicas de información
 export const config = {
     matcher: [
-        "/((?!api|_next/static|_next/image|favicon.ico|icon-192x192.png|icon-512x512.png|manifest.json|logo.svg).*)",
+        "/((?!api|_next/static|_next/image|favicon.ico|icon-192x192.png|icon-512x512.png|manifest.json|logo.svg|p/|api/public).*)",
     ],
 }

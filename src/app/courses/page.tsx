@@ -38,12 +38,15 @@ import {
   Euro,
   Calendar,
   Download,
-  Loader2
+  Loader2,
+  ExternalLink,
+  MessageSquare
 } from "lucide-react"
 import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
 import { toast } from "sonner"
 import { jsPDF } from "jspdf"
 import html2canvas from "html2canvas"
+import { QRCodeSVG } from "qrcode.react"
 
 interface Course {
   id: string
@@ -578,17 +581,63 @@ export default function CoursesPage() {
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between border-t pt-6 text-sm">
-                    <div className="flex items-center gap-2 text-slate-500">
-                      <Users className="h-4 w-4" />
-                      <span>{selectedCourse._count?.enrollments || 0} alumnos inscritos de {selectedCourse.maxStudents}</span>
+                  <div className="flex items-center justify-between border-t pt-6 text-sm no-print">
+                    <div className="flex flex-col gap-3 w-full">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-slate-500">
+                          <Users className="h-4 w-4" />
+                          <span>{selectedCourse._count?.enrollments || 0} alumnos inscritos de {selectedCourse.maxStudents}</span>
+                        </div>
+                        <div className="text-slate-400 italic font-medium">UGT Sanidad Salamanca</div>
+                      </div>
+
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col md:flex-row items-center gap-6">
+                        <div className="flex-1 space-y-2">
+                          <p className="font-bold text-slate-700 text-xs uppercase tracking-wider">Herramientas de captación</p>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 h-9"
+                              onClick={() => {
+                                const baseUrl = window.location.origin
+                                const publicUrl = `${baseUrl}/p/${selectedCourse.id}`
+                                const message = `¡Hola! Mira este curso que te puede interesar: ${selectedCourse.title}. Toda la info aquí: ${publicUrl}`
+                                window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank')
+                              }}
+                            >
+                              <MessageSquare className="h-4 w-4 mr-2" /> WhatsApp
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 h-9"
+                              onClick={() => {
+                                const baseUrl = window.location.origin
+                                const publicUrl = `${baseUrl}/p/${selectedCourse.id}`
+                                navigator.clipboard.writeText(publicUrl)
+                                toast.success("Enlace público copiado")
+                              }}
+                            >
+                              <ExternalLink className="h-4 w-4 mr-2" /> Copiar Enlace
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="bg-white p-2 rounded-lg border shadow-sm flex flex-col items-center">
+                          <QRCodeSVG
+                            value={`${window.location.host}/p/${selectedCourse.id}`}
+                            size={64}
+                            level="L"
+                          />
+                          <span className="text-[10px] mt-1 text-slate-400 font-bold uppercase">QR Info</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-slate-400 italic">UGT Sanidad Salamanca</div>
                   </div>
                 </div>
                 <div className="bg-slate-50 px-8 py-4 flex justify-end gap-3 no-print">
                   <Button variant="outline" onClick={() => handleExportPDF(selectedCourse)}>
-                    <Download className="mr-2 h-4 w-4" /> Descargar Ficha
+                    <Download className="mr-2 h-4 w-4" /> Descargar Ficha (PDF)
                   </Button>
                   <Button onClick={() => setIsViewDialogOpen(false)}>Cerrar</Button>
                 </div>
