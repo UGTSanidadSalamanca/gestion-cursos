@@ -23,6 +23,7 @@ export async function GET(
                 publicDescription: true,
                 benefits: true,
                 features: true,
+                callUrl: true,
                 hasCertificate: true,
                 hasMaterials: true,
                 teacher: {

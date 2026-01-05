@@ -65,6 +65,7 @@ interface Course {
   publicDescription?: string
   benefits?: string
   features?: string
+  callUrl?: string
   hasCertificate: boolean
   hasMaterials: boolean
   teacher?: {
@@ -100,6 +101,7 @@ export default function CoursesPage() {
     publicDescription: '',
     benefits: '',
     features: '',
+    callUrl: '',
     isActive: true,
     hasCertificate: true,
     hasMaterials: true,
@@ -218,6 +220,7 @@ export default function CoursesPage() {
       publicDescription: '',
       benefits: '',
       features: '',
+      callUrl: '',
       isActive: true,
       hasCertificate: true,
       hasMaterials: true,
@@ -240,6 +243,7 @@ export default function CoursesPage() {
       publicDescription: course.publicDescription || '',
       benefits: course.benefits || '',
       features: course.features || '',
+      callUrl: course.callUrl || '',
       isActive: course.isActive,
       hasCertificate: course.hasCertificate ?? true,
       hasMaterials: course.hasMaterials ?? true,
@@ -501,14 +505,24 @@ export default function CoursesPage() {
                           placeholder="Esta descripción aparecerá en el enlace público"
                         />
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
+                      <div className="grid grid-cols-4 items-center gap-4 mb-4">
                         <Label htmlFor="benefits" className="text-right">Beneficios</Label>
                         <Textarea
                           id="benefits"
                           className="col-span-3 h-20 bg-blue-50/30"
                           value={courseFormData.benefits}
                           onChange={(e) => setCourseFormData({ ...courseFormData, benefits: e.target.value })}
-                          placeholder="Ej: Certificado oficial, Prácticas en empresa, Material incluido (separar por comas)"
+                          placeholder="Ej: Certificado oficial, Material incluido (separar por comas)"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="callUrl" className="text-right whitespace-nowrap">Link Convocatoria</Label>
+                        <Input
+                          id="callUrl"
+                          placeholder="https://..."
+                          className="col-span-3 bg-blue-50/30"
+                          value={courseFormData.callUrl}
+                          onChange={(e) => setCourseFormData({ ...courseFormData, callUrl: e.target.value })}
                         />
                       </div>
                     </div>
@@ -926,7 +940,7 @@ export default function CoursesPage() {
                       onChange={(e) => setCourseFormData({ ...courseFormData, publicDescription: e.target.value })}
                     />
                   </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
+                  <div className="grid grid-cols-4 items-center gap-4 mb-4">
                     <Label htmlFor="edit-benefits" className="text-right">Beneficios</Label>
                     <Textarea
                       id="edit-benefits"
@@ -934,6 +948,16 @@ export default function CoursesPage() {
                       value={courseFormData.benefits}
                       onChange={(e) => setCourseFormData({ ...courseFormData, benefits: e.target.value })}
                       placeholder="Separar beneficios por comas"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-callUrl" className="text-right whitespace-nowrap">Link Convocatoria</Label>
+                    <Input
+                      id="edit-callUrl"
+                      placeholder="https://..."
+                      className="col-span-3 bg-blue-50/20"
+                      value={courseFormData.callUrl}
+                      onChange={(e) => setCourseFormData({ ...courseFormData, callUrl: e.target.value })}
                     />
                   </div>
                 </div>

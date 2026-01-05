@@ -5,7 +5,7 @@ import { useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { BookOpen, Clock, Users, Euro, Calendar, CheckCircle, MessageSquare, ShieldCheck } from "lucide-react"
+import { BookOpen, Clock, Users, Euro, Calendar, CheckCircle, MessageSquare, ShieldCheck, ExternalLink } from "lucide-react"
 
 interface PublicCourse {
     title: string
@@ -19,6 +19,7 @@ interface PublicCourse {
     affiliatePrice?: number
     startDate?: string
     features?: string
+    callUrl?: string
     hasCertificate?: boolean
     hasMaterials?: boolean
     teacher?: { name: string }
@@ -231,6 +232,16 @@ export default function PublicCoursePage() {
                                 <Button className="w-full h-14 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98] group" onClick={handleInterest}>
                                     <MessageSquare className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Reservar Plaza
                                 </Button>
+
+                                {course.callUrl && (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full h-12 mt-3 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold rounded-2xl transition-all"
+                                        onClick={() => window.open(course.callUrl, '_blank')}
+                                    >
+                                        <ExternalLink className="mr-2 h-4 w-4" /> Ver Convocatoria
+                                    </Button>
+                                )}
 
                                 <div className="mt-8 pt-6 border-t border-slate-100 space-y-3">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Contacto de Formación</p>

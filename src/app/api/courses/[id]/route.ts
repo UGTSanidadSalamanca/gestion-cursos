@@ -47,6 +47,7 @@ export async function PUT(
             publicDescription,
             benefits,
             features,
+            callUrl,
             hasCertificate,
             hasMaterials,
             teacherId
@@ -69,6 +70,7 @@ export async function PUT(
                 publicDescription,
                 benefits,
                 features,
+                callUrl,
                 hasCertificate,
                 hasMaterials,
                 teacherId: teacherId || null

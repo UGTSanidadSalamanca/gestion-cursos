@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
       publicDescription,
       benefits,
       features,
+      callUrl,
       hasCertificate,
       hasMaterials,
       teacherId
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
         publicDescription,
         benefits,
         features,
+        callUrl,
         hasCertificate,
         hasMaterials,
         teacherId: teacherId || null
@@ -101,6 +103,7 @@ export async function POST(request: NextRequest) {
         publicDescription,
         benefits,
         features,
+        callUrl,
         hasCertificate,
         hasMaterials,
         teacherId: teacherId || null
