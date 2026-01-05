@@ -64,6 +64,7 @@ interface Course {
   endDate?: string
   publicDescription?: string
   benefits?: string
+  features?: string
   hasCertificate: boolean
   hasMaterials: boolean
   teacher?: {
@@ -98,6 +99,7 @@ export default function CoursesPage() {
     description: '',
     publicDescription: '',
     benefits: '',
+    features: '',
     isActive: true,
     hasCertificate: true,
     hasMaterials: true,
@@ -215,6 +217,7 @@ export default function CoursesPage() {
       description: '',
       publicDescription: '',
       benefits: '',
+      features: '',
       isActive: true,
       hasCertificate: true,
       hasMaterials: true,
@@ -236,6 +239,7 @@ export default function CoursesPage() {
       description: course.description || '',
       publicDescription: course.publicDescription || '',
       benefits: course.benefits || '',
+      features: course.features || '',
       isActive: course.isActive,
       hasCertificate: course.hasCertificate ?? true,
       hasMaterials: course.hasMaterials ?? true,
@@ -483,28 +487,16 @@ export default function CoursesPage() {
                       />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label className="text-right">Características</Label>
-                      <div className="col-span-3 flex flex-col gap-2">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id="hasCertificate"
-                            checked={courseFormData.hasCertificate}
-                            onChange={(e) => setCourseFormData({ ...courseFormData, hasCertificate: e.target.checked })}
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <Label htmlFor="hasCertificate" className="text-sm font-medium">Ofrece Certificado oficial</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id="hasMaterials"
-                            checked={courseFormData.hasMaterials}
-                            onChange={(e) => setCourseFormData({ ...courseFormData, hasMaterials: e.target.checked })}
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <Label htmlFor="hasMaterials" className="text-sm font-medium">Materiales incluidos</Label>
-                        </div>
+                      <Label htmlFor="features" className="text-right">Ajustes Públicos</Label>
+                      <div className="col-span-3">
+                        <Textarea
+                          id="features"
+                          placeholder="Ej: Certificado oficial, Materiales incluidos (separados por comas)"
+                          className="resize-none h-20"
+                          value={courseFormData.features}
+                          onChange={(e) => setCourseFormData({ ...courseFormData, features: e.target.value })}
+                        />
+                        <p className="text-[10px] text-slate-400 mt-1 italic font-medium">Características con checkmark en la landing.</p>
                       </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -912,29 +904,17 @@ export default function CoursesPage() {
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Ajustes Públicos</Label>
-                  <div className="col-span-3 flex flex-col gap-2">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="edit-hasCertificate"
-                        checked={courseFormData.hasCertificate}
-                        onChange={(e) => setCourseFormData({ ...courseFormData, hasCertificate: e.target.checked })}
-                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <Label htmlFor="edit-hasCertificate" className="text-sm font-normal">Ofrece Certificado oficial</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="edit-hasMaterials"
-                        checked={courseFormData.hasMaterials}
-                        onChange={(e) => setCourseFormData({ ...courseFormData, hasMaterials: e.target.checked })}
-                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <Label htmlFor="edit-hasMaterials" className="text-sm font-normal">Materiales incluidos</Label>
-                    </div>
-                    <div className="flex items-center space-x-2 mt-1 pt-1 border-t border-slate-100">
+                  <Label htmlFor="features" className="text-right">Ajustes Públicos</Label>
+                  <div className="col-span-3">
+                    <Textarea
+                      id="features"
+                      placeholder="Ej: Certificado oficial, Materiales incluidos, Acceso 24/7 (separado por comas)"
+                      className="resize-none h-20"
+                      value={courseFormData.features}
+                      onChange={(e) => setCourseFormData({ ...courseFormData, features: e.target.value })}
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1 italic">Estas características aparecerán como checkmarks en la landing page.</p>
+                    <div className="flex items-center space-x-2 mt-3 pt-3 border-t border-slate-100">
                       <input
                         type="checkbox"
                         id="edit-isActive"

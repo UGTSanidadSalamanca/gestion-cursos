@@ -46,6 +46,7 @@ export async function PUT(
             endDate,
             publicDescription,
             benefits,
+            features,
             hasCertificate,
             hasMaterials,
             teacherId
@@ -67,6 +68,7 @@ export async function PUT(
                 endDate: endDate ? new Date(endDate) : null,
                 publicDescription,
                 benefits,
+                features,
                 hasCertificate,
                 hasMaterials,
                 teacherId: teacherId || null

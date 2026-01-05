@@ -22,6 +22,7 @@ export async function GET(
                 endDate: true,
                 publicDescription: true,
                 benefits: true,
+                features: true,
                 hasCertificate: true,
                 hasMaterials: true,
                 teacher: {

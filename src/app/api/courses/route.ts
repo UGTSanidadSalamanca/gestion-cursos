@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       endDate,
       publicDescription,
       benefits,
+      features,
       hasCertificate,
       hasMaterials,
       teacherId
@@ -79,6 +80,7 @@ export async function POST(request: NextRequest) {
         endDate: endDate ? new Date(endDate) : null,
         publicDescription,
         benefits,
+        features,
         hasCertificate,
         hasMaterials,
         teacherId: teacherId || null
@@ -98,6 +100,7 @@ export async function POST(request: NextRequest) {
         endDate: endDate ? new Date(endDate) : null,
         publicDescription,
         benefits,
+        features,
         hasCertificate,
         hasMaterials,
         teacherId: teacherId || null

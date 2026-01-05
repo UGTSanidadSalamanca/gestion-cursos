@@ -156,6 +156,7 @@ model Course {
   endDate     DateTime?
   publicDescription String?    // Descripción para la landing page pública
   benefits          String?    // Lo que el alumno aprenderá (separado por comas o líneas)
+  features          String?    // Características adicionales separadas por comas (Ej: Certificado, Materiales)
   hasCertificate    Boolean    @default(true)
   hasMaterials      Boolean    @default(true)
   teacherId   String?

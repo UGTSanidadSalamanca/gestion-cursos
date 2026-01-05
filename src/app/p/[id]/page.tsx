@@ -18,6 +18,7 @@ interface PublicCourse {
     price: number
     affiliatePrice?: number
     startDate?: string
+    features?: string
     hasCertificate?: boolean
     hasMaterials?: boolean
     teacher?: { name: string }
@@ -198,17 +199,28 @@ export default function PublicCoursePage() {
                                 </div>
 
                                 <div className="space-y-4 pt-6 border-t border-slate-100">
-                                    {(course.hasCertificate ?? true) && (
-                                        <div className="flex items-center gap-3 text-slate-600 text-sm">
-                                            <CheckCircle className="h-4 w-4 text-green-500" />
-                                            <span>Certificado oficial</span>
-                                        </div>
-                                    )}
-                                    {(course.hasMaterials ?? true) && (
-                                        <div className="flex items-center gap-3 text-slate-600 text-sm">
-                                            <CheckCircle className="h-4 w-4 text-green-500" />
-                                            <span>Materiales incluidos</span>
-                                        </div>
+                                    {course.features ? (
+                                        course.features.split(/,|\n/).map((feature, i) => (
+                                            <div key={i} className="flex items-center gap-3 text-slate-600 text-sm italic font-medium">
+                                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                                <span>{feature.trim()}</span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <>
+                                            {(course.hasCertificate ?? true) && (
+                                                <div className="flex items-center gap-3 text-slate-600 text-sm">
+                                                    <CheckCircle className="h-4 w-4 text-green-500" />
+                                                    <span>Certificado oficial</span>
+                                                </div>
+                                            )}
+                                            {(course.hasMaterials ?? true) && (
+                                                <div className="flex items-center gap-3 text-slate-600 text-sm">
+                                                    <CheckCircle className="h-4 w-4 text-green-500" />
+                                                    <span>Materiales incluidos</span>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                     <div className="flex items-center gap-3 text-slate-600 text-sm">
                                         <CheckCircle className="h-4 w-4 text-green-500" />
