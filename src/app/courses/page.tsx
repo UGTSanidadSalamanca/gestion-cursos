@@ -257,54 +257,36 @@ export default function CoursesPage() {
     const toastId = toast.loading("Preparando ficha técnica...")
 
     try {
-      // Pequeño retardo para asegurar que el DOM está estable
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
+      await new Promise(resolve => setTimeout(resolve, 1500))
       const element = document.getElementById('course-details-print')
       if (!element) {
         toast.error("Error: Abre la vista del curso antes de descargar", { id: toastId })
         return
       }
 
-      toast.loading("Procesando diseño para impresión...", { id: toastId })
+      toast.loading("Capturando diseño...", { id: toastId })
       const canvas = await html2canvas(element, {
-        scale: 2, // Reducido de 3 a 2 para mayor compatibilidad
+        scale: 2,
         useCORS: true,
-        logging: false,
         backgroundColor: "#ffffff",
-        windowWidth: 1000,
         onclone: (clonedDoc) => {
           const el = clonedDoc.getElementById('course-details-print')
           if (el) {
-            const all = el.getElementsByTagName('*')
-            for (let i = 0; i < all.length; i++) {
-              const item = all[i] as HTMLElement
-              item.style.fontFamily = 'Arial, sans-serif'
-
-              // Limpieza de colores oklch si existen
-              const styles = window.getComputedStyle(item)
-              if (styles.color.includes('oklch')) item.style.color = '#1e293b'
-              if (styles.backgroundColor.includes('oklch')) item.style.backgroundColor = 'transparent'
-
-              if (item.classList.contains('text-blue-600')) item.style.color = '#2563eb'
-              if (item.classList.contains('bg-blue-600')) item.style.backgroundColor = '#2563eb'
-              if (item.classList.contains('text-green-600')) item.style.color = '#16a34a'
-              if (item.classList.contains('bg-blue-50')) item.style.backgroundColor = '#eff6ff'
-              if (item.classList.contains('no-print')) item.style.display = 'none'
+            const elements = el.getElementsByTagName('*')
+            for (let i = 0; i < elements.length; i++) {
+              const item = elements[i] as HTMLElement
+              if (window.getComputedStyle(item).color.includes('oklch')) item.style.color = '#1e293b'
             }
           }
         }
       })
 
-      const imgData = canvas.toDataURL('image/png')
-      if (imgData === 'data:,' || imgData.length < 100) {
-        throw new Error("La captura de pantalla falló (imagen vacía)")
-      }
-
+      const imgData = canvas.toDataURL('image/jpeg', 0.8)
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: true
       })
 
       const pdfWidth = pdf.internal.pageSize.getWidth()
@@ -313,24 +295,22 @@ export default function CoursesPage() {
       const targetWidth = pdfWidth - 20
       const targetHeight = (imgProps.height * targetWidth) / imgProps.width
 
-      // Encabezado
       pdf.setFillColor(37, 99, 235)
       pdf.rect(0, 0, pdfWidth, 15, 'F')
       pdf.setFontSize(10)
       pdf.setTextColor(255, 255, 255)
-      pdf.text('Formación UGT Salamanca - Ficha Técnica de Curso', 10, 10)
+      pdf.text(`FICHA TÉCNICA: ${course.title}`, 10, 10)
 
-      pdf.addImage(imgData, 'PNG', 10, 25, targetWidth, targetHeight)
-
+      pdf.addImage(imgData, 'JPEG', 10, 20, targetWidth, targetHeight)
       pdf.setFontSize(8)
       pdf.setTextColor(150, 150, 150)
-      pdf.text(`Documento generado automáticamente el ${new Date().toLocaleString()}`, 10, pdfHeight - 10)
+      pdf.text(`Generado el ${new Date().toLocaleDateString()} - Formación UGT Salamanca`, 10, pdfHeight - 10)
 
-      pdf.save(`FICHA-CURSO-${course.code}.pdf`)
+      pdf.save(`FICHA-${course.code}.pdf`)
       toast.success("PDF descargado con éxito", { id: toastId })
     } catch (error) {
-      console.error("Error crítico al generar PDF:", error)
-      toast.error("Error al generar el PDF. Prueba a cerrar y abrir la vista del curso.", { id: toastId })
+      console.error("PDF Export Error:", error)
+      toast.error("Error al generar PDF. Intenta con Chrome.", { id: toastId })
     }
   }
 
