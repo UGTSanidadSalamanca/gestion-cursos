@@ -236,7 +236,7 @@ export default function CoursesPage() {
     const toastId = toast.loading("Preparando ficha técnica...")
 
     // Pequeño retardo para asegurar que el DOM está estable
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, 800))
 
     const element = document.getElementById('course-details-print')
     if (!element) {
@@ -245,12 +245,25 @@ export default function CoursesPage() {
     }
 
     try {
-      toast.loading("Capturando diseño...", { id: toastId })
+      toast.loading("Capturando diseño (evitando oklch)...", { id: toastId })
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
+        onclone: (clonedDoc) => {
+          const el = clonedDoc.getElementById('course-details-print')
+          if (el) {
+            // Forzamos colores estándar en el clon para evitar errores con oklch
+            const allElements = el.getElementsByTagName('*')
+            for (let i = 0; i < allElements.length; i++) {
+              const target = allElements[i] as HTMLElement
+              target.style.color = '#1e293b'
+              if (target.classList.contains('bg-blue-600')) target.style.backgroundColor = '#2563eb'
+              if (target.classList.contains('text-blue-600')) target.style.color = '#2563eb'
+            }
+          }
+        }
       })
 
       const imgData = canvas.toDataURL('image/png')
@@ -269,7 +282,7 @@ export default function CoursesPage() {
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
 
       pdf.setFontSize(22)
-      pdf.setTextColor(14, 165, 233)
+      pdf.setTextColor(30, 41, 59)
       pdf.text('FICHA DEL CURSO', 10, 20)
       pdf.addImage(imgData, 'PNG', 10, 30, pdfWidth, pdfHeight)
 
@@ -281,7 +294,7 @@ export default function CoursesPage() {
       toast.success("PDF descargado correctamente", { id: toastId })
     } catch (error) {
       console.error("Error al generar PDF:", error)
-      toast.error("Error al exportar. Inténtalo de nuevo.", { id: toastId })
+      toast.error("Error técnico: Problema de compatibilidad de colores. Inténtalo de nuevo.", { id: toastId })
     }
   }
 
