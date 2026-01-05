@@ -58,9 +58,14 @@ function Sidebar({ className }: SidebarProps) {
     <div className={cn('pb-12 w-64 flex flex-col h-full', className)}>
       <div className="space-y-4 py-4 flex-1">
         <div className="px-3 py-2">
-          <div className="flex items-center mb-6">
-            <BarChart3 className="h-8 w-8 text-blue-400 mr-2" />
-            <h2 className="text-lg font-semibold text-white">Gestión Cursos</h2>
+          <div className="flex items-center mb-6 px-2">
+            <div className="bg-white p-1 rounded-lg mr-3 shadow-md">
+              <img src="/logo-ugt.png" alt="Logo UGT" className="h-10 w-10 object-contain" />
+            </div>
+            <div className="flex flex-col">
+              <h2 className="text-sm font-bold text-white leading-tight">Formación UGT</h2>
+              <span className="text-[10px] text-blue-400 font-bold tracking-tighter uppercase">Salamanca</span>
+            </div>
           </div>
           <div className="space-y-1">
             {navigation.map((item) => {
@@ -120,8 +125,13 @@ export function MainLayout({ children }: MainLayoutProps) {
         <div className="fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-slate-700 z-50">
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center">
-              <BarChart3 className="h-8 w-8 text-blue-400 mr-2" />
-              <h2 className="text-lg font-semibold text-white">Gestión Cursos</h2>
+              <div className="bg-white p-1 rounded-lg mr-2 shadow-sm">
+                <img src="/logo-ugt.png" alt="Logo UGT" className="h-8 w-8 object-contain" />
+              </div>
+              <div className="flex flex-col">
+                <h2 className="text-xs font-bold text-white leading-none">Formación UGT</h2>
+                <span className="text-[8px] text-blue-400 font-bold uppercase">Salamanca</span>
+              </div>
             </div>
             <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)}>
               <X className="h-4 w-4 text-white" />
@@ -145,7 +155,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </Button>
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1 items-center">
-              <h1 className="text-lg font-semibold">Sistema de Gestión de Cursos</h1>
+              <h1 className="text-sm font-bold uppercase tracking-tight text-slate-700">Formación UGT <span className="text-blue-600">Salamanca</span></h1>
             </div>
           </div>
         </div>

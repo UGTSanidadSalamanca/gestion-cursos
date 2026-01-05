@@ -49,10 +49,15 @@ export default function PublicCoursePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <div className="animate-pulse flex flex-col items-center gap-4">
-                    <div className="h-12 w-12 bg-blue-200 rounded-full"></div>
-                    <div className="h-4 w-48 bg-slate-200 rounded"></div>
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <div className="flex flex-col items-center gap-6">
+                    <div className="relative h-20 w-20">
+                        <img src="/logo-ugt.png" alt="Logo UGT" className="h-20 w-20 animate-pulse object-contain" />
+                    </div>
+                    <div className="flex flex-col items-center">
+                        <p className="text-xl font-black text-slate-800 tracking-tighter uppercase">Formación UGT</p>
+                        <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">Salamanca</span>
+                    </div>
                 </div>
             </div>
         )
@@ -258,9 +263,12 @@ export default function PublicCoursePage() {
                                     </div>
                                 </div>
 
-                                <p className="text-center text-[10px] uppercase font-bold text-slate-400 mt-8 tracking-tighter">
-                                    Formación UGT Salamanca
-                                </p>
+                                <div className="mt-8 flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100 cursor-default">
+                                    <img src="/logo-ugt.png" alt="Logo UGT" className="h-6 w-6 object-contain" />
+                                    <p className="text-center text-[8px] uppercase font-black text-slate-500 tracking-[0.2em]">
+                                        Formación UGT Salamanca
+                                    </p>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>

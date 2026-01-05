@@ -50,13 +50,18 @@ export default function LoginPage() {
             </div>
 
             <Card className="w-full max-w-md border-slate-800 bg-slate-900/50 backdrop-blur-xl shadow-2xl relative z-10">
-                <CardHeader className="space-y-2 text-center">
-                    <div className="flex justify-center mb-2">
-                        <div className="p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/20">
-                            <Database className="h-8 w-8 text-white" />
+                <CardHeader className="space-y-4 text-center">
+                    <div className="flex justify-center mb-0">
+                        <div className="p-1 bg-white rounded-3xl shadow-2xl shadow-blue-500/30 border border-slate-700">
+                            <img src="/logo-ugt.png" alt="Logo UGT" className="h-20 w-20 object-contain rounded-2xl" />
                         </div>
                     </div>
-                    <CardTitle className="text-3xl font-bold tracking-tight text-white">Gestión Cursos</CardTitle>
+                    <div className="space-y-1">
+                        <CardTitle className="text-3xl font-black tracking-tighter text-white uppercase">
+                            Formación UGT <span className="text-blue-500">Salamanca</span>
+                        </CardTitle>
+                        <p className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.2em]">Sistema de Gestión Integral</p>
+                    </div>
                     <CardDescription className="text-slate-400">
                         Ingresa tus credenciales para acceder al sistema
                     </CardDescription>
