@@ -54,8 +54,13 @@ interface Course {
   title: string
   description?: string
   code: string
-  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT'
+  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT' | 'PREPARACION_OPOSICIONES'
   duration: number
+  durationSessions?: number
+  sessionDuration?: number
+  durationMonths?: number
+  durationPeriod?: string
+  syllabusUrl?: string
   maxStudents: number
   price: number
   affiliatePrice?: number
@@ -93,9 +98,15 @@ export default function CoursesPage() {
     code: '',
     level: 'BEGINNER',
     duration: '',
+    durationSessions: '',
+    sessionDuration: '',
+    durationMonths: '',
+    durationPeriod: '',
+    syllabusUrl: '',
     price: '',
     affiliatePrice: '',
     startDate: '',
+    endDate: '',
     teacherId: '',
     description: '',
     publicDescription: '',
@@ -152,6 +163,9 @@ export default function CoursesPage() {
         body: JSON.stringify({
           ...courseFormData,
           duration: courseFormData.duration ? parseInt(courseFormData.duration) : 0,
+          durationSessions: courseFormData.durationSessions ? parseInt(courseFormData.durationSessions) : null,
+          sessionDuration: courseFormData.sessionDuration ? parseFloat(courseFormData.sessionDuration) : null,
+          durationMonths: courseFormData.durationMonths ? parseInt(courseFormData.durationMonths) : null,
           price: courseFormData.price ? parseFloat(courseFormData.price) : 0,
           affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
           maxStudents: parseInt(courseFormData.maxStudents),
@@ -185,6 +199,9 @@ export default function CoursesPage() {
         body: JSON.stringify({
           ...courseFormData,
           duration: courseFormData.duration ? parseInt(courseFormData.duration) : 0,
+          durationSessions: courseFormData.durationSessions ? parseInt(courseFormData.durationSessions) : null,
+          sessionDuration: courseFormData.sessionDuration ? parseFloat(courseFormData.sessionDuration) : null,
+          durationMonths: courseFormData.durationMonths ? parseInt(courseFormData.durationMonths) : null,
           price: courseFormData.price ? parseFloat(courseFormData.price) : 0,
           affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
           maxStudents: parseInt(courseFormData.maxStudents),
@@ -212,9 +229,15 @@ export default function CoursesPage() {
       code: '',
       level: 'BEGINNER',
       duration: '',
+      durationSessions: '',
+      sessionDuration: '',
+      durationMonths: '',
+      durationPeriod: '',
+      syllabusUrl: '',
       price: '',
       affiliatePrice: '',
       startDate: '',
+      endDate: '',
       teacherId: '',
       description: '',
       publicDescription: '',
@@ -235,9 +258,15 @@ export default function CoursesPage() {
       code: course.code,
       level: course.level,
       duration: course.duration.toString(),
+      durationSessions: course.durationSessions?.toString() || '',
+      sessionDuration: course.sessionDuration?.toString() || '',
+      durationMonths: course.durationMonths?.toString() || '',
+      durationPeriod: course.durationPeriod || '',
+      syllabusUrl: course.syllabusUrl || '',
       price: course.price.toString(),
       affiliatePrice: course.affiliatePrice?.toString() || '',
       startDate: course.startDate ? (typeof course.startDate === 'string' ? course.startDate.split('T')[0] : (course.startDate as any).toISOString().split('T')[0]) : '',
+      endDate: course.endDate ? (typeof course.endDate === 'string' ? course.endDate.split('T')[0] : (course.endDate as any).toISOString().split('T')[0]) : '',
       teacherId: (course as any).teacherId || (course.teacher?.id) || '',
       description: course.description || '',
       publicDescription: course.publicDescription || '',
@@ -310,11 +339,11 @@ export default function CoursesPage() {
       pdf.setTextColor(150, 150, 150)
       pdf.text(`Generado el ${new Date().toLocaleDateString()} - Formación UGT Salamanca`, 10, pdfHeight - 10)
 
-      pdf.save(`FICHA-${course.code}.pdf`)
+      pdf.save(`FICHA-${course.code.replace(/[^a-z0-9]/gi, '_')}.pdf`)
       toast.success("PDF descargado con éxito", { id: toastId })
     } catch (error) {
       console.error("PDF Export Error:", error)
-      toast.error("Error al generar PDF. Intenta con Chrome.", { id: toastId })
+      toast.error(`Error al generar PDF: ${error instanceof Error ? error.message : "Desconocido"}`, { id: toastId })
     }
   }
 
@@ -328,6 +357,8 @@ export default function CoursesPage() {
         return <Badge className="bg-purple-500 hover:bg-purple-600">Avanzado</Badge>
       case "EXPERT":
         return <Badge className="bg-red-500 hover:bg-red-600">Experto</Badge>
+      case "PREPARACION_OPOSICIONES":
+        return <Badge className="bg-amber-600 hover:bg-amber-700">Oposiciones</Badge>
       default:
         return <Badge>{level}</Badge>
     }
@@ -403,6 +434,7 @@ export default function CoursesPage() {
                           <SelectItem value="INTERMEDIATE">Intermedio</SelectItem>
                           <SelectItem value="ADVANCED">Avanzado</SelectItem>
                           <SelectItem value="EXPERT">Experto</SelectItem>
+                          <SelectItem value="PREPARACION_OPOSICIONES">Oposiciones</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -415,6 +447,61 @@ export default function CoursesPage() {
                         value={courseFormData.duration}
                         onChange={(e) => setCourseFormData({ ...courseFormData, duration: e.target.value })}
                         required
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="durationSessions" className="text-right">Sesiones</Label>
+                        <Input
+                          id="durationSessions"
+                          type="number"
+                          className="col-span-3"
+                          value={courseFormData.durationSessions}
+                          onChange={(e) => setCourseFormData({ ...courseFormData, durationSessions: e.target.value })}
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="sessionDuration" className="text-right">h/sesión</Label>
+                        <Input
+                          id="sessionDuration"
+                          type="number"
+                          step="0.5"
+                          className="col-span-3"
+                          value={courseFormData.sessionDuration}
+                          onChange={(e) => setCourseFormData({ ...courseFormData, sessionDuration: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="durationMonths" className="text-right whitespace-nowrap">Meses</Label>
+                        <Input
+                          id="durationMonths"
+                          type="number"
+                          className="col-span-3"
+                          value={courseFormData.durationMonths}
+                          onChange={(e) => setCourseFormData({ ...courseFormData, durationMonths: e.target.value })}
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="durationPeriod" className="text-right whitespace-nowrap">Periodo</Label>
+                        <Input
+                          id="durationPeriod"
+                          className="col-span-3"
+                          placeholder="Ej: Abr-Jun"
+                          value={courseFormData.durationPeriod}
+                          onChange={(e) => setCourseFormData({ ...courseFormData, durationPeriod: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4 bg-amber-50/50 p-2 rounded-lg border border-amber-100">
+                      <Label htmlFor="syllabusUrl" className="text-right text-amber-700 font-bold">Drive/Temario</Label>
+                      <Input
+                        id="syllabusUrl"
+                        className="col-span-3 border-amber-200"
+                        placeholder="Link a Drive o plataforma (solo administradores)"
+                        value={courseFormData.syllabusUrl}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, syllabusUrl: e.target.value })}
                       />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -460,15 +547,27 @@ export default function CoursesPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="startDate" className="text-right">Fecha Inicio</Label>
-                      <Input
-                        id="startDate"
-                        type="date"
-                        className="col-span-3"
-                        value={courseFormData.startDate}
-                        onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })}
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="startDate" className="text-right">Inicio</Label>
+                        <Input
+                          id="startDate"
+                          type="date"
+                          className="col-span-3"
+                          value={courseFormData.startDate}
+                          onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })}
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="endDate" className="text-right">Fin</Label>
+                        <Input
+                          id="endDate"
+                          type="date"
+                          className="col-span-3"
+                          value={courseFormData.endDate}
+                          onChange={(e) => setCourseFormData({ ...courseFormData, endDate: e.target.value })}
+                        />
+                      </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="features" className="text-right">Ajustes Públicos</Label>
@@ -565,6 +664,7 @@ export default function CoursesPage() {
                     <SelectItem value="INTERMEDIATE">Intermedio</SelectItem>
                     <SelectItem value="ADVANCED">Avanzado</SelectItem>
                     <SelectItem value="EXPERT">Experto</SelectItem>
+                    <SelectItem value="PREPARACION_OPOSICIONES">Oposiciones</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -678,8 +778,32 @@ export default function CoursesPage() {
                         <div>
                           <p className="text-xs font-bold text-slate-400 uppercase">Duración</p>
                           <p className="font-semibold text-slate-700">{selectedCourse.duration} horas</p>
+                          {(selectedCourse.durationSessions || selectedCourse.durationMonths || selectedCourse.durationPeriod) && (
+                            <p className="text-[10px] text-slate-500 mt-1 italic">
+                              {selectedCourse.durationPeriod && `Periodo: ${selectedCourse.durationPeriod}. `}
+                              {selectedCourse.durationMonths && `${selectedCourse.durationMonths} meses. `}
+                              {selectedCourse.durationSessions && `${selectedCourse.durationSessions} sesiones`}
+                              {selectedCourse.sessionDuration && ` de ${selectedCourse.sessionDuration}h`}
+                            </p>
+                          )}
                         </div>
                       </div>
+                      {selectedCourse.syllabusUrl && (
+                        <div className="flex items-start space-x-3 bg-amber-50 p-2 rounded-lg border border-amber-100">
+                          <div className="p-2 bg-amber-100 rounded-lg"><ExternalLink className="h-5 w-5 text-amber-600" /></div>
+                          <div>
+                            <p className="text-xs font-bold text-amber-500 uppercase">Temario / Drive</p>
+                            <a
+                              href={selectedCourse.syllabusUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-bold text-amber-700 hover:underline flex items-center"
+                            >
+                              Acceder al material <ExternalLink className="h-3 w-3 ml-1" />
+                            </a>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-4">
                       <div className="flex items-start space-x-3">
@@ -824,11 +948,12 @@ export default function CoursesPage() {
                       <SelectItem value="INTERMEDIATE">Intermedio</SelectItem>
                       <SelectItem value="ADVANCED">Avanzado</SelectItem>
                       <SelectItem value="EXPERT">Experto</SelectItem>
+                      <SelectItem value="PREPARACION_OPOSICIONES">Oposiciones</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-duration" className="text-right">Duración (h)</Label>
+                  <Label htmlFor="edit-duration" className="text-right">Duración Total (h)</Label>
                   <Input
                     id="edit-duration"
                     type="number"
@@ -836,6 +961,61 @@ export default function CoursesPage() {
                     value={courseFormData.duration}
                     onChange={(e) => setCourseFormData({ ...courseFormData, duration: e.target.value })}
                     required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-durationSessions" className="text-right">Sesiones</Label>
+                    <Input
+                      id="edit-durationSessions"
+                      type="number"
+                      className="col-span-3"
+                      value={courseFormData.durationSessions}
+                      onChange={(e) => setCourseFormData({ ...courseFormData, durationSessions: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-sessionDuration" className="text-right">h/sesión</Label>
+                    <Input
+                      id="edit-sessionDuration"
+                      type="number"
+                      step="0.5"
+                      className="col-span-3"
+                      value={courseFormData.sessionDuration}
+                      onChange={(e) => setCourseFormData({ ...courseFormData, sessionDuration: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-durationMonths" className="text-right whitespace-nowrap">Meses</Label>
+                    <Input
+                      id="edit-durationMonths"
+                      type="number"
+                      className="col-span-3"
+                      value={courseFormData.durationMonths}
+                      onChange={(e) => setCourseFormData({ ...courseFormData, durationMonths: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-durationPeriod" className="text-right whitespace-nowrap">Periodo</Label>
+                    <Input
+                      id="edit-durationPeriod"
+                      className="col-span-3"
+                      placeholder="Ej: Abr-Jun"
+                      value={courseFormData.durationPeriod}
+                      onChange={(e) => setCourseFormData({ ...courseFormData, durationPeriod: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4 bg-amber-50/50 p-2 rounded-lg border border-amber-100">
+                  <Label htmlFor="edit-syllabusUrl" className="text-right text-amber-700 font-bold">Drive/Temario</Label>
+                  <Input
+                    id="edit-syllabusUrl"
+                    className="col-span-3 border-amber-200"
+                    placeholder="Link a Drive o plataforma (solo administradores)"
+                    value={courseFormData.syllabusUrl}
+                    onChange={(e) => setCourseFormData({ ...courseFormData, syllabusUrl: e.target.value })}
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -887,15 +1067,27 @@ export default function CoursesPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-startDate" className="text-right">Fecha Inicio</Label>
-                  <Input
-                    id="edit-startDate"
-                    type="date"
-                    className="col-span-3"
-                    value={courseFormData.startDate}
-                    onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-startDate" className="text-right">Inicio</Label>
+                    <Input
+                      id="edit-startDate"
+                      type="date"
+                      className="col-span-3"
+                      value={courseFormData.startDate}
+                      onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="edit-endDate" className="text-right">Fin</Label>
+                    <Input
+                      id="edit-endDate"
+                      type="date"
+                      className="col-span-3"
+                      value={courseFormData.endDate}
+                      onChange={(e) => setCourseFormData({ ...courseFormData, endDate: e.target.value })}
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="features" className="text-right">Ajustes Públicos</Label>

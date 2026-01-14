@@ -147,7 +147,12 @@ model Course {
   description String?
   code        String        @unique
   level       CourseLevel
-  duration    Int           // duración en horas
+  duration           Int           // duración total en horas
+  durationSessions   Int?          // número de sesiones/clases
+  sessionDuration    Float?        // duración de cada sesión en horas
+  durationMonths     Int?          // duración en meses
+  durationPeriod     String?       // periodo de tiempo (ej: "cuatro meses")
+  syllabusUrl        String?       // Enlace a temarios (Drive, etc.)
   maxStudents Int?
   price       Float         // Precio para no afiliados
   affiliatePrice Float?    // Precio para afiliados
@@ -179,6 +184,7 @@ enum CourseLevel {
   INTERMEDIATE
   ADVANCED
   EXPERT
+  PREPARACION_OPOSICIONES
 }
 
 // Matrículas/Inscripciones
