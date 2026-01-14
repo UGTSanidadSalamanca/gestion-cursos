@@ -5,7 +5,7 @@ import { useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { BookOpen, Clock, Users, Euro, Calendar, CheckCircle, MessageSquare, ShieldCheck, ExternalLink } from "lucide-react"
+import { BookOpen, Clock, Users, Euro, Calendar, CheckCircle, MessageSquare, ShieldCheck, ExternalLink, Printer } from "lucide-react"
 
 interface PublicCourse {
     title: string
@@ -100,6 +100,17 @@ export default function PublicCoursePage() {
             <div className="bg-gradient-to-br from-blue-700 to-indigo-800 text-white h-72 flex items-end relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-10">
                     <BookOpen className="h-80 w-80" />
+                </div>
+                {/* Botón Imprimir Flotante (no-print) */}
+                <div className="absolute top-6 right-6 no-print">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md"
+                        onClick={() => window.print()}
+                    >
+                        <Printer className="h-4 w-4 mr-2" /> Imprimir Ficha
+                    </Button>
                 </div>
                 <div className="container mx-auto px-4 pb-12 relative z-10">
                     <Badge className="bg-blue-400/30 text-white border-blue-400/50 mb-3 px-3 py-1 text-xs">
