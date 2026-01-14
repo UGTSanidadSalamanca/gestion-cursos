@@ -129,60 +129,75 @@
     margin: 10mm;
   }
 
-  /* AISLAMIENTO RADICAL: Ocultar TODO por defecto */
-  body * {
-    visibility: hidden;
-    height: 0;
-    margin: 0;
-    padding: 0;
-    overflow: hidden !important;
+  /* AISLAMIENTO TOTAL: Ocultar la aplicación principal */
+  /* Normalmente Radix Portals son hijos directos del body, al igual que el div principal de Next.js */
+  body>*:not([data-radix-portal]):not(#public-course-landing) {
+    display: none !important;
   }
 
-  /* Mostrar solo los contenedores de impresión específicos y sus hijos */
-  #course-details-print,
-  #course-details-print *,
-  #public-course-landing,
-  #public-course-landing * {
-    visibility: visible !important;
-    height: auto !important;
-    overflow: visible !important;
-  }
-
-  /* Posicionamiento para la Ficha Técnica (dentro de un Dialog/Modal) */
-  #course-details-print {
+  /* Mostrar solo lo necesario dentro de los portales (Fichas Técnicas) */
+  [data-radix-portal] {
+    display: block !important;
     position: absolute !important;
-    left: 0 !important;
     top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Ocultar elementos de UI del Dialog */
+  [role="dialog"]>button,
+  .bg-black\/80,
+  [data-state="open"]>.fixed {
+    display: none !important;
+  }
+
+  #course-details-print {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
     width: 210mm !important;
     background: white !important;
-    padding: 0 !important;
     margin: 0 !important;
+    padding: 0 !important;
+    z-index: 9999 !important;
   }
 
-  /* Posicionamiento para la Landing Page Pública */
+  #course-details-print * {
+    visibility: visible !important;
+  }
+
+  /* Estilos para la Landing Page Pública */
   #public-course-landing {
+    display: block !important;
+    visibility: visible !important;
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
     background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  .no-print {
+  #public-course-landing * {
+    visibility: visible !important;
+  }
+
+  .no-print,
+  button,
+  .sidebar-cta-extra {
     display: none !important;
-    height: 0 !important;
-    visibility: hidden !important;
   }
 
-  /* Evitar saltos de página indeseados y condensar contenido */
+  /* Condensar Landing para 1 sola página A4 */
   #public-course-landing h1 {
-    font-size: 20pt !important;
+    font-size: 18pt !important;
     line-height: 1.1 !important;
     margin-bottom: 2mm !important;
   }
 
   #public-course-landing .h-72 {
-    height: 45mm !important;
+    height: 40mm !important;
   }
 
   #public-course-landing .p-8 {
@@ -190,23 +205,29 @@
   }
 
   #public-course-landing .mt-12 {
-    margin-top: 6mm !important;
+    margin-top: 4mm !important;
   }
 
   #public-course-landing .mb-12 {
-    margin-bottom: 6mm !important;
+    margin-bottom: 4mm !important;
+  }
+
+  #public-course-landing .mt-6 {
+    margin-top: 3mm !important;
+  }
+
+  #public-course-landing .grid {
+    gap: 4mm !important;
   }
 
   #public-course-landing [class*="space-y"]>*+* {
     margin-top: 2mm !important;
   }
 
-  /* Forzar layout de una columna para imprimir la landing page en una cara */
   #public-course-landing .grid-cols-1,
   #public-course-landing .lg\:grid-cols-3 {
     display: flex !important;
     flex-direction: column !important;
-    gap: 4mm !important;
   }
 
   #public-course-landing .lg\:col-span-2 {
@@ -216,11 +237,6 @@
   #public-course-landing .sticky {
     position: relative !important;
     top: 0 !important;
-  }
-
-  /* Ocultar secciones redundantes en la impresión de la landing si es necesario */
-  #public-course-landing .sidebar-cta-extra {
-    display: none !important;
   }
 
   /* Asegurar que se impriman colores y fondos */
