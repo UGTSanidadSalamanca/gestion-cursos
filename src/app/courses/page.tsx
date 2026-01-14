@@ -349,13 +349,42 @@ export default function CoursesPage() {
           if (el) {
             // Aseguramos que el clon tenga fondo blanco y sea visible
             el.style.backgroundColor = '#ffffff'
-            // Corregimos posibles problemas con colores modernos (oklch) que html2canvas no entiende bien
+
+            // ELIMINACIÓN AGRESIVA DE OKLCH: html2canvas falla al intentar parsear estos colores.
+            // Recorremos todos los elementos y forzamos colores estándar si detectamos oklch.
             const allElements = el.getElementsByTagName('*')
             for (let i = 0; i < allElements.length; i++) {
               const item = allElements[i] as HTMLElement
-              const style = clonedDoc.defaultView?.getComputedStyle(item)
-              if (style?.color?.includes('oklch')) item.style.color = '#1e293b'
-              if (style?.backgroundColor?.includes('oklch')) item.style.backgroundColor = 'transparent'
+
+              // Forzamos que no haya estilos inline con oklch
+              const inlineStyles = item.getAttribute('style') || ''
+              if (inlineStyles.includes('oklch')) {
+                item.setAttribute('style', inlineStyles.replace(/oklch\([^)]+\)/g, '#1e293b'))
+              }
+
+              // Intentamos corregir los estilos computados que html2canvas intentará leer
+              try {
+                const computed = clonedDoc.defaultView?.getComputedStyle(item)
+                if (computed) {
+                  if (computed.color && computed.color.includes('oklch')) {
+                    item.style.color = '#1e293b'
+                  }
+                  if (computed.backgroundColor && computed.backgroundColor.includes('oklch')) {
+                    // Si es un fondo con oklch, lo ponemos blanco o transparente según el contexto
+                    item.style.backgroundColor = item.tagName === 'DIV' ? '#ffffff' : 'transparent'
+                  }
+                  if (computed.borderColor && computed.borderColor.includes('oklch')) {
+                    item.style.borderColor = '#e2e8f0'
+                  }
+                  // Corregir SVG fills que suelen usar oklch en Tailwind 4/v3.4+
+                  if (item instanceof SVGElement) {
+                    const fill = item.getAttribute('fill')
+                    if (fill && fill.includes('oklch')) item.setAttribute('fill', 'currentColor')
+                  }
+                }
+              } catch (e) {
+                // Si falla el acceso al estilo, ignoramos ese elemento
+              }
             }
           }
         }
