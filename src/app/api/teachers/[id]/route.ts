@@ -51,24 +51,27 @@ export async function PUT(
       status
     } = body
 
-    // Check if another teacher with same email or DNI exists
-    const existingTeacher = await db.teacher.findFirst({
-      where: {
-        OR: [
-          { email: email },
-          { dni: dni }
-        ],
-        NOT: {
-          id: params.id
-        }
-      }
-    })
+    // Check if another teacher with same email or DNI exists (only if values are provided)
+    const orClauses = []
+    if (email) orClauses.push({ email })
+    if (dni) orClauses.push({ dni })
 
-    if (existingTeacher) {
-      return NextResponse.json(
-        { error: 'Another teacher with this email or DNI already exists' },
-        { status: 400 }
-      )
+    if (orClauses.length > 0) {
+      const existingTeacher = await db.teacher.findFirst({
+        where: {
+          OR: orClauses,
+          NOT: {
+            id: params.id
+          }
+        }
+      })
+
+      if (existingTeacher) {
+        return NextResponse.json(
+          { error: 'Another teacher with this email or DNI already exists' },
+          { status: 400 }
+        )
+      }
     }
 
     const teacher = await db.teacher.update({

@@ -65,6 +65,30 @@ export async function POST(request: NextRequest) {
       status = 'ACTIVE'
     } = body
 
+    // Si no hay email, creamos directamente para evitar problemas con upsert y campos únicos nulos
+    if (!email) {
+      const teacher = await db.teacher.create({
+        data: {
+          id: body.id || undefined,
+          name,
+          phone,
+          address,
+          dni,
+          specialty,
+          experience,
+          cv,
+          contractType,
+          hourlyRate,
+          status: status || 'ACTIVE'
+        },
+        include: {
+          courses: true,
+          contacts: true
+        }
+      })
+      return NextResponse.json(teacher, { status: 201 })
+    }
+
     const teacher = await db.teacher.upsert({
       where: {
         email: email

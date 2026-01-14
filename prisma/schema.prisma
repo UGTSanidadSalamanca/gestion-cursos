@@ -69,8 +69,8 @@ enum StudentStatus {
 // Docentes
 model Teacher {
   id          String      @id @default(cuid())
-  name        String
-  email       String      @unique
+  name        String?
+  email       String?     @unique
   phone       String?
   address     String?
   dni         String?     @unique

@@ -43,8 +43,8 @@ import {
 
 interface Teacher {
   id: string
-  name: string
-  email: string
+  name?: string
+  email?: string
   phone?: string
   address?: string
   dni?: string
@@ -176,8 +176,8 @@ export default function TeachersPage() {
   }
 
   const filteredTeachers = teachers.filter(teacher =>
-    teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (teacher.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (teacher.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     teacher.specialty?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     teacher.dni?.toLowerCase().includes(searchTerm.toLowerCase())
   )
@@ -291,7 +291,6 @@ export default function TeachersPage() {
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
             />
           </div>
           <div className="space-y-2">
@@ -301,7 +300,6 @@ export default function TeachersPage() {
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
             />
           </div>
           <div className="space-y-2">
@@ -411,8 +409,8 @@ export default function TeachersPage() {
           <User className="h-6 w-6 text-primary" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold">{teacher.name}</h3>
-          <p className="text-sm text-muted-foreground">{teacher.email}</p>
+          <h3 className="text-lg font-semibold">{teacher.name || 'Sin nombre'}</h3>
+          <p className="text-sm text-muted-foreground">{teacher.email || 'Sin email'}</p>
         </div>
       </div>
 
@@ -558,8 +556,8 @@ export default function TeachersPage() {
                   <TableRow key={teacher.id}>
                     <TableCell className="font-medium">
                       <div>
-                        <div>{teacher.name}</div>
-                        <div className="text-sm text-muted-foreground">{teacher.email}</div>
+                        <div className="font-bold">{teacher.name || 'Docente sin nombre'}</div>
+                        <div className="text-xs text-muted-foreground italic">{teacher.email || 'Sin correo electrónico'}</div>
                       </div>
                     </TableCell>
                     <TableCell>{teacher.specialty || '-'}</TableCell>
