@@ -37,7 +37,7 @@ enum UserRole {
 model Student {
   id              String        @id @default(cuid())
   name            String
-  email           String        @unique
+  email           String?        @unique
   phone           String?
   address         String?
   dni             String?       @unique

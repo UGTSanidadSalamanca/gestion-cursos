@@ -46,7 +46,7 @@ import * as XLSX from 'xlsx'
 interface Student {
   id: string
   name: string
-  email: string
+  email?: string
   phone?: string
   address?: string
   dni?: string
@@ -164,7 +164,7 @@ export default function StudentsPage() {
     const headers = ['Nombre', 'Email', 'Telefono', 'DNI', 'Afiliado', 'Estado', 'Fecha Registro']
     const csvRows = students.map(s => [
       `"${s.name}"`,
-      `"${s.email}"`,
+      `"${s.email || ''}"`,
       `"${s.phone || ''}"`,
       `"${s.dni || ''}"`,
       s.isAffiliated ? 'Si' : 'No',
@@ -211,7 +211,7 @@ export default function StudentsPage() {
             isAffiliated: !!(row.Afiliado || row.affiliated)
           }
 
-          if (!studentData.name || !studentData.email) continue
+          if (!studentData.name) continue
 
           try {
             const response = await fetch('/api/students', {
@@ -241,7 +241,7 @@ export default function StudentsPage() {
 
   const filteredStudents = students.filter(student =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (student.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.dni?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
@@ -360,7 +360,6 @@ export default function StudentsPage() {
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
             />
           </div>
           <div className="space-y-2">
@@ -457,7 +456,7 @@ export default function StudentsPage() {
         </div>
         <div>
           <h3 className="text-lg font-semibold">{student.name}</h3>
-          <p className="text-sm text-muted-foreground">{student.email}</p>
+          <p className="text-sm text-muted-foreground">{student.email || 'Sin email'}</p>
         </div>
       </div>
 
@@ -603,7 +602,7 @@ export default function StudentsPage() {
                   {filteredStudents.map((student) => (
                     <TableRow key={student.id}>
                       <TableCell className="font-medium">{student.name}</TableCell>
-                      <TableCell>{student.email}</TableCell>
+                      <TableCell>{student.email || <span className="text-slate-400 italic text-xs">Sin email</span>}</TableCell>
                       <TableCell>{student.phone || '-'}</TableCell>
                       <TableCell>
                         {student.isAffiliated ? (
