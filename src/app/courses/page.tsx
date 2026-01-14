@@ -48,7 +48,7 @@ import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
 import { toast } from "sonner"
 import { jsPDF } from "jspdf"
 import html2canvas from "html2canvas"
-import { QRCodeCanvas } from "qrcode.react"
+import { QRCodeSVG } from "qrcode.react"
 
 interface Course {
   id: string
@@ -345,28 +345,23 @@ export default function CoursesPage() {
       toast.loading("Generando captura de alta resolución...", { id: toastId })
 
       const canvas = await html2canvas(element, {
-        scale: 3, // Mayor calidad
+        scale: 4,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
-        width: element.scrollWidth,
-        height: element.scrollHeight,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
         onclone: (clonedDoc) => {
           const el = clonedDoc.getElementById('course-details-print')
           if (el) {
-            // Aseguramos que el clon tenga fondo blanco y sea visible al 100% (sin scrolls)
             el.style.backgroundColor = '#ffffff'
-            el.style.width = '700px' // Forzamos ancho relativo al diseño original
+            el.style.width = '700px'
             el.style.height = 'auto'
             el.style.overflow = 'visible'
+            el.style.display = 'block'
+            el.style.padding = '40px'
 
-            // ELIMINACIÓN RADICAL DE COLORES MODERNOS (oklch, oklab): 
             const allElements = el.getElementsByTagName('*')
             for (let i = 0; i < allElements.length; i++) {
               const item = allElements[i] as HTMLElement
-
               const inlineStyles = item.getAttribute('style') || ''
               if (inlineStyles.includes('ok')) {
                 item.setAttribute('style', inlineStyles.replace(/ok(lch|lab)\([^)]+\)/g, '#1e293b'))
@@ -961,7 +956,7 @@ export default function CoursesPage() {
 
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6 opacity-80 pt-4 border-t border-dashed">
                       <div className="flex items-center gap-4">
-                        <QRCodeCanvas value={`${window.location.protocol}//${window.location.host}/p/${selectedCourse.id}`} size={56} className="bg-white p-1 rounded-lg border shadow-sm" />
+                        <QRCodeSVG value={`${window.location.origin}/p/${selectedCourse.id}`} size={64} className="bg-white p-1 rounded-lg border shadow-sm" />
                         <div className="text-left">
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Landing Page Pública</p>
                           <p className="text-[10px] font-bold text-blue-600 italic">Accede a toda la información del curso</p>

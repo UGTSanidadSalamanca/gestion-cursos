@@ -189,39 +189,44 @@
     display: none !important;
   }
 
-  /* Condensar Landing para 1 sola página A4 */
+  /* Condensar Landing para 1 sola página A4 - EXTREMO */
+  #public-course-landing {
+    transform: scale(0.85) !important;
+    transform-origin: top center !important;
+    width: 110% !important;
+    /* Compensar escala para ancho */
+    margin-left: -5% !important;
+  }
+
   #public-course-landing h1 {
-    font-size: 18pt !important;
+    font-size: 16pt !important;
     line-height: 1.1 !important;
     margin-bottom: 2mm !important;
   }
 
   #public-course-landing .h-72 {
-    height: 40mm !important;
+    height: 35mm !important;
   }
 
-  #public-course-landing .p-8 {
-    padding: 4mm !important;
+  #public-course-landing .p-8,
+  #public-course-landing .p-6 {
+    padding: 3mm !important;
   }
 
-  #public-course-landing .mt-12 {
-    margin-top: 4mm !important;
-  }
-
-  #public-course-landing .mb-12 {
-    margin-bottom: 4mm !important;
-  }
-
-  #public-course-landing .mt-6 {
-    margin-top: 3mm !important;
+  #public-course-landing .mt-12,
+  #public-course-landing .mb-12,
+  #public-course-landing .mt-10,
+  #public-course-landing .mt-8 {
+    margin-top: 2mm !important;
+    margin-bottom: 2mm !important;
   }
 
   #public-course-landing .grid {
-    gap: 4mm !important;
+    gap: 3mm !important;
   }
 
   #public-course-landing [class*="space-y"]>*+* {
-    margin-top: 2mm !important;
+    margin-top: 1.5mm !important;
   }
 
   #public-course-landing .grid-cols-1,
