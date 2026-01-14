@@ -74,20 +74,25 @@ export async function PUT(
       }
     }
 
+    // Limpieza de datos antes de actualizar
+    const cleanData = {
+      name: name || null,
+      email: email || null,
+      phone: phone || null,
+      address: address || null,
+      dni: dni || null,
+      specialty: specialty || null,
+      experience: experience || null,
+      cv: cv || null,
+      contractType: contractType,
+      hourlyRate: (hourlyRate && !isNaN(parseFloat(hourlyRate))) ? parseFloat(hourlyRate) : null,
+      status: status
+    }
+
     const teacher = await db.teacher.update({
       where: { id: params.id },
       data: {
-        name,
-        email,
-        phone,
-        address,
-        dni,
-        specialty,
-        experience,
-        cv,
-        contractType,
-        hourlyRate,
-        status
+        ...cleanData
       },
       include: {
         courses: true,

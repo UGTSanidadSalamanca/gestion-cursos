@@ -79,20 +79,25 @@ export async function PUT(
       }
     }
 
+    // Limpieza de datos
+    const cleanData = {
+      name: name || null,
+      email: email || null,
+      phone: phone || null,
+      address: address || null,
+      dni: dni || null,
+      isAffiliated: isAffiliated || false,
+      affiliateNumber: (isAffiliated && affiliateNumber) ? affiliateNumber : null,
+      emergencyContact: emergencyContact || null,
+      emergencyPhone: emergencyPhone || null,
+      medicalInfo: medicalInfo || null,
+      status: status
+    }
+
     const student = await db.student.update({
       where: { id: params.id },
       data: {
-        name,
-        email,
-        phone,
-        address,
-        dni,
-        isAffiliated: isAffiliated || false,
-        affiliateNumber: isAffiliated ? affiliateNumber : null,
-        emergencyContact,
-        emergencyPhone,
-        medicalInfo,
-        status
+        ...cleanData
       },
       include: {
         enrollments: {

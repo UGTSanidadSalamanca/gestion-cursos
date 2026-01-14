@@ -60,26 +60,33 @@ export async function POST(request: NextRequest) {
       specialty,
       experience,
       cv,
-      contractType = 'FREELANCE',
+      contractType,
       hourlyRate,
-      status = 'ACTIVE'
+      status
     } = body
 
+    // Limpiamos los datos: si vienen como string vacío, los convertimos a null para evitar
+    // errores de duplicados en campos únicos (DNI, Email)
+    const cleanData = {
+      name: name || null,
+      email: email || null,
+      phone: phone || null,
+      address: address || null,
+      dni: dni || null,
+      specialty: specialty || null,
+      experience: experience || null,
+      cv: cv || null,
+      contractType: contractType || 'FREELANCE',
+      hourlyRate: (hourlyRate && !isNaN(parseFloat(hourlyRate))) ? parseFloat(hourlyRate) : null,
+      status: status || 'ACTIVE'
+    }
+
     // Si no hay email, creamos directamente para evitar problemas con upsert y campos únicos nulos
-    if (!email) {
+    if (!cleanData.email) {
       const teacher = await db.teacher.create({
         data: {
           id: body.id || undefined,
-          name,
-          phone,
-          address,
-          dni,
-          specialty,
-          experience,
-          cv,
-          contractType,
-          hourlyRate,
-          status: status || 'ACTIVE'
+          ...cleanData
         },
         include: {
           courses: true,
@@ -91,33 +98,14 @@ export async function POST(request: NextRequest) {
 
     const teacher = await db.teacher.upsert({
       where: {
-        email: email
+        email: cleanData.email
       },
       update: {
-        name,
-        phone,
-        address,
-        dni,
-        specialty,
-        experience,
-        cv,
-        contractType,
-        hourlyRate,
-        status: status || 'ACTIVE'
+        ...cleanData
       },
       create: {
         id: body.id || undefined,
-        name,
-        email,
-        phone,
-        address,
-        dni,
-        specialty,
-        experience,
-        cv,
-        contractType,
-        hourlyRate,
-        status: status || 'ACTIVE'
+        ...cleanData
       },
       include: {
         courses: true,

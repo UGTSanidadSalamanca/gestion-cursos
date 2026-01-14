@@ -66,24 +66,30 @@ export async function POST(request: NextRequest) {
       emergencyContact,
       emergencyPhone,
       medicalInfo,
-      status = 'ACTIVE'
+      status
     } = body
 
+    // Limpiamos datos para evitar duplicados de strings vacíos en campos Únicos
+    const cleanData = {
+      name: name || null,
+      email: email || null,
+      phone: phone || null,
+      address: address || null,
+      dni: dni || null,
+      isAffiliated: isAffiliated || false,
+      affiliateNumber: (isAffiliated && affiliateNumber) ? affiliateNumber : null,
+      emergencyContact: emergencyContact || null,
+      emergencyPhone: emergencyPhone || null,
+      medicalInfo: medicalInfo || null,
+      status: status || 'ACTIVE'
+    }
+
     // Si no hay email, creamos directamente para evitar problemas con upsert y campos únicos nulos
-    if (!email) {
+    if (!cleanData.email) {
       const student = await db.student.create({
         data: {
           id: body.id || undefined,
-          name,
-          phone,
-          address,
-          dni,
-          isAffiliated: isAffiliated || false,
-          affiliateNumber: isAffiliated ? affiliateNumber : null,
-          emergencyContact,
-          emergencyPhone,
-          medicalInfo,
-          status: status || 'ACTIVE'
+          ...cleanData
         },
         include: {
           enrollments: {
@@ -100,33 +106,14 @@ export async function POST(request: NextRequest) {
 
     const student = await db.student.upsert({
       where: {
-        email: email
+        email: cleanData.email
       },
       update: {
-        name,
-        phone,
-        address,
-        dni,
-        isAffiliated: isAffiliated !== undefined ? isAffiliated : false,
-        affiliateNumber: isAffiliated ? affiliateNumber : null,
-        emergencyContact,
-        emergencyPhone,
-        medicalInfo,
-        status: status || 'ACTIVE'
+        ...cleanData
       },
       create: {
         id: body.id || undefined,
-        name,
-        email,
-        phone,
-        address,
-        dni,
-        isAffiliated: isAffiliated || false,
-        affiliateNumber: isAffiliated ? affiliateNumber : null,
-        emergencyContact,
-        emergencyPhone,
-        medicalInfo,
-        status: status || 'ACTIVE'
+        ...cleanData
       },
       include: {
         enrollments: {
