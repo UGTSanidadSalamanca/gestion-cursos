@@ -41,7 +41,8 @@ import {
   Loader2,
   ExternalLink,
   MessageSquare,
-  UserCheck
+  UserCheck,
+  Printer
 } from "lucide-react"
 import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
 import { toast } from "sonner"
@@ -324,6 +325,10 @@ export default function CoursesPage() {
     setIsViewDialogOpen(true)
   }
 
+  const handlePrint = () => {
+    window.print()
+  }
+
   const handleExportPDF = async (course: Course) => {
     const toastId = toast.loading("Preparando ficha técnica...")
 
@@ -350,41 +355,33 @@ export default function CoursesPage() {
             // Aseguramos que el clon tenga fondo blanco y sea visible
             el.style.backgroundColor = '#ffffff'
 
-            // ELIMINACIÓN AGRESIVA DE OKLCH: html2canvas falla al intentar parsear estos colores.
-            // Recorremos todos los elementos y forzamos colores estándar si detectamos oklch.
+            // ELIMINACIÓN RADICAL DE COLORES MODERNOS (oklch, oklab): 
             const allElements = el.getElementsByTagName('*')
             for (let i = 0; i < allElements.length; i++) {
               const item = allElements[i] as HTMLElement
 
-              // Forzamos que no haya estilos inline con oklch
               const inlineStyles = item.getAttribute('style') || ''
-              if (inlineStyles.includes('oklch')) {
-                item.setAttribute('style', inlineStyles.replace(/oklch\([^)]+\)/g, '#1e293b'))
+              if (inlineStyles.includes('ok')) {
+                item.setAttribute('style', inlineStyles.replace(/ok(lch|lab)\([^)]+\)/g, '#1e293b'))
               }
 
-              // Intentamos corregir los estilos computados que html2canvas intentará leer
               try {
                 const computed = clonedDoc.defaultView?.getComputedStyle(item)
                 if (computed) {
-                  if (computed.color && computed.color.includes('oklch')) {
-                    item.style.color = '#1e293b'
+                  if (computed.color?.includes('ok')) item.style.color = '#1e293b'
+                  if (computed.backgroundColor?.includes('ok')) {
+                    item.style.backgroundColor = (item.tagName === 'DIV' || item.tagName === 'SECTION') ? '#ffffff' : 'transparent'
                   }
-                  if (computed.backgroundColor && computed.backgroundColor.includes('oklch')) {
-                    // Si es un fondo con oklch, lo ponemos blanco o transparente según el contexto
-                    item.style.backgroundColor = item.tagName === 'DIV' ? '#ffffff' : 'transparent'
-                  }
-                  if (computed.borderColor && computed.borderColor.includes('oklch')) {
-                    item.style.borderColor = '#e2e8f0'
-                  }
-                  // Corregir SVG fills que suelen usar oklch en Tailwind 4/v3.4+
+                  if (computed.borderColor?.includes('ok')) item.style.borderColor = '#e2e8f0'
+
                   if (item instanceof SVGElement) {
                     const fill = item.getAttribute('fill')
-                    if (fill && fill.includes('oklch')) item.setAttribute('fill', 'currentColor')
+                    if (fill?.includes('ok')) item.setAttribute('fill', 'currentColor')
+                    const stroke = item.getAttribute('stroke')
+                    if (stroke?.includes('ok')) item.setAttribute('stroke', 'currentColor')
                   }
                 }
-              } catch (e) {
-                // Si falla el acceso al estilo, ignoramos ese elemento
-              }
+              } catch (e) { }
             }
           }
         }
@@ -827,183 +824,161 @@ export default function CoursesPage() {
 
         {/* Dialogs */}
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className="sm:max-w-[600px] border-none shadow-2xl overflow-hidden p-0">
+          <DialogContent className="sm:max-w-[700px] border-none shadow-2xl overflow-hidden p-0 max-h-[95vh] flex flex-col">
             {selectedCourse && (
-              <div id="course-details-print" className="bg-white">
-                <div className="bg-blue-600 h-2 w-full" />
-                <div className="p-8">
-                  <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <h2 className="text-3xl font-bold text-slate-900 leading-tight">{selectedCourse.title}</h2>
-                      <p className="text-slate-500 font-mono mt-1">{selectedCourse.code}</p>
+              <>
+                <div id="course-details-print" className="bg-white flex-1 overflow-y-auto custom-scrollbar">
+                  <div className="bg-blue-600 h-2 w-full no-print" />
+                  <div className="p-6 md:p-8">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="flex-1">
+                        <h2 className="text-2xl md:text-3xl font-black text-slate-900 leading-tight tracking-tight uppercase">
+                          {selectedCourse.title}
+                        </h2>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="bg-slate-100 text-slate-600 font-mono text-xs px-2 py-0.5 rounded border border-slate-200 uppercase font-bold">
+                            {selectedCourse.code}
+                          </span>
+                          <Badge className={selectedCourse.isActive ? 'bg-green-500/10 text-green-700 border-green-200 shadow-none' : 'bg-slate-100 text-slate-500 border-slate-200 shadow-none'}>
+                            {selectedCourse.isActive ? 'Visible en Web' : 'Borrador'}
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
-                    <Badge className={selectedCourse.isActive ? 'bg-green-500 px-3 py-1 text-sm' : 'bg-slate-400 px-3 py-1 text-sm'}>
-                      {selectedCourse.isActive ? 'Activo' : 'Inactivo'}
-                    </Badge>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-8 mb-8">
-                    <div className="space-y-4">
-                      <div className="flex items-start space-x-3">
-                        <div className="p-2 bg-slate-100 rounded-lg"><BookOpen className="h-5 w-5 text-blue-600" /></div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-400 uppercase">Nivel</p>
-                          <p className="font-semibold text-slate-700">{getLevelBadge(selectedCourse.level)}</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Nivel</p>
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4 text-blue-600" />
+                          <span className="text-xs font-bold text-slate-700">{selectedCourse.level}</span>
                         </div>
                       </div>
-                      <div className="flex items-start space-x-3">
-                        <div className="p-2 bg-slate-100 rounded-lg"><Clock className="h-5 w-5 text-blue-600" /></div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-400 uppercase">Duración</p>
-                          <p className="font-semibold text-slate-700">{selectedCourse.duration} horas</p>
-                          {(selectedCourse.durationSessions || selectedCourse.durationMonths || selectedCourse.durationPeriod) && (
-                            <p className="text-[10px] text-slate-500 mt-1 italic">
-                              {selectedCourse.durationPeriod && `Periodo: ${selectedCourse.durationPeriod}. `}
-                              {selectedCourse.durationMonths && `${selectedCourse.durationMonths} meses. `}
-                              {selectedCourse.durationSessions && `${selectedCourse.durationSessions} sesiones`}
-                              {selectedCourse.sessionDuration && ` de ${selectedCourse.sessionDuration}h`}
-                            </p>
-                          )}
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Duración</p>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-blue-600" />
+                          <span className="text-xs font-bold text-slate-700">{selectedCourse.duration}h</span>
                         </div>
                       </div>
-                      {selectedCourse.syllabusUrl && (
-                        <div className="flex items-start space-x-3 bg-amber-50 p-2 rounded-lg border border-amber-100">
-                          <div className="p-2 bg-amber-100 rounded-lg"><ExternalLink className="h-5 w-5 text-amber-600" /></div>
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Precio Gral.</p>
+                        <div className="flex items-center gap-2">
+                          <Euro className="h-4 w-4 text-slate-600" />
+                          <span className="text-xs font-bold text-slate-700">€{selectedCourse.price}</span>
+                        </div>
+                      </div>
+                      <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
+                        <p className="text-[10px] font-black text-green-600 uppercase mb-1">Afiliados</p>
+                        <div className="flex items-center gap-2">
+                          <Euro className="h-4 w-4 text-green-700" />
+                          <span className="text-xs font-bold text-green-700">€{selectedCourse.affiliatePrice || '---'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                            <UserCheck className="h-4 w-4 text-blue-600" />
+                          </div>
                           <div>
-                            <p className="text-xs font-bold text-amber-500 uppercase">Temario / Drive</p>
-                            <a
-                              href={selectedCourse.syllabusUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs font-bold text-amber-700 hover:underline flex items-center"
-                            >
-                              Acceder al material <ExternalLink className="h-3 w-3 ml-1" />
-                            </a>
+                            <p className="text-[10px] font-black text-slate-400 uppercase">Profesorado</p>
+                            <p className="text-sm font-bold text-slate-800">{selectedCourse.teacher?.name || 'Por asignar'}</p>
                           </div>
                         </div>
-                      )}
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex items-start space-x-3">
-                        <div className="p-2 bg-slate-100 rounded-lg"><UserCheck className="h-5 w-5 text-blue-600" /></div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-400 uppercase">Profesor</p>
-                          <p className="font-semibold text-slate-700">{selectedCourse.teacher?.name || 'Por asignar'}</p>
+                        {selectedCourse.startDate && (
+                          <div className="flex items-start gap-3">
+                            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                              <Calendar className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black text-slate-400 uppercase">Calendario</p>
+                              <p className="text-sm font-bold text-slate-800">Inicio: {new Date(selectedCourse.startDate).toLocaleDateString()}</p>
+                              {selectedCourse.durationPeriod && <p className="text-[10px] text-slate-500 italic">{selectedCourse.durationPeriod}</p>}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-3">
+                        {selectedCourse.syllabusUrl && (
+                          <a href={selectedCourse.syllabusUrl} target="_blank" className="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-200 group transition-all no-print">
+                            <div className="flex items-center gap-3">
+                              <ExternalLink className="h-4 w-4 text-amber-600" />
+                              <span className="text-xs font-bold text-amber-800 uppercase tracking-tighter">Material Didáctico</span>
+                            </div>
+                            <div className="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-black italic">DRIVE</div>
+                          </a>
+                        )}
+                        <div className="p-3 bg-slate-100/50 rounded-xl border border-slate-200">
+                          <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Inscripción actual</p>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-bold text-slate-700">{selectedCourse._count?.enrollments || 0} / {selectedCourse.maxStudents}</span>
+                            <div className="h-1.5 w-24 bg-slate-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-blue-600"
+                                style={{ width: `${Math.min(((selectedCourse._count?.enrollments || 0) / selectedCourse.maxStudents) * 100, 100)}%` }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-start space-x-3">
-                        <div className="p-2 bg-slate-100 rounded-lg"><Euro className="h-5 w-5 text-green-600" /></div>
-                        <div className="flex flex-col">
-                          <p className="text-xs font-bold text-slate-400 uppercase">Precios</p>
-                          <p className="font-semibold text-slate-700 text-sm">Gral: €{selectedCourse.price.toFixed(2)}</p>
-                          {selectedCourse.affiliatePrice && (
-                            <p className="font-bold text-green-600 text-sm">Afiliado: €{selectedCourse.affiliatePrice.toFixed(2)}</p>
-                          )}
-                        </div>
-                      </div>
                     </div>
-                  </div>
 
-                  {selectedCourse.startDate && (
-                    <div className="mb-6 flex items-center gap-2 bg-blue-50 p-3 rounded-xl border border-blue-100">
-                      <Calendar className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-bold text-blue-800">Fecha de inicio: {new Date(selectedCourse.startDate).toLocaleDateString()}</span>
-                    </div>
-                  )}
-
-                  {/* Sección de Temario por Apartado */}
-                  {selectedCourse.modules && selectedCourse.modules.length > 0 && (
-                    <div className="mb-8">
-                      <p className="text-xs font-bold text-slate-400 uppercase mb-3 px-1">Temario y Profesorado por Módulo</p>
-                      <div className="grid gap-3">
-                        {selectedCourse.modules.map((module, idx) => (
-                          <div key={idx} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-md transition-all duration-300">
-                            <div className="h-10 w-10 shrink-0 bg-white rounded-xl border flex items-center justify-center text-blue-600 font-bold group-hover:scale-110 transition-transform shadow-sm">
-                              {idx + 1}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-bold text-slate-900 text-sm truncate">{module.title}</h4>
-                              {module.description && <p className="text-[10px] text-slate-500 italic mt-0.5 truncate">{module.description}</p>}
-                            </div>
-                            <div className="text-right">
-                              <div className="inline-flex items-center bg-blue-100/50 px-2 py-1 rounded-lg border border-blue-100">
-                                <span className="text-[10px] font-bold text-blue-700">{module.teacher?.name || '---'}</span>
+                    {/* Temario Compacto */}
+                    {selectedCourse.modules && selectedCourse.modules.length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest pl-1">Bloques de contenido</h3>
+                        <div className="space-y-2">
+                          {selectedCourse.modules.map((module, idx) => (
+                            <div key={idx} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+                              <span className="text-xs font-black text-blue-600 bg-blue-50 w-6 h-6 flex items-center justify-center rounded-lg border border-blue-100">{idx + 1}</span>
+                              <div className="flex-1">
+                                <p className="text-xs font-bold text-slate-800 uppercase">{module.title}</p>
                               </div>
+                              <span className="text-[9px] font-black text-slate-400 italic uppercase">{module.teacher?.name.split(' ')[0]}</span>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
+                    )}
+
+                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 mb-6">
+                      <p className="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest text-center">Resumen del programa</p>
+                      <p className="text-xs text-slate-600 leading-relaxed italic text-center">
+                        "{selectedCourse.description || 'Consulta los detalles específicos con el departamento de formación.'}"
+                      </p>
                     </div>
-                  )}
 
-                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8">
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-3">Descripción del Curso</p>
-                    <p className="text-slate-600 leading-relaxed italic">
-                      {selectedCourse.description || 'Este curso no dispone de una descripción detallada en este momento.'}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between border-t pt-6 text-sm no-print">
-                    <div className="flex flex-col gap-3 w-full">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-slate-500">
-                          <Users className="h-4 w-4" />
-                          <span>{selectedCourse._count?.enrollments || 0} alumnos inscritos de {selectedCourse.maxStudents}</span>
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 opacity-80 pt-4 border-t border-dashed">
+                      <div className="flex items-center gap-4">
+                        <QRCodeSVG value={`${window.location.host}/p/${selectedCourse.id}`} size={56} className="bg-white p-1 rounded-lg border shadow-sm" />
+                        <div className="text-left">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Landing Page Pública</p>
+                          <p className="text-[10px] font-bold text-blue-600 italic">Accede a toda la información del curso</p>
                         </div>
-                        <div className="text-slate-400 italic font-medium">Formación UGT Salamanca</div>
                       </div>
-
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col md:flex-row items-center gap-6">
-                        <div className="flex-1 space-y-2">
-                          <p className="font-bold text-slate-700 text-xs uppercase tracking-wider">Herramientas de captación</p>
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 h-9"
-                              onClick={() => {
-                                const baseUrl = window.location.origin
-                                const publicUrl = `${baseUrl}/p/${selectedCourse.id}`
-                                const message = `¡Hola! Mira este curso que te puede interesar: ${selectedCourse.title}. Toda la info aquí: ${publicUrl}`
-                                window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank')
-                              }}
-                            >
-                              <MessageSquare className="h-4 w-4 mr-2" /> WhatsApp
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 h-9"
-                              onClick={() => {
-                                const baseUrl = window.location.origin
-                                const publicUrl = `${baseUrl}/p/${selectedCourse.id}`
-                                navigator.clipboard.writeText(publicUrl)
-                                toast.success("Enlace público copiado")
-                              }}
-                            >
-                              <ExternalLink className="h-4 w-4 mr-2" /> Copiar Enlace
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="bg-white p-2 rounded-lg border shadow-sm flex flex-col items-center">
-                          <QRCodeSVG
-                            value={`${window.location.host}/p/${selectedCourse.id}`}
-                            size={64}
-                            level="L"
-                          />
-                          <span className="text-[10px] mt-1 text-slate-400 font-bold uppercase">QR Info</span>
-                        </div>
+                      <div className="text-right hidden md:block">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Información Oficial</p>
+                        <p className="text-[10px] font-bold text-slate-800">UGT Servicios Públicos Salamanca</p>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="bg-slate-50 px-8 py-4 flex justify-end gap-3 no-print">
-                  <Button variant="outline" onClick={() => handleExportPDF(selectedCourse)}>
-                    <Download className="mr-2 h-4 w-4" /> Descargar Ficha (PDF)
+                <div className="bg-slate-50 px-8 py-5 flex items-center justify-end gap-3 no-print border-t shrink-0">
+                  <Button variant="outline" className="h-11 rounded-xl font-bold uppercase text-[10px] tracking-widest border-slate-300" onClick={handlePrint}>
+                    <Printer className="mr-2 h-4 w-4" /> Imprimir / PDF
                   </Button>
-                  <Button onClick={() => setIsViewDialogOpen(false)}>Cerrar</Button>
+                  <Button variant="outline" className="h-11 rounded-xl font-bold uppercase text-[10px] tracking-widest border-slate-300" onClick={() => handleExportPDF(selectedCourse)}>
+                    <Download className="mr-2 h-4 w-4" /> Descargar Imagen PDF
+                  </Button>
+                  <Button className="h-11 bg-slate-900 hover:bg-black rounded-xl font-bold uppercase text-[10px] tracking-widest px-8" onClick={() => setIsViewDialogOpen(false)}>
+                    Cerrar
+                  </Button>
                 </div>
-              </div>
+              </>
             )}
           </DialogContent>
         </Dialog>
