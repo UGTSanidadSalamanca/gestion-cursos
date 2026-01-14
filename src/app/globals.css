@@ -122,76 +122,110 @@
   }
 }
 
-/* Estilos de impresión mejorados */
+/* Estilos de impresión definitivos */
 @media print {
   @page {
     size: A4;
-    margin: 1.5cm;
+    margin: 10mm;
   }
 
-  /* No ocultamos todo por defecto para permitir imprimir la landing page */
-  .no-print,
-  button,
-  nav,
-  footer,
-  [role="dialog"]>button,
-  .no-print-area {
-    display: none !important;
+  /* AISLAMIENTO RADICAL: Ocultar TODO por defecto */
+  body * {
+    visibility: hidden;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden !important;
   }
 
-  body,
-  html {
-    background: white !important;
-    color: black !important;
+  /* Mostrar solo los contenedores de impresión específicos y sus hijos */
+  #course-details-print,
+  #course-details-print *,
+  #public-course-landing,
+  #public-course-landing * {
+    visibility: visible !important;
     height: auto !important;
     overflow: visible !important;
   }
 
-  /* Asegurar que se impriman fondos y colores */
+  /* Posicionamiento para la Ficha Técnica (dentro de un Dialog/Modal) */
+  #course-details-print {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 210mm !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Posicionamiento para la Landing Page Pública */
+  #public-course-landing {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    background: white !important;
+  }
+
+  .no-print {
+    display: none !important;
+    height: 0 !important;
+    visibility: hidden !important;
+  }
+
+  /* Evitar saltos de página indeseados y condensar contenido */
+  #public-course-landing h1 {
+    font-size: 20pt !important;
+    line-height: 1.1 !important;
+    margin-bottom: 2mm !important;
+  }
+
+  #public-course-landing .h-72 {
+    height: 45mm !important;
+  }
+
+  #public-course-landing .p-8 {
+    padding: 4mm !important;
+  }
+
+  #public-course-landing .mt-12 {
+    margin-top: 6mm !important;
+  }
+
+  #public-course-landing .mb-12 {
+    margin-bottom: 6mm !important;
+  }
+
+  #public-course-landing [class*="space-y"]>*+* {
+    margin-top: 2mm !important;
+  }
+
+  /* Forzar layout de una columna para imprimir la landing page en una cara */
+  #public-course-landing .grid-cols-1,
+  #public-course-landing .lg\:grid-cols-3 {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4mm !important;
+  }
+
+  #public-course-landing .lg\:col-span-2 {
+    width: 100% !important;
+  }
+
+  #public-course-landing .sticky {
+    position: relative !important;
+    top: 0 !important;
+  }
+
+  /* Ocultar secciones redundantes en la impresión de la landing si es necesario */
+  #public-course-landing .sidebar-cta-extra {
+    display: none !important;
+  }
+
+  /* Asegurar que se impriman colores y fondos */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-  }
-
-  /* Ajustes para la Ficha Técnica (en Dialog) */
-  #course-details-print {
-    display: block !important;
-    position: relative !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-    border: none !important;
-    box-shadow: none !important;
-  }
-
-  /* Forzar que el diálogo ocupe toda la página en impresión si está abierto */
-  [role="dialog"] {
-    position: static !important;
-    width: 100% !important;
-    height: auto !important;
-    max-width: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  /* Compactar elementos para que quepan en A4 */
-  h1 {
-    font-size: 22pt !important;
-  }
-
-  h2 {
-    font-size: 18pt !important;
-  }
-
-  p,
-  span,
-  div {
-    font-size: 10pt !important;
-  }
-
-  .grid {
-    gap: 10px !important;
   }
 }
