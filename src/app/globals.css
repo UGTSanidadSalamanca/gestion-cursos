@@ -122,15 +122,15 @@
   }
 }
 
-/* Estilos de impresión definitivos */
+/* Estilos de impresión definitivos - ULTRA COMPACTOS */
 @media print {
   @page {
     size: A4;
-    margin: 10mm;
+    margin: 5mm;
+    /* Margen mínimo para ganar espacio */
   }
 
   /* AISLAMIENTO TOTAL: Ocultar la aplicación principal */
-  /* Normalmente Radix Portals son hijos directos del body, al igual que el div principal de Next.js */
   body>*:not([data-radix-portal]):not(#public-course-landing) {
     display: none !important;
   }
@@ -151,13 +151,15 @@
     display: none !important;
   }
 
+  /* FICHA TÉCNICA (ADMIN) */
   #course-details-print {
     display: block !important;
     visibility: visible !important;
     position: relative !important;
-    width: 210mm !important;
+    width: 200mm !important;
+    /* Un poco más estrecho para evitar cortes */
     background: white !important;
-    margin: 0 !important;
+    margin: 5mm auto !important;
     padding: 0 !important;
     z-index: 9999 !important;
   }
@@ -166,7 +168,7 @@
     visibility: visible !important;
   }
 
-  /* Estilos para la Landing Page Pública */
+  /* LANDING PAGE PÚBLICA */
   #public-course-landing {
     display: block !important;
     visibility: visible !important;
@@ -177,6 +179,9 @@
     background: white !important;
     margin: 0 !important;
     padding: 0 !important;
+    /* ESCALA ULTRA COMPACTA */
+    transform: scale(0.78) !important;
+    transform-origin: top center !important;
   }
 
   #public-course-landing * {
@@ -189,23 +194,15 @@
     display: none !important;
   }
 
-  /* Condensar Landing para 1 sola página A4 - EXTREMO */
-  #public-course-landing {
-    transform: scale(0.85) !important;
-    transform-origin: top center !important;
-    width: 110% !important;
-    /* Compensar escala para ancho */
-    margin-left: -5% !important;
-  }
-
+  /* AJUSTES DE ESPACIO PARA LANDING PAGE */
   #public-course-landing h1 {
-    font-size: 16pt !important;
+    font-size: 15pt !important;
     line-height: 1.1 !important;
     margin-bottom: 2mm !important;
   }
 
   #public-course-landing .h-72 {
-    height: 35mm !important;
+    height: 30mm !important;
   }
 
   #public-course-landing .p-8,
@@ -226,23 +223,22 @@
   }
 
   #public-course-landing [class*="space-y"]>*+* {
-    margin-top: 1.5mm !important;
+    margin-top: 1mm !important;
   }
 
+  /* Forzar Layout vertical para maximizar espacio */
   #public-course-landing .grid-cols-1,
   #public-course-landing .lg\:grid-cols-3 {
     display: flex !important;
     flex-direction: column !important;
   }
 
-  #public-course-landing .lg\:col-span-2 {
-    width: 100% !important;
+  /* Ocultar elementos voluminosos en la landing si es para imprimir */
+  #public-course-landing .mt-12:has(.grid-cols-1.md\:grid-cols-2) {
+    margin-top: 4mm !important;
   }
 
-  #public-course-landing .sticky {
-    position: relative !important;
-    top: 0 !important;
-  }
+  /* Beneficios */
 
   /* Asegurar que se impriman colores y fondos */
   * {

@@ -358,6 +358,7 @@ export default function CoursesPage() {
             el.style.overflow = 'visible'
             el.style.display = 'block'
             el.style.padding = '40px'
+            el.style.paddingBottom = '80px' // Margen de seguridad extra para el QR
 
             const allElements = el.getElementsByTagName('*')
             for (let i = 0; i < allElements.length; i++) {
