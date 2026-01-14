@@ -328,31 +328,40 @@ export default function CoursesPage() {
     const toastId = toast.loading("Preparando ficha técnica...")
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // Forzar un pequeño delay para asegurar que el DOM esté listo y las fuentes cargadas
+      await new Promise(resolve => setTimeout(resolve, 800))
+
       const element = document.getElementById('course-details-print')
       if (!element) {
-        toast.error("Error: Abre la vista del curso antes de descargar", { id: toastId })
+        toast.error("Error: Abre primero la ficha completa del curso", { id: toastId })
         return
       }
 
-      toast.loading("Capturando diseño...", { id: toastId })
+      toast.loading("Generando captura de alta resolución...", { id: toastId })
+
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 3, // Mayor calidad
         useCORS: true,
         backgroundColor: "#ffffff",
+        logging: false,
         onclone: (clonedDoc) => {
           const el = clonedDoc.getElementById('course-details-print')
           if (el) {
-            const elements = el.getElementsByTagName('*')
-            for (let i = 0; i < elements.length; i++) {
-              const item = elements[i] as HTMLElement
-              if (window.getComputedStyle(item).color.includes('oklch')) item.style.color = '#1e293b'
+            // Aseguramos que el clon tenga fondo blanco y sea visible
+            el.style.backgroundColor = '#ffffff'
+            // Corregimos posibles problemas con colores modernos (oklch) que html2canvas no entiende bien
+            const allElements = el.getElementsByTagName('*')
+            for (let i = 0; i < allElements.length; i++) {
+              const item = allElements[i] as HTMLElement
+              const style = clonedDoc.defaultView?.getComputedStyle(item)
+              if (style?.color?.includes('oklch')) item.style.color = '#1e293b'
+              if (style?.backgroundColor?.includes('oklch')) item.style.backgroundColor = 'transparent'
             }
           }
         }
       })
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.8)
+      const imgData = canvas.toDataURL('image/jpeg', 1.0)
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -360,28 +369,41 @@ export default function CoursesPage() {
         compress: true
       })
 
-      const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pdfHeight = pdf.internal.pageSize.getHeight()
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      const margin = 10
+      const contentWidth = pageWidth - (margin * 2)
+
+      // Calcular altura proporcional
       const imgProps = pdf.getImageProperties(imgData)
-      const targetWidth = pdfWidth - 20
-      const targetHeight = (imgProps.height * targetWidth) / imgProps.width
+      const contentHeight = (imgProps.height * contentWidth) / imgProps.width
 
-      pdf.setFillColor(37, 99, 235)
-      pdf.rect(0, 0, pdfWidth, 15, 'F')
-      pdf.setFontSize(10)
+      // Cabecera decorativa del PDF
+      pdf.setFillColor(37, 99, 235) // Azul UGT
+      pdf.rect(0, 0, pageWidth, 20, 'F')
       pdf.setTextColor(255, 255, 255)
-      pdf.text(`FICHA TÉCNICA: ${course.title}`, 10, 10)
+      pdf.setFontSize(14)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text("UGT SERVICIOS PÚBLICOS SALAMANCA - FORMACIÓN", margin, 13)
 
-      pdf.addImage(imgData, 'JPEG', 10, 20, targetWidth, targetHeight)
+      // Añadir la imagen capturada
+      pdf.addImage(imgData, 'JPEG', margin, 25, contentWidth, contentHeight, undefined, 'FAST')
+
+      // Pie de página
       pdf.setFontSize(8)
-      pdf.setTextColor(150, 150, 150)
-      pdf.text(`Generado el ${new Date().toLocaleDateString()} - Formación UGT Salamanca`, 10, pdfHeight - 10)
+      pdf.setTextColor(100, 100, 100)
+      pdf.setFont('helvetica', 'normal')
+      const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
+      pdf.text(`Ficha técnica generada el ${dateStr}. Este documento tiene carácter informativo.`, margin, pageHeight - 10)
+      pdf.text("Página 1 de 1", pageWidth - 30, pageHeight - 10)
 
-      pdf.save(`FICHA-${course.code.replace(/[^a-z0-9]/gi, '_')}.pdf`)
-      toast.success("PDF descargado con éxito", { id: toastId })
+      const fileName = `FICHA_CURSO_${course.code.replace(/[^a-z0-9]/gi, '_')}.pdf`
+      pdf.save(fileName)
+
+      toast.success("¡Ficha descargada con éxito!", { id: toastId })
     } catch (error) {
       console.error("PDF Export Error:", error)
-      toast.error(`Error al generar PDF: ${error instanceof Error ? error.message : "Desconocido"}`, { id: toastId })
+      toast.error(`Error al generar: ${error instanceof Error ? error.message : "Error técnico"}`, { id: toastId })
     }
   }
 
@@ -429,48 +451,49 @@ export default function CoursesPage() {
                   Nuevo Curso
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[850px] max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl">
-                <form onSubmit={handleCreateCourse} className="flex flex-col h-full">
+              <DialogContent className="sm:max-w-[850px] h-[90vh] flex flex-col p-0 border-none shadow-2xl overflow-hidden">
+                <form onSubmit={handleCreateCourse} className="flex flex-col h-full overflow-hidden">
                   <DialogHeader className="p-6 bg-slate-50 border-b shrink-0">
                     <DialogTitle className="text-2xl font-bold text-slate-900">Crear Nuevo Curso</DialogTitle>
                     <DialogDescription>Configura los detalles del nuevo programa educativo de forma profesional.</DialogDescription>
                   </DialogHeader>
-                  <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+
+                  <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar bg-white">
                     {/* Sección 1: Información Básica */}
                     <div className="space-y-4 text-left">
                       <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
                         <BookOpen className="h-4 w-4" /> Datos de Identificación
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div className="space-y-2">
-                          <Label htmlFor="title" className="text-[10px] font-bold text-slate-400 uppercase">Título del Curso</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor="title" className="text-xs font-bold text-slate-500 uppercase">Título del Curso</Label>
                           <Input
                             id="title"
                             value={courseFormData.title}
                             onChange={(e) => setCourseFormData({ ...courseFormData, title: e.target.value })}
                             required
-                            className="bg-white border-slate-200"
-                            placeholder="Nombre del programa..."
+                            className="bg-white border-slate-200 h-11"
+                            placeholder="Nombre completo del curso..."
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="code" className="text-[10px] font-bold text-slate-400 uppercase">Código Interno</Label>
+                          <Label htmlFor="code" className="text-xs font-bold text-slate-500 uppercase">Código Interno</Label>
                           <Input
                             id="code"
                             value={courseFormData.code}
                             onChange={(e) => setCourseFormData({ ...courseFormData, code: e.target.value })}
                             required
                             placeholder="Ej: ESC-2024-X"
-                            className="bg-white border-slate-200"
+                            className="bg-white border-slate-200 h-11"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="level" className="text-[10px] font-bold text-slate-400 uppercase">Nivel</Label>
+                          <Label htmlFor="level" className="text-xs font-bold text-slate-500 uppercase">Nivel Académico</Label>
                           <Select
                             value={courseFormData.level}
                             onValueChange={(value) => setCourseFormData({ ...courseFormData, level: value })}
                           >
-                            <SelectTrigger className="bg-white border-slate-200">
+                            <SelectTrigger className="bg-white border-slate-200 h-11">
                               <SelectValue placeholder="Elegir nivel" />
                             </SelectTrigger>
                             <SelectContent>
@@ -490,34 +513,34 @@ export default function CoursesPage() {
                       <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
                         <Clock className="h-4 w-4" /> Duración y Cronograma
                       </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
-                          <Label htmlFor="duration" className="text-[10px] font-bold text-slate-400 uppercase">Horas Totales</Label>
-                          <Input id="duration" type="number" value={courseFormData.duration} onChange={(e) => setCourseFormData({ ...courseFormData, duration: e.target.value })} required className="bg-white border-slate-200" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="durationSessions" className="text-[10px] font-bold text-slate-400 uppercase">Nº Sesiones</Label>
-                          <Input id="durationSessions" type="number" value={courseFormData.durationSessions} onChange={(e) => setCourseFormData({ ...courseFormData, durationSessions: e.target.value })} className="bg-white border-slate-200" />
+                          <Label htmlFor="duration" className="text-xs font-bold text-slate-500 uppercase">Horas Totales</Label>
+                          <Input id="duration" type="number" value={courseFormData.duration} onChange={(e) => setCourseFormData({ ...courseFormData, duration: e.target.value })} required className="bg-white border-slate-200 h-11" />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="sessionDuration" className="text-[10px] font-bold text-slate-400 uppercase">H/Sesión</Label>
-                          <Input id="sessionDuration" type="number" step="0.5" value={courseFormData.sessionDuration} onChange={(e) => setCourseFormData({ ...courseFormData, sessionDuration: e.target.value })} className="bg-white border-slate-200" />
+                          <Label htmlFor="durationSessions" className="text-xs font-bold text-slate-500 uppercase">Nº Sesiones</Label>
+                          <Input id="durationSessions" type="number" value={courseFormData.durationSessions} onChange={(e) => setCourseFormData({ ...courseFormData, durationSessions: e.target.value })} className="bg-white border-slate-200 h-11" />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="durationMonths" className="text-[10px] font-bold text-slate-400 uppercase">Meses</Label>
-                          <Input id="durationMonths" type="number" value={courseFormData.durationMonths} onChange={(e) => setCourseFormData({ ...courseFormData, durationMonths: e.target.value })} className="bg-white border-slate-200" />
+                          <Label htmlFor="sessionDuration" className="text-xs font-bold text-slate-500 uppercase">H/Sesión</Label>
+                          <Input id="sessionDuration" type="number" step="0.5" value={courseFormData.sessionDuration} onChange={(e) => setCourseFormData({ ...courseFormData, sessionDuration: e.target.value })} className="bg-white border-slate-200 h-11" />
                         </div>
-                        <div className="space-y-2 md:col-span-1 lg:col-span-1">
-                          <Label htmlFor="durationPeriod" className="text-[10px] font-bold text-slate-400 uppercase">Periodo</Label>
-                          <Input id="durationPeriod" placeholder="Ej: Oct-Dic" value={courseFormData.durationPeriod} onChange={(e) => setCourseFormData({ ...courseFormData, durationPeriod: e.target.value })} className="bg-white border-slate-200" />
+                        <div className="space-y-2">
+                          <Label htmlFor="durationMonths" className="text-xs font-bold text-slate-500 uppercase">Nº Meses</Label>
+                          <Input id="durationMonths" type="number" value={courseFormData.durationMonths} onChange={(e) => setCourseFormData({ ...courseFormData, durationMonths: e.target.value })} className="bg-white border-slate-200 h-11" />
                         </div>
-                        <div className="space-y-2 col-span-1 md:col-span-2">
-                          <Label htmlFor="startDate" className="text-[10px] font-bold text-slate-400 uppercase">Inicio</Label>
-                          <Input id="startDate" type="date" value={courseFormData.startDate} onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })} className="bg-white border-slate-200" />
+                        <div className="space-y-2">
+                          <Label htmlFor="durationPeriod" className="text-xs font-bold text-slate-500 uppercase">Periodo</Label>
+                          <Input id="durationPeriod" placeholder="Ej: Oct-Dic" value={courseFormData.durationPeriod} onChange={(e) => setCourseFormData({ ...courseFormData, durationPeriod: e.target.value })} className="bg-white border-slate-200 h-11" />
                         </div>
-                        <div className="space-y-2 col-span-1 md:col-span-2">
-                          <Label htmlFor="endDate" className="text-[10px] font-bold text-slate-400 uppercase">Fin</Label>
-                          <Input id="endDate" type="date" value={courseFormData.endDate} onChange={(e) => setCourseFormData({ ...courseFormData, endDate: e.target.value })} className="bg-white border-slate-200" />
+                        <div className="space-y-2">
+                          <Label htmlFor="startDate" className="text-xs font-bold text-slate-500 uppercase">Fecha Inicio</Label>
+                          <Input id="startDate" type="date" value={courseFormData.startDate} onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })} className="bg-white border-slate-200 h-11" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="endDate" className="text-xs font-bold text-slate-500 uppercase">Fecha Fin</Label>
+                          <Input id="endDate" type="date" value={courseFormData.endDate} onChange={(e) => setCourseFormData({ ...courseFormData, endDate: e.target.value })} className="bg-white border-slate-200 h-11" />
                         </div>
                       </div>
                     </div>
@@ -527,19 +550,19 @@ export default function CoursesPage() {
                       <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
                         <Euro className="h-4 w-4" /> Costes y Docencia
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
-                          <Label htmlFor="price" className="text-[10px] font-bold text-slate-400 uppercase">Precio Base (€)</Label>
-                          <Input id="price" type="number" step="0.01" value={courseFormData.price} onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })} required className="bg-white border-slate-200 font-bold" />
+                          <Label htmlFor="price" className="text-xs font-bold text-slate-500 uppercase">Precio Base (€)</Label>
+                          <Input id="price" type="number" step="0.01" value={courseFormData.price} onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })} required className="bg-white border-slate-200 h-11 font-bold" />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="affiliatePrice" className="text-[10px] font-bold text-green-600 uppercase">Precio Afiliado (€)</Label>
-                          <Input id="affiliatePrice" type="number" step="0.01" value={courseFormData.affiliatePrice} onChange={(e) => setCourseFormData({ ...courseFormData, affiliatePrice: e.target.value })} className="bg-green-50/30 border-green-100 font-bold text-green-700" />
+                          <Label htmlFor="affiliatePrice" className="text-xs font-bold text-green-600 uppercase">Precio Afiliado (€)</Label>
+                          <Input id="affiliatePrice" type="number" step="0.01" value={courseFormData.affiliatePrice} onChange={(e) => setCourseFormData({ ...courseFormData, affiliatePrice: e.target.value })} className="bg-green-50/30 border-green-100 h-11 font-bold text-green-700" />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="teacher" className="text-[10px] font-bold text-slate-400 uppercase">Docente Principal</Label>
+                          <Label htmlFor="teacher" className="text-xs font-bold text-slate-500 uppercase">Docente Principal</Label>
                           <Select value={courseFormData.teacherId} onValueChange={(value) => setCourseFormData({ ...courseFormData, teacherId: value })}>
-                            <SelectTrigger className="bg-white border-slate-200"><SelectValue placeholder="Elegir" /></SelectTrigger>
+                            <SelectTrigger className="bg-white border-slate-200 h-11"><SelectValue placeholder="Elegir" /></SelectTrigger>
                             <SelectContent>
                               {teachers.map((t) => (<SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>))}
                             </SelectContent>
@@ -564,19 +587,23 @@ export default function CoursesPage() {
                             <Button type="button" variant="ghost" size="icon" className="absolute -right-2 -top-2 h-7 w-7 rounded-full bg-white border shadow-md overflow-hidden text-red-500 hover:bg-red-50 z-10" onClick={() => removeModule(index)}>
                               <Plus className="h-4 w-4 rotate-45" />
                             </Button>
-                            <div className="grid grid-cols-12 gap-4">
-                              <div className="col-span-12 md:col-span-7 space-y-2">
-                                <Label className="text-[10px] font-bold uppercase text-slate-400 text-left block">Título</Label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase text-slate-500 text-left block">Título</Label>
                                 <Input placeholder="Nombre del tema..." className="h-10 text-sm font-bold bg-white" value={module.title} onChange={(e) => updateModule(index, 'title', e.target.value)} />
                               </div>
-                              <div className="col-span-12 md:col-span-5 space-y-2">
-                                <Label className="text-[10px] font-bold uppercase text-slate-400 text-left block">Docente</Label>
+                              <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase text-slate-500 text-left block">Docente</Label>
                                 <Select value={module.teacherId} onValueChange={(val) => updateModule(index, 'teacherId', val)}>
                                   <SelectTrigger className="h-10 text-xs bg-white"><SelectValue placeholder="Elegir" /></SelectTrigger>
                                   <SelectContent>
                                     {teachers.map((t) => (<SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>))}
                                   </SelectContent>
                                 </Select>
+                              </div>
+                              <div className="col-span-1 md:col-span-2 space-y-2">
+                                <Label className="text-xs font-bold uppercase text-slate-500 text-left block">Descripción breve</Label>
+                                <Input placeholder="Resumen del contenido..." className="h-10 text-sm bg-white" value={module.description} onChange={(e) => updateModule(index, 'description', e.target.value)} />
                               </div>
                             </div>
                           </div>
@@ -592,23 +619,53 @@ export default function CoursesPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
                         <div className="space-y-6">
                           <div className="space-y-2">
-                            <Label htmlFor="publicDescription" className="text-[10px] font-bold text-slate-400 uppercase text-left block">Descripción Pública</Label>
-                            <Textarea id="publicDescription" className="min-h-[140px] bg-blue-50/10 border-blue-100" value={courseFormData.publicDescription} onChange={(e) => setCourseFormData({ ...courseFormData, publicDescription: e.target.value })} placeholder="Texto que verán los alumnos..." />
+                            <Label htmlFor="publicDescription" className="text-xs font-bold text-slate-500 uppercase text-left block">Descripción Pública</Label>
+                            <Textarea id="publicDescription" className="min-h-[140px] bg-blue-50/10 border-blue-100" value={courseFormData.publicDescription} onChange={(e) => setCourseFormData({ ...courseFormData, publicDescription: e.target.value })} placeholder="Texto descriptivo para los alumnos..." />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="benefits" className="text-[10px] font-bold text-slate-400 uppercase text-left block">Beneficios (Uno por línea)</Label>
-                            <Textarea id="benefits" className="min-h-[100px] bg-blue-50/10 border-blue-100" value={courseFormData.benefits} onChange={(e) => setCourseFormData({ ...courseFormData, benefits: e.target.value })} placeholder="Ej: Certificado oficial..." />
+                            <Label htmlFor="benefits" className="text-xs font-bold text-slate-500 uppercase text-left block">Beneficios (Uno por línea)</Label>
+                            <Textarea id="benefits" className="min-h-[100px] bg-blue-50/10 border-blue-100" value={courseFormData.benefits} onChange={(e) => setCourseFormData({ ...courseFormData, benefits: e.target.value })} placeholder="Ej: Certificado oficial, Bolsa de empleo..." />
                           </div>
                         </div>
                         <div className="space-y-6">
                           <div className="space-y-2">
-                            <Label htmlFor="featuresFixed" className="text-[10px] font-bold text-slate-400 uppercase text-left block">Características (Checks)</Label>
-                            <Textarea id="featuresFixed" className="min-h-[100px] bg-blue-50/10 border-blue-100" value={courseFormData.features} onChange={(e) => setCourseFormData({ ...courseFormData, features: e.target.value })} placeholder="Ej: Material incluido..." />
+                            <Label htmlFor="featuresFixed" className="text-xs font-bold text-slate-500 uppercase text-left block">Características técnicas</Label>
+                            <Textarea id="featuresFixed" className="min-h-[100px] bg-blue-50/10 border-blue-100" value={courseFormData.features} onChange={(e) => setCourseFormData({ ...courseFormData, features: e.target.value })} placeholder="Ej: Material PDF, Clases en directo..." />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="callUrl" className="text-[10px] font-bold text-slate-400 uppercase text-left block">Link Convocatoria PDF</Label>
-                            <Input id="callUrl" placeholder="https://..." className="bg-blue-50/10 border-blue-100" value={courseFormData.callUrl} onChange={(e) => setCourseFormData({ ...courseFormData, callUrl: e.target.value })} />
+                            <Label htmlFor="callUrl" className="text-xs font-bold text-slate-500 uppercase text-left block">Link Convocatoria PDF</Label>
+                            <Input id="callUrl" placeholder="https://..." className="bg-blue-50/10 border-blue-100 h-11" value={courseFormData.callUrl} onChange={(e) => setCourseFormData({ ...courseFormData, callUrl: e.target.value })} />
                           </div>
+                          <div className="space-y-2 bg-slate-50 p-4 rounded-xl border">
+                            <div className="flex items-center space-x-3">
+                              <input
+                                type="checkbox"
+                                id="isActive"
+                                checked={courseFormData.isActive}
+                                onChange={(e) => setCourseFormData({ ...courseFormData, isActive: e.target.checked })}
+                                className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                              />
+                              <Label htmlFor="isActive" className="text-sm font-bold text-slate-700 cursor-pointer">Activar curso en la web</Label>
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-1 pl-8">Si está marcado, el curso aparecerá en la landing page pública.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sección 6: Área Interna */}
+                    <div className="space-y-4 pt-6 border-t text-left pb-4">
+                      <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                        Notas Administrativas
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="syllabusUrl" className="text-xs font-bold text-slate-500 uppercase">Link al Temario (Interno)</Label>
+                          <Input id="syllabusUrl" placeholder="URL Drive/Dropbox" value={courseFormData.syllabusUrl} onChange={(e) => setCourseFormData({ ...courseFormData, syllabusUrl: e.target.value })} className="bg-slate-50 h-11" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="description" className="text-xs font-bold text-slate-500 uppercase">Comentarios Internos</Label>
+                          <Textarea id="description" className="bg-slate-50" value={courseFormData.description} onChange={(e) => setCourseFormData({ ...courseFormData, description: e.target.value })} placeholder="Notas solo visibles para el personal..." />
                         </div>
                       </div>
                     </div>
@@ -924,47 +981,52 @@ export default function CoursesPage() {
 
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl">
-            <form onSubmit={handleUpdateCourse} className="flex flex-col h-full">
+          <DialogContent className="sm:max-w-[850px] h-[90vh] flex flex-col p-0 border-none shadow-2xl overflow-hidden">
+            <form onSubmit={handleUpdateCourse} className="flex flex-col h-full overflow-hidden">
               <DialogHeader className="p-6 bg-slate-50 border-b shrink-0">
-                <DialogTitle className="text-2xl font-bold text-slate-900">Editar Curso</DialogTitle>
-                <DialogDescription>Actualiza los detalles del programa de forma organizada.</DialogDescription>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <DialogTitle className="text-2xl font-bold text-slate-900">Editar Curso</DialogTitle>
+                    <DialogDescription>Actualiza los detalles del programa de forma organizada.</DialogDescription>
+                  </div>
+                </div>
               </DialogHeader>
-              <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar bg-white">
                 {/* Sección 1: Datos de Identificación */}
                 <div className="space-y-4 text-left">
                   <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
                     <BookOpen className="h-4 w-4" /> Datos de Identificación
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-title" className="text-[10px] font-bold text-slate-400 uppercase">Título del Curso</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="edit-title" className="text-xs font-bold text-slate-500 uppercase">Título del Curso</Label>
                       <Input
                         id="edit-title"
                         value={courseFormData.title}
                         onChange={(e) => setCourseFormData({ ...courseFormData, title: e.target.value })}
                         required
-                        className="bg-white border-slate-200 focus:border-blue-500 transition-colors"
+                        className="bg-white border-slate-200 h-11 focus:border-blue-500 transition-colors"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-code" className="text-[10px] font-bold text-slate-400 uppercase">Código / Expediente</Label>
+                      <Label htmlFor="edit-code" className="text-xs font-bold text-slate-500 uppercase">Código / Expediente</Label>
                       <Input
                         id="edit-code"
                         value={courseFormData.code}
                         onChange={(e) => setCourseFormData({ ...courseFormData, code: e.target.value })}
                         required
                         placeholder="Ej: EXP-2024-01"
-                        className="bg-white border-slate-200"
+                        className="bg-white border-slate-200 h-11"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-level" className="text-[10px] font-bold text-slate-400 uppercase">Categoría Académica</Label>
+                      <Label htmlFor="edit-level" className="text-xs font-bold text-slate-500 uppercase">Categoría Académica</Label>
                       <Select
                         value={courseFormData.level}
                         onValueChange={(value) => setCourseFormData({ ...courseFormData, level: value as any })}
                       >
-                        <SelectTrigger className="bg-white border-slate-200">
+                        <SelectTrigger className="bg-white border-slate-200 h-11">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -984,26 +1046,34 @@ export default function CoursesPage() {
                   <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
                     <Clock className="h-4 w-4" /> Horario y Cronograma
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="edit-duration" className="text-[10px] font-bold text-slate-400 uppercase">Total H.</Label>
-                      <Input id="edit-duration" type="number" value={courseFormData.duration} onChange={(e) => setCourseFormData({ ...courseFormData, duration: e.target.value })} required className="bg-white border-slate-200" />
+                      <Label htmlFor="edit-duration" className="text-xs font-bold text-slate-500 uppercase">Total Horas</Label>
+                      <Input id="edit-duration" type="number" value={courseFormData.duration} onChange={(e) => setCourseFormData({ ...courseFormData, duration: e.target.value })} required className="bg-white border-slate-200 h-11" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-durationSessions" className="text-[10px] font-bold text-slate-400 uppercase">Sesiones</Label>
-                      <Input id="edit-durationSessions" type="number" value={courseFormData.durationSessions} onChange={(e) => setCourseFormData({ ...courseFormData, durationSessions: e.target.value })} className="bg-white border-slate-200" />
+                      <Label htmlFor="edit-durationSessions" className="text-xs font-bold text-slate-500 uppercase">Nº Sesiones</Label>
+                      <Input id="edit-durationSessions" type="number" value={courseFormData.durationSessions} onChange={(e) => setCourseFormData({ ...courseFormData, durationSessions: e.target.value })} className="bg-white border-slate-200 h-11" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-sessionDuration" className="text-[10px] font-bold text-slate-400 uppercase">H/Sesión</Label>
-                      <Input id="edit-sessionDuration" type="number" step="0.5" value={courseFormData.sessionDuration} onChange={(e) => setCourseFormData({ ...courseFormData, sessionDuration: e.target.value })} className="bg-white border-slate-200" />
+                      <Label htmlFor="edit-sessionDuration" className="text-xs font-bold text-slate-500 uppercase">Horas p/ Sesión</Label>
+                      <Input id="edit-sessionDuration" type="number" step="0.5" value={courseFormData.sessionDuration} onChange={(e) => setCourseFormData({ ...courseFormData, sessionDuration: e.target.value })} className="bg-white border-slate-200 h-11" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-durationMonths" className="text-[10px] font-bold text-slate-400 uppercase">Meses</Label>
-                      <Input id="edit-durationMonths" type="number" value={courseFormData.durationMonths} onChange={(e) => setCourseFormData({ ...courseFormData, durationMonths: e.target.value })} className="bg-white border-slate-200" />
+                      <Label htmlFor="edit-durationMonths" className="text-xs font-bold text-slate-500 uppercase">Meses</Label>
+                      <Input id="edit-durationMonths" type="number" value={courseFormData.durationMonths} onChange={(e) => setCourseFormData({ ...courseFormData, durationMonths: e.target.value })} className="bg-white border-slate-200 h-11" />
                     </div>
-                    <div className="space-y-2 md:col-span-2 lg:col-span-1">
-                      <Label htmlFor="edit-durationPeriod" className="text-[10px] font-bold text-slate-400 uppercase">Periodo</Label>
-                      <Input id="edit-durationPeriod" placeholder="Ej: Oct-Dic" value={courseFormData.durationPeriod} onChange={(e) => setCourseFormData({ ...courseFormData, durationPeriod: e.target.value })} className="bg-white border-slate-200" />
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-durationPeriod" className="text-xs font-bold text-slate-500 uppercase">Periodo</Label>
+                      <Input id="edit-durationPeriod" placeholder="Ej: Oct-Dic" value={courseFormData.durationPeriod} onChange={(e) => setCourseFormData({ ...courseFormData, durationPeriod: e.target.value })} className="bg-white border-slate-200 h-11" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-startDate" className="text-xs font-bold text-slate-500 uppercase">Fecha Inicio</Label>
+                      <Input id="edit-startDate" type="date" value={courseFormData.startDate} onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })} className="bg-white border-slate-200 h-11" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-endDate" className="text-xs font-bold text-slate-500 uppercase">Fecha Fin</Label>
+                      <Input id="edit-endDate" type="date" value={courseFormData.endDate} onChange={(e) => setCourseFormData({ ...courseFormData, endDate: e.target.value })} className="bg-white border-slate-200 h-11" />
                     </div>
                   </div>
                 </div>
@@ -1013,23 +1083,23 @@ export default function CoursesPage() {
                   <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
                     <Euro className="h-4 w-4" /> Costes y Responsable
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="edit-price" className="text-[10px] font-bold text-slate-400 uppercase">Precio General (€)</Label>
-                      <Input id="edit-price" type="number" step="0.01" value={courseFormData.price} onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })} required className="bg-white border-slate-200 font-bold" />
+                      <Label htmlFor="edit-price" className="text-xs font-bold text-slate-500 uppercase">Precio General (€)</Label>
+                      <Input id="edit-price" type="number" step="0.01" value={courseFormData.price} onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })} required className="bg-white border-slate-200 h-11 font-bold" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-affiliatePrice" className="text-[10px] font-bold text-green-600 uppercase">Precio Afiliado (€)</Label>
-                      <Input id="edit-affiliatePrice" type="number" step="0.01" value={courseFormData.affiliatePrice} onChange={(e) => setCourseFormData({ ...courseFormData, affiliatePrice: e.target.value })} className="bg-green-50/30 border-green-100 font-bold text-green-700" />
+                      <Label htmlFor="edit-affiliatePrice" className="text-xs font-bold text-green-600 uppercase">Precio Afiliado (€)</Label>
+                      <Input id="edit-affiliatePrice" type="number" step="0.01" value={courseFormData.affiliatePrice} onChange={(e) => setCourseFormData({ ...courseFormData, affiliatePrice: e.target.value })} className="bg-green-50/30 border-green-100 h-11 font-bold text-green-700" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-maxStudents" className="text-[10px] font-bold text-slate-400 uppercase">Cupo Máximo</Label>
-                      <Input id="edit-maxStudents" type="number" value={courseFormData.maxStudents} onChange={(e) => setCourseFormData({ ...courseFormData, maxStudents: e.target.value })} required className="bg-white border-slate-200" />
+                      <Label htmlFor="edit-maxStudents" className="text-xs font-bold text-slate-500 uppercase">Cupo Máximo</Label>
+                      <Input id="edit-maxStudents" type="number" value={courseFormData.maxStudents} onChange={(e) => setCourseFormData({ ...courseFormData, maxStudents: e.target.value })} required className="bg-white border-slate-200 h-11" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-teacher" className="text-[10px] font-bold text-slate-400 uppercase">Docente Principal</Label>
+                      <Label htmlFor="edit-teacher" className="text-xs font-bold text-slate-500 uppercase">Docente Principal</Label>
                       <Select value={courseFormData.teacherId} onValueChange={(value) => setCourseFormData({ ...courseFormData, teacherId: value })}>
-                        <SelectTrigger className="bg-white border-slate-200">
+                        <SelectTrigger className="bg-white border-slate-200 h-11">
                           <SelectValue placeholder="Seleccionar" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1065,13 +1135,13 @@ export default function CoursesPage() {
                         >
                           <Plus className="h-4 w-4 rotate-45" />
                         </Button>
-                        <div className="grid grid-cols-12 gap-4">
-                          <div className="col-span-12 md:col-span-7 space-y-2">
-                            <Label className="text-[9px] font-bold uppercase text-slate-400 text-left block">Título del Apartado</Label>
-                            <Input placeholder="Título del tema..." className="h-10 text-sm font-bold bg-white" value={module.title} onChange={(e) => updateModule(index, 'title', e.target.value)} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-xs font-bold uppercase text-slate-500 text-left block">Título</Label>
+                            <Input placeholder="Título del apartado..." className="h-10 text-sm font-bold bg-white" value={module.title} onChange={(e) => updateModule(index, 'title', e.target.value)} />
                           </div>
-                          <div className="col-span-12 md:col-span-5 space-y-2">
-                            <Label className="text-[9px] font-bold uppercase text-slate-400 text-left block">Profesor Asignado</Label>
+                          <div className="space-y-2">
+                            <Label className="text-xs font-bold uppercase text-slate-500 text-left block">Profesor Asignado</Label>
                             <Select value={module.teacherId} onValueChange={(val) => updateModule(index, 'teacherId', val)}>
                               <SelectTrigger className="h-10 text-xs bg-white"><SelectValue placeholder="Elegir docente" /></SelectTrigger>
                               <SelectContent>
@@ -1079,20 +1149,16 @@ export default function CoursesPage() {
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="col-span-12 space-y-2">
-                            <Label className="text-[9px] font-bold uppercase text-slate-400 text-left block">Resumen del contenido</Label>
-                            <Input placeholder="Descripción breve..." className="h-9 text-xs italic bg-white/50" value={module.description} onChange={(e) => updateModule(index, 'description', e.target.value)} />
+                          <div className="col-span-1 md:col-span-2 space-y-2">
+                            <Label className="text-xs font-bold uppercase text-slate-500 text-left block">Resumen del contenido</Label>
+                            <Input placeholder="Descripción breve..." className="h-10 text-sm bg-white" value={module.description} onChange={(e) => updateModule(index, 'description', e.target.value)} />
                           </div>
                         </div>
                       </div>
                     ))}
-                    {courseFormData.modules.length === 0 && (
-                      <div className="text-center py-8 bg-slate-50 border border-dashed rounded-3xl">
-                        <p className="text-xs text-slate-400 italic">No se han definido apartados. Se asume que el profesor principal imparte todo el curso.</p>
-                      </div>
-                    )}
                   </div>
                 </div>
+
                 {/* Sección 5: Presencia Online */}
                 <div className="space-y-4 pt-6 border-t text-left">
                   <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -1101,29 +1167,28 @@ export default function CoursesPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <Label htmlFor="edit-publicDescription" className="text-[10px] font-bold text-slate-400 uppercase text-left block">Resumen para la Web</Label>
-                        <Textarea id="edit-publicDescription" className="min-h-[140px] bg-blue-50/10 border-blue-100 focus:border-blue-500" value={courseFormData.publicDescription} onChange={(e) => setCourseFormData({ ...courseFormData, publicDescription: e.target.value })} placeholder="Escribe aquí la descripción comercial..." />
+                        <Label htmlFor="edit-publicDescription" className="text-xs font-bold text-slate-500 uppercase text-left block">Resumen Comercial (Web)</Label>
+                        <Textarea id="edit-publicDescription" className="min-h-[140px] bg-blue-50/10 border-blue-100 focus:border-blue-500" value={courseFormData.publicDescription} onChange={(e) => setCourseFormData({ ...courseFormData, publicDescription: e.target.value })} placeholder="Escribe aquí la descripción..." />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="edit-benefits" className="text-[10px] font-bold text-slate-400 uppercase text-left block">Beneficios Clave (Uno por línea o coma)</Label>
-                        <Textarea id="edit-benefits" className="min-h-[100px] bg-blue-50/10 border-blue-100" value={courseFormData.benefits} onChange={(e) => setCourseFormData({ ...courseFormData, benefits: e.target.value })} placeholder="Ej: Bolsa de empleo, Tutorías 24/7..." />
+                        <Label htmlFor="edit-benefits" className="text-xs font-bold text-slate-500 uppercase text-left block">Puntos Clave / Beneficios</Label>
+                        <Textarea id="edit-benefits" className="min-h-[100px] bg-blue-50/10 border-blue-100" value={courseFormData.benefits} onChange={(e) => setCourseFormData({ ...courseFormData, benefits: e.target.value })} placeholder="Ej: Bolsa de empleo, Tutorías..." />
                       </div>
                     </div>
 
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <Label htmlFor="edit-features" className="text-[10px] font-bold text-slate-400 uppercase text-left block">Prestaciones Incluidas</Label>
-                        <Textarea id="edit-features" className="min-h-[100px] bg-blue-50/10 border-blue-100" value={courseFormData.features} onChange={(e) => setCourseFormData({ ...courseFormData, features: e.target.value })} placeholder="Ej: Material impreso, Certificado oficial..." />
+                        <Label htmlFor="edit-features" className="text-xs font-bold text-slate-500 uppercase text-left block">Características técnicas</Label>
+                        <Textarea id="edit-features" className="min-h-[100px] bg-blue-50/10 border-blue-100" value={courseFormData.features} onChange={(e) => setCourseFormData({ ...courseFormData, features: e.target.value })} placeholder="Ej: Material incluido..." />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="edit-callUrl" className="text-[10px] font-bold text-slate-400 uppercase text-left block">Enlace a Convocatoria PDF/Web</Label>
-                        <Input id="edit-callUrl" placeholder="https://..." className="bg-blue-50/10 border-blue-100" value={courseFormData.callUrl} onChange={(e) => setCourseFormData({ ...courseFormData, callUrl: e.target.value })} />
+                        <Label htmlFor="edit-callUrl" className="text-xs font-bold text-slate-500 uppercase text-left block">Link Convocatoria / Info</Label>
+                        <Input id="edit-callUrl" placeholder="https://..." className="bg-blue-50/10 border-blue-100 h-11" value={courseFormData.callUrl} onChange={(e) => setCourseFormData({ ...courseFormData, callUrl: e.target.value })} />
                       </div>
-                      <div className="bg-slate-100 p-6 rounded-2xl flex items-center space-x-4 border border-slate-200">
-                        <input type="checkbox" id="edit-isActive" checked={courseFormData.isActive} onChange={(e) => setCourseFormData({ ...courseFormData, isActive: e.target.checked })} className="h-6 w-6 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
-                        <div className="flex flex-col text-left">
-                          <Label htmlFor="edit-isActive" className="text-sm font-black text-slate-700 cursor-pointer">CURSO VISIBLE</Label>
-                          <p className="text-[10px] text-slate-500 uppercase font-bold text-left">Publicar automáticamente en la web</p>
+                      <div className="space-y-2 bg-slate-50 p-4 rounded-xl border">
+                        <div className="flex items-center gap-3">
+                          <input type="checkbox" id="edit-isActive" checked={courseFormData.isActive} onChange={(e) => setCourseFormData({ ...courseFormData, isActive: e.target.checked })} className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
+                          <Label htmlFor="edit-isActive" className="text-sm font-bold text-slate-700 cursor-pointer uppercase">Curso Visible en Web</Label>
                         </div>
                       </div>
                     </div>
@@ -1135,12 +1200,12 @@ export default function CoursesPage() {
                   <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em] text-left">Gestión administrativa</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-2">
-                      <Label htmlFor="edit-syllabusUrl" className="text-[10px] font-bold text-slate-400 uppercase text-left block">Material didáctico (Link Drive)</Label>
-                      <Input id="edit-syllabusUrl" placeholder="URL para uso interno" value={courseFormData.syllabusUrl} onChange={(e) => setCourseFormData({ ...courseFormData, syllabusUrl: e.target.value })} className="bg-slate-50" />
+                      <Label htmlFor="edit-syllabusUrl" className="text-xs font-bold text-slate-500 uppercase text-left block">Material didáctico (Drive)</Label>
+                      <Input id="edit-syllabusUrl" placeholder="Link interno" value={courseFormData.syllabusUrl} onChange={(e) => setCourseFormData({ ...courseFormData, syllabusUrl: e.target.value })} className="bg-slate-50 h-11" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-description" className="text-[10px] font-bold text-slate-400 uppercase text-left block">Notas y Comentarios Internos</Label>
-                      <Textarea id="edit-description" className="min-h-[80px] bg-slate-50" value={courseFormData.description} onChange={(e) => setCourseFormData({ ...courseFormData, description: e.target.value })} placeholder="Solo el personal podrá leer esto..." />
+                      <Label htmlFor="edit-description" className="text-xs font-bold text-slate-500 uppercase text-left block">Notas Internas</Label>
+                      <Textarea id="edit-description" className="bg-slate-50" value={courseFormData.description} onChange={(e) => setCourseFormData({ ...courseFormData, description: e.target.value })} placeholder="Solo administrativo..." />
                     </div>
                   </div>
                 </div>
