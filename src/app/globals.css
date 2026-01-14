@@ -122,125 +122,130 @@
   }
 }
 
-/* Estilos de impresión definitivos - ULTRA COMPACTOS */
+/* Estilos de impresión definitivos - ESTRATEGIA DE COMPACTACIÓN */
 @media print {
   @page {
     size: A4;
-    margin: 5mm;
-    /* Margen mínimo para ganar espacio */
+    margin: 8mm;
   }
 
-  /* AISLAMIENTO TOTAL: Ocultar la aplicación principal */
-  body>*:not([data-radix-portal]):not(#public-course-landing) {
-    display: none !important;
-  }
-
-  /* Mostrar solo lo necesario dentro de los portales (Fichas Técnicas) */
-  [data-radix-portal] {
-    display: block !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-  }
-
-  /* Ocultar elementos de UI del Dialog */
-  [role="dialog"]>button,
-  .bg-black\/80,
-  [data-state="open"]>.fixed {
-    display: none !important;
-  }
-
-  /* FICHA TÉCNICA (ADMIN) */
-  #course-details-print {
-    display: block !important;
-    visibility: visible !important;
-    position: relative !important;
-    width: 200mm !important;
-    /* Un poco más estrecho para evitar cortes */
+  /* Reset y Base */
+  body {
     background: white !important;
-    margin: 5mm auto !important;
-    padding: 0 !important;
-    z-index: 9999 !important;
+    color: #1e293b !important;
+    font-size: 10pt !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
-  #course-details-print * {
-    visibility: visible !important;
-  }
-
-  /* LANDING PAGE PÚBLICA */
-  #public-course-landing {
-    display: block !important;
-    visibility: visible !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
-    background: white !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    /* ESCALA ULTRA COMPACTA */
-    transform: scale(0.78) !important;
-    transform-origin: top center !important;
-  }
-
-  #public-course-landing * {
-    visibility: visible !important;
-  }
-
+  /* Ocultar UI general e interactiva */
   .no-print,
+  nav,
+  footer,
   button,
-  .sidebar-cta-extra {
+  [role="dialog"]>button,
+  .bg-black/80 {
     display: none !important;
   }
 
-  /* AJUSTES DE ESPACIO PARA LANDING PAGE */
+  /* AISLAMIENTO DE FICHA (ADMIN) */
+  /* Si el diálogo está abierto, ocultamos todo el fondo de la app */
+  body:has([role="dialog"]) main,
+  body:has([role="dialog"]) #public-course-landing {
+    display: none !important;
+  }
+
+  /* El portal de Radix (donde viven los diálogos) debe ser visible */
+  [data-radix-portal] {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  #course-details-print {
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    visibility: visible !important;
+    background: white !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Eliminar límites de altura que causan páginas en blanco o cortes */
+  #course-details-print>div,
+  [role="dialog"],
+  .overflow-y-auto {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* LANDING PAGE PÚBLICA (SOLUCIÓN 1 PÁGINA) */
+  #public-course-landing {
+    background: white !important;
+    width: 100% !important;
+    position: relative !important;
+  }
+
+  /* Eliminar cabecera visual para ganar espacio */
+  #public-course-landing .h-72 {
+    height: auto !important;
+    padding: 6mm 0 !important;
+    background: #1e3a8a !important;
+    /* Azul sólido */
+    margin-bottom: 4mm !important;
+  }
+
   #public-course-landing h1 {
-    font-size: 15pt !important;
+    font-size: 18pt !important;
     line-height: 1.1 !important;
     margin-bottom: 2mm !important;
   }
 
-  #public-course-landing .h-72 {
-    height: 30mm !important;
-  }
-
+  /* Compactar paddings y márgenes */
   #public-course-landing .p-8,
-  #public-course-landing .p-6 {
+  #public-course-landing .p-6,
+  #public-course-landing .p-12 {
     padding: 3mm !important;
   }
 
   #public-course-landing .mt-12,
   #public-course-landing .mb-12,
-  #public-course-landing .mt-10,
   #public-course-landing .mt-8 {
     margin-top: 2mm !important;
     margin-bottom: 2mm !important;
   }
 
-  #public-course-landing .grid {
-    gap: 3mm !important;
+  /* Ocultar secciones secundarias para ahorrar media hoja */
+  .sidebar-cta-extra,
+  #public-course-landing .container:has(.lg\:grid-cols-3)>.space-y-6:last-child {
+    display: none !important;
   }
 
-  #public-course-landing [class*="space-y"]>*+* {
-    margin-top: 1mm !important;
-  }
-
-  /* Forzar Layout vertical para maximizar espacio */
-  #public-course-landing .grid-cols-1,
+  /* Forzar Layout vertical para aprovechar el ancho */
   #public-course-landing .lg\:grid-cols-3 {
+    display: block !important;
+  }
+
+  #public-course-landing .lg\:col-span-2 {
+    width: 100% !important;
+  }
+
+  /* Ajustar cuadrículas de beneficios y módulos a 1 columna */
+  #public-course-landing .grid-cols-1,
+  #public-course-landing .md\:grid-cols-2 {
     display: flex !important;
     flex-direction: column !important;
+    gap: 2mm !important;
   }
 
-  /* Ocultar elementos voluminosos en la landing si es para imprimir */
-  #public-course-landing .mt-12:has(.grid-cols-1.md\:grid-cols-2) {
-    margin-top: 4mm !important;
-  }
-
-  /* Beneficios */
-
-  /* Asegurar que se impriman colores y fondos */
+  /* Asegurar colores */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;

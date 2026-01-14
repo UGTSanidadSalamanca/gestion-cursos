@@ -349,16 +349,24 @@ export default function CoursesPage() {
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
+        height: element.scrollHeight + 50, // Capturar altura completa con margen
+        windowHeight: element.scrollHeight + 100,
         onclone: (clonedDoc) => {
           const el = clonedDoc.getElementById('course-details-print')
           if (el) {
+            // Eliminar restricciones de scroll y altura para la captura
+            el.style.height = 'auto'
+            el.style.maxHeight = 'none'
+            el.style.overflow = 'visible'
             el.style.backgroundColor = '#ffffff'
             el.style.width = '700px'
-            el.style.height = 'auto'
-            el.style.overflow = 'visible'
             el.style.display = 'block'
-            el.style.padding = '40px'
-            el.style.paddingBottom = '80px' // Margen de seguridad extra para el QR
+            el.style.padding = '0'
+            el.style.margin = '0'
+
+            // Asegurar que el contenedor interno tenga espacio al final
+            const inner = el.querySelector('.pb-16') as HTMLElement
+            if (inner) inner.style.paddingBottom = '100px'
 
             const allElements = el.getElementsByTagName('*')
             for (let i = 0; i < allElements.length; i++) {
@@ -832,7 +840,7 @@ export default function CoursesPage() {
               <>
                 <div id="course-details-print" className="bg-white flex-1 overflow-y-auto custom-scrollbar">
                   <div className="bg-blue-600 h-2 w-full no-print" />
-                  <div className="p-6 md:p-8">
+                  <div className="p-6 md:p-8 pb-16">
                     <div className="flex justify-between items-start mb-6">
                       <div className="flex-1">
                         <h2 className="text-2xl md:text-3xl font-black text-slate-900 leading-tight tracking-tight uppercase">
