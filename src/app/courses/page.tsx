@@ -77,8 +77,20 @@ interface Course {
     id: string
     name: string
   }
+  modules?: CourseModule[]
   _count?: {
     enrollments: number
+  }
+}
+
+interface CourseModule {
+  id?: string
+  title: string
+  description?: string
+  teacherId?: string
+  teacher?: {
+    id: string
+    name: string
   }
 }
 
@@ -116,7 +128,8 @@ export default function CoursesPage() {
     isActive: true,
     hasCertificate: true,
     hasMaterials: true,
-    maxStudents: '30'
+    maxStudents: '30',
+    modules: [] as { title: string; description: string; teacherId: string }[]
   })
 
   useEffect(() => {
@@ -223,6 +236,25 @@ export default function CoursesPage() {
     }
   }
 
+  const addModule = () => {
+    setCourseFormData({
+      ...courseFormData,
+      modules: [...courseFormData.modules, { title: '', description: '', teacherId: '' }]
+    })
+  }
+
+  const removeModule = (index: number) => {
+    const nextModules = [...courseFormData.modules]
+    nextModules.splice(index, 1)
+    setCourseFormData({ ...courseFormData, modules: nextModules })
+  }
+
+  const updateModule = (index: number, field: string, value: string) => {
+    const nextModules = [...courseFormData.modules]
+    nextModules[index] = { ...nextModules[index], [field]: value } as any
+    setCourseFormData({ ...courseFormData, modules: nextModules })
+  }
+
   const resetForm = () => {
     setCourseFormData({
       title: '',
@@ -247,7 +279,8 @@ export default function CoursesPage() {
       isActive: true,
       hasCertificate: true,
       hasMaterials: true,
-      maxStudents: '30'
+      maxStudents: '30',
+      modules: []
     })
   }
 
@@ -276,7 +309,12 @@ export default function CoursesPage() {
       isActive: course.isActive,
       hasCertificate: course.hasCertificate ?? true,
       hasMaterials: course.hasMaterials ?? true,
-      maxStudents: (course.maxStudents || 0).toString()
+      maxStudents: (course.maxStudents || 0).toString(),
+      modules: (course.modules || []).map(m => ({
+        title: m.title,
+        description: m.description || '',
+        teacherId: m.teacherId || ''
+      }))
     })
     setIsEditDialogOpen(true)
   }
@@ -530,7 +568,7 @@ export default function CoursesPage() {
                       />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="teacher" className="text-right">Profesor</Label>
+                      <Label htmlFor="teacher" className="text-right">Profesor Principal</Label>
                       <Select
                         value={courseFormData.teacherId}
                         onValueChange={(value) => setCourseFormData({ ...courseFormData, teacherId: value })}
@@ -546,6 +584,70 @@ export default function CoursesPage() {
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    {/* Sección de Módulos */}
+                    <div className="col-span-4 border-t pt-2 mt-2">
+                      <div className="flex items-center justify-between mb-3 bg-slate-100 p-2 rounded-lg">
+                        <Label className="text-blue-700 font-bold uppercase text-[10px] tracking-widest pl-1">Temario y Profesores por Apartado</Label>
+                        <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px] bg-white shadow-sm border" onClick={addModule}>
+                          <Plus className="h-3 w-3 mr-1" /> Añadir Tema
+                        </Button>
+                      </div>
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        {courseFormData.modules.map((module, index) => (
+                          <div key={index} className="bg-white p-3 rounded-xl border border-slate-200 relative group shadow-sm">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-white border shadow-md opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700 z-10"
+                              onClick={() => removeModule(index)}
+                            >
+                              <Plus className="h-4 w-4 rotate-45" />
+                            </Button>
+                            <div className="grid grid-cols-12 gap-2">
+                              <div className="col-span-7">
+                                <Input
+                                  placeholder="Título del tema/apartado"
+                                  className="h-8 text-xs font-semibold"
+                                  value={module.title}
+                                  onChange={(e) => updateModule(index, 'title', e.target.value)}
+                                />
+                              </div>
+                              <div className="col-span-5">
+                                <Select
+                                  value={module.teacherId}
+                                  onValueChange={(val) => updateModule(index, 'teacherId', val)}
+                                >
+                                  <SelectTrigger className="h-8 text-[10px] bg-slate-50">
+                                    <SelectValue placeholder="Profesor" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {teachers.map((t) => (
+                                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="col-span-12">
+                                <Input
+                                  placeholder="Descripción corta o apuntes del tema..."
+                                  className="h-7 text-[10px] italic border-dashed bg-slate-50/30"
+                                  value={module.description}
+                                  onChange={(e) => updateModule(index, 'description', e.target.value)}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {courseFormData.modules.length === 0 && (
+                          <div className="text-center py-6 border-2 border-dashed border-slate-100 rounded-xl">
+                            <BookOpen className="h-8 w-8 text-slate-200 mx-auto mb-2" />
+                            <p className="text-[10px] text-slate-400 italic">No hay temas específicos definidos.<br />El curso usará al profesor principal.</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid grid-cols-4 items-center gap-4">
@@ -827,9 +929,34 @@ export default function CoursesPage() {
                   </div>
 
                   {selectedCourse.startDate && (
-                    <div className="mb-8 flex items-center gap-2 bg-blue-50 p-3 rounded-xl border border-blue-100">
+                    <div className="mb-6 flex items-center gap-2 bg-blue-50 p-3 rounded-xl border border-blue-100">
                       <Calendar className="h-4 w-4 text-blue-600" />
                       <span className="text-sm font-bold text-blue-800">Fecha de inicio: {new Date(selectedCourse.startDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
+
+                  {/* Sección de Temario por Apartado */}
+                  {selectedCourse.modules && selectedCourse.modules.length > 0 && (
+                    <div className="mb-8">
+                      <p className="text-xs font-bold text-slate-400 uppercase mb-3 px-1">Temario y Profesorado por Módulo</p>
+                      <div className="grid gap-3">
+                        {selectedCourse.modules.map((module, idx) => (
+                          <div key={idx} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-md transition-all duration-300">
+                            <div className="h-10 w-10 shrink-0 bg-white rounded-xl border flex items-center justify-center text-blue-600 font-bold group-hover:scale-110 transition-transform shadow-sm">
+                              {idx + 1}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-slate-900 text-sm truncate">{module.title}</h4>
+                              {module.description && <p className="text-[10px] text-slate-500 italic mt-0.5 truncate">{module.description}</p>}
+                            </div>
+                            <div className="text-right">
+                              <div className="inline-flex items-center bg-blue-100/50 px-2 py-1 rounded-lg border border-blue-100">
+                                <span className="text-[10px] font-bold text-blue-700">{module.teacher?.name || '---'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -1052,13 +1179,13 @@ export default function CoursesPage() {
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="edit-teacher" className="text-right">Profesor</Label>
+                  <Label htmlFor="edit-teacher" className="text-right whitespace-nowrap">Profesor Ppal.</Label>
                   <Select
                     value={courseFormData.teacherId}
                     onValueChange={(value) => setCourseFormData({ ...courseFormData, teacherId: value })}
                   >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Seleccionar" />
+                    <SelectTrigger className="col-span-3 h-9">
+                      <SelectValue placeholder="Seleccionar profesor" />
                     </SelectTrigger>
                     <SelectContent>
                       {teachers.map((t) => (
@@ -1066,6 +1193,64 @@ export default function CoursesPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Sección de Módulos en Edición */}
+                <div className="col-span-4 border-t pt-2 mt-2">
+                  <div className="flex items-center justify-between mb-3 bg-slate-100 p-2 rounded-lg">
+                    <Label className="text-blue-700 font-bold uppercase text-[10px] tracking-widest pl-1">Temario y Profesores por Apartado</Label>
+                    <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px] bg-white shadow-sm border" onClick={addModule}>
+                      <Plus className="h-3 w-3 mr-1" /> Añadir Tema
+                    </Button>
+                  </div>
+                  <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                    {courseFormData.modules.map((module, index) => (
+                      <div key={index} className="bg-white p-3 rounded-xl border border-slate-200 relative group shadow-sm">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-white border shadow-md opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700 z-10"
+                          onClick={() => removeModule(index)}
+                        >
+                          <Plus className="h-4 w-4 rotate-45" />
+                        </Button>
+                        <div className="grid grid-cols-12 gap-2">
+                          <div className="col-span-7">
+                            <Input
+                              placeholder="Título del tema"
+                              className="h-8 text-xs font-semibold"
+                              value={module.title}
+                              onChange={(e) => updateModule(index, 'title', e.target.value)}
+                            />
+                          </div>
+                          <div className="col-span-5">
+                            <Select
+                              value={module.teacherId}
+                              onValueChange={(val) => updateModule(index, 'teacherId', val)}
+                            >
+                              <SelectTrigger className="h-8 text-[10px] bg-slate-50">
+                                <SelectValue placeholder="Profesor" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {teachers.map((t) => (
+                                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="col-span-12">
+                            <Input
+                              placeholder="Descripción del tema..."
+                              className="h-7 text-[10px] italic border-dashed bg-slate-50/30"
+                              value={module.description}
+                              onChange={(e) => updateModule(index, 'description', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid grid-cols-4 items-center gap-4">
@@ -1161,7 +1346,7 @@ export default function CoursesPage() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
-    </MainLayout>
+      </div >
+    </MainLayout >
   )
 }

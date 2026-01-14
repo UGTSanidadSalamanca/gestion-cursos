@@ -21,6 +21,11 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       include: {
         teacher: true,
+        modules: {
+          include: {
+            teacher: true
+          }
+        },
         _count: {
           select: { enrollments: true }
         }
@@ -66,7 +71,8 @@ export async function POST(request: NextRequest) {
       callUrl,
       hasCertificate,
       hasMaterials,
-      teacherId
+      teacherId,
+      modules = []
     } = body
 
     const course = await db.course.upsert({
@@ -93,9 +99,16 @@ export async function POST(request: NextRequest) {
         benefits,
         features,
         callUrl,
-        hasCertificate,
         hasMaterials,
-        teacherId: teacherId || null
+        teacherId: teacherId || null,
+        modules: {
+          deleteMany: {},
+          create: modules.map((m: any) => ({
+            title: m.title,
+            description: m.description,
+            teacherId: m.teacherId || null
+          }))
+        }
       },
       create: {
         id: body.id || undefined,
@@ -119,12 +132,23 @@ export async function POST(request: NextRequest) {
         benefits,
         features,
         callUrl,
-        hasCertificate,
         hasMaterials,
-        teacherId: teacherId || null
+        teacherId: teacherId || null,
+        modules: {
+          create: modules.map((m: any) => ({
+            title: m.title,
+            description: m.description,
+            teacherId: m.teacherId || null
+          }))
+        }
       },
       include: {
         teacher: true,
+        modules: {
+          include: {
+            teacher: true
+          }
+        },
         _count: {
           select: { enrollments: true }
         }

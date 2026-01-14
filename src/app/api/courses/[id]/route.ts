@@ -10,6 +10,11 @@ export async function GET(
             where: { id: params.id },
             include: {
                 teacher: true,
+                modules: {
+                    include: {
+                        teacher: true
+                    }
+                },
                 _count: {
                     select: { enrollments: true }
                 }
@@ -55,7 +60,8 @@ export async function PUT(
             callUrl,
             hasCertificate,
             hasMaterials,
-            teacherId
+            teacherId,
+            modules = []
         } = body
 
         const course = await db.course.update({
@@ -83,7 +89,23 @@ export async function PUT(
                 callUrl,
                 hasCertificate,
                 hasMaterials,
-                teacherId: teacherId || null
+                teacherId: teacherId || null,
+                modules: {
+                    deleteMany: {},
+                    create: modules.map((m: any) => ({
+                        title: m.title,
+                        description: m.description,
+                        teacherId: m.teacherId || null
+                    }))
+                }
+            },
+            include: {
+                teacher: true,
+                modules: {
+                    include: {
+                        teacher: true
+                    }
+                }
             }
         })
 

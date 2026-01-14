@@ -23,6 +23,11 @@ interface PublicCourse {
     hasCertificate?: boolean
     hasMaterials?: boolean
     teacher?: { name: string }
+    modules?: {
+        title: string
+        description?: string
+        teacher?: { name: string }
+    }[]
 }
 
 export default function PublicCoursePage() {
@@ -156,6 +161,32 @@ export default function PublicCoursePage() {
                                     </div>
                                 )}
 
+                                {course.modules && course.modules.length > 0 && (
+                                    <div className="mt-12 bg-slate-50 p-8 rounded-3xl border border-slate-100">
+                                        <h3 className="text-slate-900 font-extrabold text-2xl mb-8 flex items-center gap-3">
+                                            <div className="h-10 w-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-lg"><BookOpen className="h-5 w-5" /></div>
+                                            Contenido del Programa
+                                        </h3>
+                                        <div className="space-y-4">
+                                            {course.modules.map((module, i) => (
+                                                <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center gap-4 group hover:border-blue-200 transition-all">
+                                                    <div className="flex-1">
+                                                        <h4 className="font-bold text-slate-900 text-lg group-hover:text-blue-600 transition-colors">{module.title}</h4>
+                                                        {module.description && <p className="text-slate-500 text-sm mt-1 italic">{module.description}</p>}
+                                                    </div>
+                                                    <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 whitespace-nowrap">
+                                                        <Users className="h-4 w-4 text-slate-400" />
+                                                        <div>
+                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter leading-none mb-1">Docente</p>
+                                                            <p className="text-sm font-bold text-slate-700">{module.teacher?.name || 'Experto Docente'}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-12 pt-8 border-t border-slate-100">
                                     <div className="flex items-start space-x-4">
                                         <div className="p-3 bg-blue-50 rounded-2xl"><Clock className="h-6 w-6 text-blue-600" /></div>
@@ -274,6 +305,6 @@ export default function PublicCoursePage() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }

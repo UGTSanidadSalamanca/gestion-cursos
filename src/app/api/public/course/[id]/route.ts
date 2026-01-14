@@ -30,6 +30,17 @@ export async function GET(
                     select: {
                         name: true
                     }
+                },
+                modules: {
+                    select: {
+                        title: true,
+                        description: true,
+                        teacher: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
                 }
             }
         })
