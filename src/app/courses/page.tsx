@@ -48,7 +48,7 @@ import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
 import { toast } from "sonner"
 import { jsPDF } from "jspdf"
 import html2canvas from "html2canvas"
-import { QRCodeSVG } from "qrcode.react"
+import { QRCodeCanvas } from "qrcode.react"
 
 interface Course {
   id: string
@@ -349,11 +349,18 @@ export default function CoursesPage() {
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
         onclone: (clonedDoc) => {
           const el = clonedDoc.getElementById('course-details-print')
           if (el) {
-            // Aseguramos que el clon tenga fondo blanco y sea visible
+            // Aseguramos que el clon tenga fondo blanco y sea visible al 100% (sin scrolls)
             el.style.backgroundColor = '#ffffff'
+            el.style.width = '700px' // Forzamos ancho relativo al diseño original
+            el.style.height = 'auto'
+            el.style.overflow = 'visible'
 
             // ELIMINACIÓN RADICAL DE COLORES MODERNOS (oklch, oklab): 
             const allElements = el.getElementsByTagName('*')
@@ -954,7 +961,7 @@ export default function CoursesPage() {
 
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6 opacity-80 pt-4 border-t border-dashed">
                       <div className="flex items-center gap-4">
-                        <QRCodeSVG value={`${window.location.host}/p/${selectedCourse.id}`} size={56} className="bg-white p-1 rounded-lg border shadow-sm" />
+                        <QRCodeCanvas value={`${window.location.protocol}//${window.location.host}/p/${selectedCourse.id}`} size={56} className="bg-white p-1 rounded-lg border shadow-sm" />
                         <div className="text-left">
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Landing Page Pública</p>
                           <p className="text-[10px] font-bold text-blue-600 italic">Accede a toda la información del curso</p>
