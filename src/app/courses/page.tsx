@@ -967,8 +967,16 @@ export default function CoursesPage() {
                       <div className="flex items-center gap-4">
                         <QRCodeSVG value={`${window.location.origin}/p/${selectedCourse.id}`} size={64} className="bg-white p-1 rounded-lg border shadow-sm" />
                         <div className="text-left">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Landing Page Pública</p>
-                          <p className="text-[10px] font-bold text-blue-600 italic">Accede a toda la información del curso</p>
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Enlace Público</p>
+                          <a
+                            href={`${typeof window !== 'undefined' ? window.location.origin : ''}/p/${selectedCourse.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-bold text-blue-600 hover:underline block mb-1"
+                          >
+                            {`${typeof window !== 'undefined' ? window.location.origin : ''}/p/${selectedCourse.id}`}
+                          </a>
+                          <p className="text-[9px] text-slate-500 italic">Disponible para inscripción online</p>
                         </div>
                       </div>
                       <div className="text-right hidden md:block">
