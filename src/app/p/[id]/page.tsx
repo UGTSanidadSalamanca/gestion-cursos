@@ -187,13 +187,7 @@ export default function PublicCoursePage() {
                                                         <h4 className="font-bold text-slate-900 text-lg group-hover:text-blue-600 transition-colors">{module.title}</h4>
                                                         {module.description && <p className="text-slate-500 text-sm mt-1 italic">{module.description}</p>}
                                                     </div>
-                                                    <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 whitespace-nowrap">
-                                                        <Users className="h-4 w-4 text-slate-400" />
-                                                        <div>
-                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter leading-none mb-1">Docente</p>
-                                                            <p className="text-sm font-bold text-slate-700">{module.teacher?.name || 'Experto Docente'}</p>
-                                                        </div>
-                                                    </div>
+
                                                 </div>
                                             ))}
                                         </div>
@@ -288,10 +282,7 @@ export default function PublicCoursePage() {
                                             )}
                                         </>
                                     )}
-                                    <div className="flex items-center gap-3 text-slate-600 text-sm">
-                                        <CheckCircle className="h-4 w-4 text-green-500" />
-                                        <span>Docente: {course.teacher?.name || 'Experto'}</span>
-                                    </div>
+
                                 </div>
 
                                 <Button className="w-full h-14 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98] group" onClick={handleInterest}>
