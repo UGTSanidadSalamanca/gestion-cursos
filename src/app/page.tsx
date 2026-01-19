@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MainLayout } from "@/components/layout/main-layout"
-import { 
+import {
   AcademicModule,
-  InstructorsModule,
   FinancialModule,
-  OperationsModule
+  OperationsModule,
+  PriceModule
 } from "@/components/modules"
 
 export default function Home() {
@@ -87,12 +87,9 @@ export default function Home() {
 
         {/* Módulos Principales */}
         <Tabs defaultValue="academic" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="academic" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
               Módulo Académico
-            </TabsTrigger>
-            <TabsTrigger value="instructors" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">
-              Módulo Instructores
             </TabsTrigger>
             <TabsTrigger value="financial" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">
               Módulo Financiero
@@ -106,10 +103,6 @@ export default function Home() {
             <AcademicModule />
           </TabsContent>
 
-          <TabsContent value="instructors" className="space-y-4">
-            <InstructorsModule />
-          </TabsContent>
-
           <TabsContent value="financial" className="space-y-4">
             <FinancialModule />
           </TabsContent>
@@ -118,6 +111,10 @@ export default function Home() {
             <OperationsModule />
           </TabsContent>
         </Tabs>
+        <div className="mt-8">
+          <h2 className="text-3xl font-bold mb-4 text-center text-white">Precios</h2>
+          <PriceModule />
+        </div>
       </div>
     </MainLayout>
   )
