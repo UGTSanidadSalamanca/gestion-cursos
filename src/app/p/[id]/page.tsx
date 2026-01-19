@@ -15,6 +15,7 @@ interface PublicCourse {
     code: string
     level: string
     duration: number
+    durationPeriod?: string
     price?: number
     priceUnit?: string
     affiliatePrice?: number
@@ -101,12 +102,13 @@ export default function PublicCoursePage() {
         @media print {
           @page {
             size: A4;
-            margin: 10mm;
+            margin: 5mm;
           }
           body {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             background-color: white !important;
+            font-size: 12px;
           }
           .no-print {
             display: none !important;
@@ -116,17 +118,46 @@ export default function PublicCoursePage() {
             background-color: white !important;
           }
           .print-scale {
-            zoom: 0.9;
+            zoom: 0.85;
           }
           .print-compact-gap {
-            gap: 1rem !important;
+            gap: 0.75rem !important;
           }
           .print-no-shadow {
             box-shadow: none !important;
             border: 1px solid #e2e8f0 !important;
           }
+          /* Forzar que todo quepa en una página */
+          h1 { font-size: 24pt !important; line-height: 1.1 !important; }
+          .container { max-width: 100% !important; width: 100% !important; padding: 0 !important; }
+          .card-content { padding: 1rem !important; }
+          .mt-12 { margin-top: 1rem !important; }
+          .mt-8 { margin-top: 0.5rem !important; }
+          .mb-8 { margin-bottom: 0.5rem !important; }
+          .p-8 { padding: 1rem !important; }
+          .p-6 { padding: 0.75rem !important; }
+          .h-72 { height: 160px !important; }
+          .h-32 { height: 80px !important; }
+          .mt-12 { margin-top: 0.75rem !important; }
+          .mb-12 { margin-bottom: 0.75rem !important; }
+          .gap-8 { gap: 0.5rem !important; }
+          /* Ajuste de columnas en print */
+          .print-grid-layout { grid-template-columns: 2.2fr 1fr !important; display: grid !important; gap: 10px !important; }
+          .print-full-width { width: 100% !important; }
+          .print-no-break { break-inside: avoid; }
         }
       `}</style>
+
+    const formatPriceUnit = (unit?: string) => {
+        if (!unit) return '';
+            const u = unit.toUpperCase();
+            if (u === 'FULL' || u === 'TOTAL') return '';
+            if (u === 'SESSION' || u === 'SESIÓN' || u === 'SESION') return '/ Sesión';
+            if (u === 'MONTH' || u === 'MES') return '/ Mes';
+            if (u === 'TRIMESTER' || u === 'TRIMESTRE') return '/ Trimestre';
+            if (u === 'YEAR' || u === 'AÑO' || u === 'ANO') return '/ Año';
+            return `/ ${unit}`;
+    }
 
             {/* Header Visual */}
             <div className="bg-gradient-to-br from-blue-700 to-indigo-800 text-white h-72 flex items-end relative overflow-hidden print:h-48 print:rounded-2xl print:mb-6">
@@ -180,7 +211,7 @@ export default function PublicCoursePage() {
             </div>
 
             <div className="container mx-auto px-4 -mt-10 relative z-20 print:mt-0 print:px-0">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:grid-cols-2 print:gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print-grid-layout print:gap-4">
                     {/* Main Info */}
                     <div className="lg:col-span-2 space-y-6">
                         <Card className="border-none shadow-xl shadow-slate-200/60 overflow-hidden">
@@ -231,19 +262,28 @@ export default function PublicCoursePage() {
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-12 pt-8 border-t border-slate-100 print:mt-6 print:pt-4 print:gap-4">
-                                    <div className="flex items-start space-x-4">
-                                        <div className="p-3 bg-blue-50 rounded-2xl"><Clock className="h-6 w-6 text-blue-600" /></div>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-12 pt-8 border-t border-slate-100 print:mt-4 print:pt-4 print:gap-2">
+                                    <div className="flex items-start space-x-4 print:space-x-2">
+                                        <div className="p-3 bg-blue-50 rounded-2xl print:p-2"><Clock className="h-6 w-6 text-blue-600 print:h-4 print:w-4" /></div>
                                         <div>
-                                            <p className="text-sm font-bold text-slate-400 uppercase">Duración Total</p>
-                                            <p className="text-xl font-bold text-slate-800">{course.duration} horas lectivas</p>
+                                            <p className="text-sm font-bold text-slate-400 uppercase print:text-[10px]">Horas Totales</p>
+                                            <p className="text-xl font-bold text-slate-800 print:text-sm">{course.duration}h</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-start space-x-4">
-                                        <div className="p-3 bg-indigo-50 rounded-2xl"><Calendar className="h-6 w-6 text-indigo-600" /></div>
+                                    {course.durationPeriod && (
+                                        <div className="flex items-start space-x-4 print:space-x-2">
+                                            <div className="p-3 bg-purple-50 rounded-2xl print:p-2"><Calendar className="h-6 w-6 text-purple-600 print:h-4 print:w-4" /></div>
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-400 uppercase print:text-[10px]">Período</p>
+                                                <p className="text-xl font-bold text-slate-800 print:text-sm">{course.durationPeriod}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="flex items-start space-x-4 print:space-x-2">
+                                        <div className="p-3 bg-indigo-50 rounded-2xl print:p-2"><Calendar className="h-6 w-6 text-indigo-600 print:h-4 print:w-4" /></div>
                                         <div>
-                                            <p className="text-sm font-bold text-slate-400 uppercase">Inicio previsto</p>
-                                            <p className="text-xl font-bold text-slate-800">
+                                            <p className="text-sm font-bold text-slate-400 uppercase print:text-[10px]">Próximo Inicio</p>
+                                            <p className="text-xl font-bold text-slate-800 print:text-sm">
                                                 {course.startDate ? new Date(course.startDate).toLocaleDateString() : 'Próximamente'}
                                             </p>
                                         </div>
@@ -254,52 +294,44 @@ export default function PublicCoursePage() {
                     </div>
 
                     {/* Sidebar CTA */}
-                    <div className="space-y-6 print:space-y-4">
-                        <Card className="border-none shadow-2xl bg-white sticky top-6 overflow-hidden print:static print:shadow-none print:border print:border-slate-200">
+                    <div className="space-y-6 print:space-y-2">
+                        <Card className="border-none shadow-2xl bg-white sticky top-6 overflow-hidden print:static print:shadow-none print:border print:border-slate-200 print-no-break">
                             <div className="bg-blue-600 h-2 w-full print:bg-blue-700" />
-                            <CardContent className="p-8 print:p-6">
-                                <div className="text-center mb-6 print:mb-4">
-                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 print:mb-2 print:text-blue-800">Inversión del curso</p>
+                            <CardContent className="p-8 print:p-4">
+                                <div className="text-center mb-6 print:mb-2">
+                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 print:mb-1 print:text-blue-800">Inversión del curso</p>
 
-                                    <div className="space-y-4 print:space-y-2">
-                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 print:bg-white print:border-slate-200">
+                                    <div className="space-y-4 print:space-y-1">
+                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 print:bg-white print:border-slate-200 print:p-2">
                                             <p className="text-blue-600 text-[10px] font-black uppercase mb-1 tracking-tighter">Inversión General</p>
                                             <div className="flex items-baseline justify-center gap-1">
-                                                <span className="text-4xl font-black text-slate-900 tracking-tight">
+                                                <span className="text-5xl font-black text-slate-900 tracking-tight print:text-2xl">
                                                     {course.price ? `€${course.price.toFixed(2)}` : 'Consultar'}
                                                 </span>
-                                                {course.priceUnit && <span className="text-sm font-black text-blue-500 uppercase">
-                                                    {course.priceUnit === 'FULL' ? '' :
-                                                        course.priceUnit === 'SESSION' ? '/ Sesión' :
-                                                            course.priceUnit === 'MONTH' ? '/ Mes' :
-                                                                course.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
-                                                                    course.priceUnit === 'YEAR' ? '/ Año' : ''}
-                                                </span>}
+                                                <span className="text-sm font-black text-blue-600 uppercase print:text-[10px]">
+                                                    {formatPriceUnit(course.priceUnit)}
+                                                </span>
                                             </div>
                                         </div>
 
                                         {course.affiliatePrice && (
-                                            <div className="bg-green-50 p-4 rounded-2xl border border-green-100 relative overflow-hidden print:bg-white print:border-green-600 print:border-2">
-                                                <div className="absolute top-0 right-0 p-1">
-                                                    <Badge className="bg-green-500 text-[8px] font-bold print:bg-green-600">DTO. AFILIADOS</Badge>
+                                            <div className="bg-green-50 p-4 rounded-2xl border border-green-100 relative overflow-hidden print:bg-white print:border-green-600 print:border-2 print:p-2">
+                                                <div className="absolute top-0 right-0 p-1 print:hidden">
+                                                    <Badge className="bg-green-500 text-[8px] font-bold">DTO. AFILIADOS</Badge>
                                                 </div>
                                                 <p className="text-green-600 text-[10px] font-black uppercase mb-1 tracking-tighter">Precio Afiliados UGT</p>
                                                 <div className="flex items-baseline justify-center gap-1">
-                                                    <span className="text-4xl font-black text-green-700 tracking-tight">€{course.affiliatePrice.toFixed(2)}</span>
-                                                    {course.priceUnit && <span className="text-xs font-bold text-green-600/70 uppercase">
-                                                        {course.priceUnit === 'FULL' ? '' :
-                                                            course.priceUnit === 'SESSION' ? '/ Sesión' :
-                                                                course.priceUnit === 'MONTH' ? '/ Mes' :
-                                                                    course.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
-                                                                        course.priceUnit === 'YEAR' ? '/ Año' : ''}
-                                                    </span>}
+                                                    <span className="text-4xl font-black text-green-700 tracking-tight print:text-xl">€{course.affiliatePrice.toFixed(2)}</span>
+                                                    <span className="text-xs font-bold text-green-600 uppercase print:text-[10px]">
+                                                        {formatPriceUnit(course.priceUnit)}
+                                                    </span>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                <div className="space-y-4 pt-6 border-t border-slate-100">
+                                <div className="space-y-4 pt-6 border-t border-slate-100 print:pt-2 print:space-y-1">
                                     {course.features ? (
                                         course.features.split(/,|\n/).map((feature, i) => (
                                             <div key={i} className="flex items-center gap-3 text-slate-600 text-sm italic font-medium">
