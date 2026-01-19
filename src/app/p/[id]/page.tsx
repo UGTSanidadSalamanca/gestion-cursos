@@ -96,6 +96,17 @@ export default function PublicCoursePage() {
 
     const benefitsList = course.benefits ? course.benefits.split(/,|\n/).map(b => b.trim()).filter(b => b !== "") : []
 
+    const formatPriceUnit = (unit?: string) => {
+        if (!unit) return '';
+        const u = unit.toUpperCase();
+        if (u === 'FULL' || u === 'TOTAL') return '';
+        if (u === 'SESSION' || u === 'SESIÓN' || u === 'SESION') return '/ Sesión';
+        if (u === 'MONTH' || u === 'MES') return '/ Mes';
+        if (u === 'TRIMESTER' || u === 'TRIMESTRE') return '/ Trimestre';
+        if (u === 'YEAR' || u === 'AÑO' || u === 'ANO') return '/ Año';
+        return `/ ${unit}`;
+    }
+
     return (
         <div id="public-course-landing" className="min-h-screen bg-slate-50 pb-12 print:bg-white print:pb-0">
             <style jsx global>{`
@@ -147,17 +158,6 @@ export default function PublicCoursePage() {
           .print-no-break { break-inside: avoid; }
         }
       `}</style>
-
-    const formatPriceUnit = (unit?: string) => {
-        if (!unit) return '';
-            const u = unit.toUpperCase();
-            if (u === 'FULL' || u === 'TOTAL') return '';
-            if (u === 'SESSION' || u === 'SESIÓN' || u === 'SESION') return '/ Sesión';
-            if (u === 'MONTH' || u === 'MES') return '/ Mes';
-            if (u === 'TRIMESTER' || u === 'TRIMESTRE') return '/ Trimestre';
-            if (u === 'YEAR' || u === 'AÑO' || u === 'ANO') return '/ Año';
-            return `/ ${unit}`;
-    }
 
             {/* Header Visual */}
             <div className="bg-gradient-to-br from-blue-700 to-indigo-800 text-white h-72 flex items-end relative overflow-hidden print:h-48 print:rounded-2xl print:mb-6">
