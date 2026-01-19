@@ -898,14 +898,36 @@ export default function CoursesPage() {
                         <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Precio Gral.</p>
                         <div className="flex items-center gap-2">
                           <Euro className="h-4 w-4 text-slate-600" />
-                          <span className="text-xs font-bold text-slate-700">{selectedCourse.price ? `€${selectedCourse.price}` : 'Consultar'}</span>
+                          <span className="text-xs font-bold text-slate-700">
+                            {selectedCourse.price ? `€${selectedCourse.price}` : 'Consultar'}
+                            {selectedCourse.priceUnit && (
+                              <span className="text-[10px] text-slate-500 ml-1">
+                                {selectedCourse.priceUnit === 'FULL' ? '' :
+                                  selectedCourse.priceUnit === 'SESSION' ? '/ Sesión' :
+                                    selectedCourse.priceUnit === 'MONTH' ? '/ Mes' :
+                                      selectedCourse.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
+                                        selectedCourse.priceUnit === 'YEAR' ? '/ Año' : ''}
+                              </span>
+                            )}
+                          </span>
                         </div>
                       </div>
                       <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
                         <p className="text-[10px] font-black text-green-600 uppercase mb-1">Afiliados</p>
                         <div className="flex items-center gap-2">
                           <Euro className="h-4 w-4 text-green-700" />
-                          <span className="text-xs font-bold text-green-700">€{selectedCourse.affiliatePrice || '---'}</span>
+                          <span className="text-xs font-bold text-green-700">
+                            €{selectedCourse.affiliatePrice || '---'}
+                            {selectedCourse.priceUnit && selectedCourse.affiliatePrice && (
+                              <span className="text-[10px] text-green-600/70 ml-1">
+                                {selectedCourse.priceUnit === 'FULL' ? '' :
+                                  selectedCourse.priceUnit === 'SESSION' ? '/ Sesión' :
+                                    selectedCourse.priceUnit === 'MONTH' ? '/ Mes' :
+                                      selectedCourse.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
+                                        selectedCourse.priceUnit === 'YEAR' ? '/ Año' : ''}
+                              </span>
+                            )}
+                          </span>
                         </div>
                       </div>
                     </div>

@@ -15,7 +15,9 @@ interface PublicCourse {
     code: string
     level: string
     duration: number
-    price: number
+    duration: number
+    price?: number
+    priceUnit?: string
     affiliatePrice?: number
     startDate?: string
     features?: string
@@ -231,7 +233,16 @@ export default function PublicCoursePage() {
                                     <div className="space-y-4">
                                         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                             <p className="text-slate-500 text-[10px] font-bold uppercase mb-1">General</p>
-                                            <span className="text-3xl font-extrabold text-slate-900">€{course.price.toFixed(2)}</span>
+                                            <span className="text-3xl font-extrabold text-slate-900">
+                                                {course.price ? `€${course.price.toFixed(2)}` : 'Consultar'}
+                                            </span>
+                                            {course.priceUnit && <span className="text-xs font-bold text-slate-500 ml-1">
+                                                {course.priceUnit === 'FULL' ? '' :
+                                                    course.priceUnit === 'SESSION' ? '/ Sesión' :
+                                                        course.priceUnit === 'MONTH' ? '/ Mes' :
+                                                            course.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
+                                                                course.priceUnit === 'YEAR' ? '/ Año' : ''}
+                                            </span>}
                                         </div>
 
                                         {course.affiliatePrice && (
@@ -241,6 +252,13 @@ export default function PublicCoursePage() {
                                                 </div>
                                                 <p className="text-green-600 text-[10px] font-bold uppercase mb-1">Afiliados UGT</p>
                                                 <span className="text-3xl font-extrabold text-green-700">€{course.affiliatePrice.toFixed(2)}</span>
+                                                {course.priceUnit && <span className="text-xs font-bold text-green-600/70 ml-1">
+                                                    {course.priceUnit === 'FULL' ? '' :
+                                                        course.priceUnit === 'SESSION' ? '/ Sesión' :
+                                                            course.priceUnit === 'MONTH' ? '/ Mes' :
+                                                                course.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
+                                                                    course.priceUnit === 'YEAR' ? '/ Año' : ''}
+                                                </span>}
                                             </div>
                                         )}
                                     </div>
