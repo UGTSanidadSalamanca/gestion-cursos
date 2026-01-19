@@ -56,14 +56,15 @@ interface Course {
   description?: string
   code: string
   level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT' | 'PREPARACION_OPOSICIONES'
-  duration: number
+  duration?: number
   durationSessions?: number
   sessionDuration?: number
   durationMonths?: number
   durationPeriod?: string
   syllabusUrl?: string
   maxStudents: number
-  price: number
+  price?: number
+  priceUnit?: string
   affiliatePrice?: number
   isActive: boolean
   startDate?: string
@@ -117,6 +118,7 @@ export default function CoursesPage() {
     durationPeriod: '',
     syllabusUrl: '',
     price: '',
+    priceUnit: '',
     affiliatePrice: '',
     startDate: '',
     endDate: '',
@@ -176,11 +178,12 @@ export default function CoursesPage() {
         },
         body: JSON.stringify({
           ...courseFormData,
-          duration: courseFormData.duration ? parseInt(courseFormData.duration) : 0,
+          duration: courseFormData.duration ? parseInt(courseFormData.duration) : null,
           durationSessions: courseFormData.durationSessions ? parseInt(courseFormData.durationSessions) : null,
           sessionDuration: courseFormData.sessionDuration ? parseFloat(courseFormData.sessionDuration) : null,
           durationMonths: courseFormData.durationMonths ? parseInt(courseFormData.durationMonths) : null,
-          price: courseFormData.price ? parseFloat(courseFormData.price) : 0,
+          price: courseFormData.price ? parseFloat(courseFormData.price) : null,
+          priceUnit: courseFormData.priceUnit,
           affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
           maxStudents: parseInt(courseFormData.maxStudents),
         }),
@@ -212,11 +215,12 @@ export default function CoursesPage() {
         },
         body: JSON.stringify({
           ...courseFormData,
-          duration: courseFormData.duration ? parseInt(courseFormData.duration) : 0,
+          duration: courseFormData.duration ? parseInt(courseFormData.duration) : null,
           durationSessions: courseFormData.durationSessions ? parseInt(courseFormData.durationSessions) : null,
           sessionDuration: courseFormData.sessionDuration ? parseFloat(courseFormData.sessionDuration) : null,
           durationMonths: courseFormData.durationMonths ? parseInt(courseFormData.durationMonths) : null,
-          price: courseFormData.price ? parseFloat(courseFormData.price) : 0,
+          price: courseFormData.price ? parseFloat(courseFormData.price) : null,
+          priceUnit: courseFormData.priceUnit,
           affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
           maxStudents: parseInt(courseFormData.maxStudents),
         }),
@@ -268,6 +272,7 @@ export default function CoursesPage() {
       durationPeriod: '',
       syllabusUrl: '',
       price: '',
+      priceUnit: '',
       affiliatePrice: '',
       startDate: '',
       endDate: '',
@@ -291,13 +296,14 @@ export default function CoursesPage() {
       title: course.title,
       code: course.code,
       level: course.level,
-      duration: course.duration.toString(),
+      duration: course.duration?.toString() || '',
       durationSessions: course.durationSessions?.toString() || '',
       sessionDuration: course.sessionDuration?.toString() || '',
       durationMonths: course.durationMonths?.toString() || '',
       durationPeriod: course.durationPeriod || '',
       syllabusUrl: course.syllabusUrl || '',
-      price: course.price.toString(),
+      price: course.price?.toString() || '',
+      priceUnit: course.priceUnit || '',
       affiliatePrice: course.affiliatePrice?.toString() || '',
       startDate: course.startDate ? (typeof course.startDate === 'string' ? course.startDate.split('T')[0] : (course.startDate as any).toISOString().split('T')[0]) : '',
       endDate: course.endDate ? (typeof course.endDate === 'string' ? course.endDate.split('T')[0] : (course.endDate as any).toISOString().split('T')[0]) : '',
@@ -553,7 +559,7 @@ export default function CoursesPage() {
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
                           <Label htmlFor="duration" className="text-xs font-bold text-slate-500 uppercase">Horas Totales</Label>
-                          <Input id="duration" type="number" value={courseFormData.duration} onChange={(e) => setCourseFormData({ ...courseFormData, duration: e.target.value })} required className="bg-white border-slate-200 h-11" />
+                          <Input id="duration" type="number" value={courseFormData.duration} onChange={(e) => setCourseFormData({ ...courseFormData, duration: e.target.value })} className="bg-white border-slate-200 h-11" />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="durationSessions" className="text-xs font-bold text-slate-500 uppercase">Nº Sesiones</Label>
@@ -590,7 +596,21 @@ export default function CoursesPage() {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
                           <Label htmlFor="price" className="text-xs font-bold text-slate-500 uppercase">Precio Base (€)</Label>
-                          <Input id="price" type="number" step="0.01" value={courseFormData.price} onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })} required className="bg-white border-slate-200 h-11 font-bold" />
+                          <div className="flex gap-2">
+                            <Input id="price" type="number" step="0.01" value={courseFormData.price} onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })} className="bg-white border-slate-200 h-11 font-bold flex-1" />
+                            <Select value={courseFormData.priceUnit} onValueChange={(value) => setCourseFormData({ ...courseFormData, priceUnit: value })}>
+                              <SelectTrigger className="w-[110px] bg-slate-50 border-slate-200 h-11">
+                                <SelectValue placeholder="Unidad" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="FULL">Total</SelectItem>
+                                <SelectItem value="SESSION">Sesión</SelectItem>
+                                <SelectItem value="MONTH">Mes</SelectItem>
+                                <SelectItem value="TRIMESTER">Trimestre</SelectItem>
+                                <SelectItem value="YEAR">Año</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="affiliatePrice" className="text-xs font-bold text-green-600 uppercase">Precio Afiliado (€)</Label>
