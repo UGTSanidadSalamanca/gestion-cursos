@@ -1092,7 +1092,7 @@ export default function CoursesPage() {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="edit-duration" className="text-xs font-bold text-slate-500 uppercase">Total Horas</Label>
-                      <Input id="edit-duration" type="number" value={courseFormData.duration} onChange={(e) => setCourseFormData({ ...courseFormData, duration: e.target.value })} required className="bg-white border-slate-200 h-11" />
+                      <Input id="edit-duration" type="number" value={courseFormData.duration} onChange={(e) => setCourseFormData({ ...courseFormData, duration: e.target.value })} className="bg-white border-slate-200 h-11" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="edit-durationSessions" className="text-xs font-bold text-slate-500 uppercase">Nº Sesiones</Label>
@@ -1129,7 +1129,21 @@ export default function CoursesPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="edit-price" className="text-xs font-bold text-slate-500 uppercase">Precio General (€)</Label>
-                      <Input id="edit-price" type="number" step="0.01" value={courseFormData.price} onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })} required className="bg-white border-slate-200 h-11 font-bold" />
+                      <div className="flex gap-2">
+                        <Input id="edit-price" type="number" step="0.01" value={courseFormData.price} onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })} className="bg-white border-slate-200 h-11 font-bold flex-1" />
+                        <Select value={courseFormData.priceUnit} onValueChange={(value) => setCourseFormData({ ...courseFormData, priceUnit: value })}>
+                          <SelectTrigger className="w-[110px] bg-slate-50 border-slate-200 h-11">
+                            <SelectValue placeholder="Unidad" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="FULL">Total</SelectItem>
+                            <SelectItem value="SESSION">Sesión</SelectItem>
+                            <SelectItem value="MONTH">Mes</SelectItem>
+                            <SelectItem value="TRIMESTER">Trimestre</SelectItem>
+                            <SelectItem value="YEAR">Año</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="edit-affiliatePrice" className="text-xs font-bold text-green-600 uppercase">Precio Afiliado (€)</Label>
@@ -1137,7 +1151,7 @@ export default function CoursesPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="edit-maxStudents" className="text-xs font-bold text-slate-500 uppercase">Cupo Máximo</Label>
-                      <Input id="edit-maxStudents" type="number" value={courseFormData.maxStudents} onChange={(e) => setCourseFormData({ ...courseFormData, maxStudents: e.target.value })} required className="bg-white border-slate-200 h-11" />
+                      <Input id="edit-maxStudents" type="number" value={courseFormData.maxStudents} onChange={(e) => setCourseFormData({ ...courseFormData, maxStudents: e.target.value })} className="bg-white border-slate-200 h-11" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="edit-teacher" className="text-xs font-bold text-slate-500 uppercase">Docente Principal</Label>
