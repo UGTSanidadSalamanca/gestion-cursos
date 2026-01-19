@@ -15,7 +15,6 @@ interface PublicCourse {
     code: string
     level: string
     duration: number
-    duration: number
     price?: number
     priceUnit?: string
     affiliatePrice?: number
@@ -97,42 +96,80 @@ export default function PublicCoursePage() {
     const benefitsList = course.benefits ? course.benefits.split(/,|\n/).map(b => b.trim()).filter(b => b !== "") : []
 
     return (
-        <div id="public-course-landing" className="min-h-screen bg-slate-50 pb-12">
+        <div id="public-course-landing" className="min-h-screen bg-slate-50 pb-12 print:bg-white print:pb-0">
+            <style jsx global>{`
+        @media print {
+          @page {
+            size: A4;
+            margin: 10mm;
+          }
+          body {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            background-color: white !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          #public-course-landing {
+            padding-bottom: 0 !important;
+            background-color: white !important;
+          }
+          .print-scale {
+            zoom: 0.9;
+          }
+          .print-compact-gap {
+            gap: 1rem !important;
+          }
+          .print-no-shadow {
+            box-shadow: none !important;
+            border: 1px solid #e2e8f0 !important;
+          }
+        }
+      `}</style>
+
             {/* Header Visual */}
-            <div className="bg-gradient-to-br from-blue-700 to-indigo-800 text-white h-72 flex items-end relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-8 opacity-10">
+            <div className="bg-gradient-to-br from-blue-700 to-indigo-800 text-white h-72 flex items-end relative overflow-hidden print:h-48 print:rounded-2xl print:mb-6">
+                <div className="absolute top-0 right-0 p-8 opacity-10 print:opacity-5">
                     <BookOpen className="h-80 w-80" />
                 </div>
                 {/* Botón Imprimir Flotante (no-print) */}
-                <div className="absolute top-6 right-6 no-print">
+                <div className="absolute top-6 right-6 no-print flex gap-3">
                     <Button
                         variant="outline"
                         size="sm"
-                        className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md"
+                        className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md font-bold"
                         onClick={() => window.print()}
                     >
                         <Printer className="h-4 w-4 mr-2" /> Imprimir Ficha
                     </Button>
+                    <Button
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg"
+                        onClick={() => window.print()}
+                    >
+                        <ExternalLink className="h-4 w-4 mr-2" /> Descargar PDF (A4)
+                    </Button>
                 </div>
-                <div className="container mx-auto px-4 pb-12 relative z-10">
-                    <Badge className="bg-blue-400/30 text-white border-blue-400/50 mb-3 px-3 py-1 text-xs">
+                <div className="container mx-auto px-4 pb-12 relative z-10 print:pb-6">
+                    <Badge className="bg-blue-400/30 text-white border-blue-400/50 mb-3 px-3 py-1 text-xs print:bg-blue-600/20">
                         PROGRAMA FORMATIVO
                     </Badge>
-                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight max-w-4xl leading-tight">
+                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight max-w-4xl leading-tight print:text-3xl">
                         {course.title}
                     </h1>
-                    <div className="flex flex-wrap items-center gap-3 mt-4">
-                        <Badge variant="outline" className="border-blue-300/30 text-blue-100 font-bold px-3 py-1">
+                    <div className="flex flex-wrap items-center gap-3 mt-4 print:mt-2">
+                        <Badge variant="outline" className="border-blue-300/30 text-blue-100 font-bold px-3 py-1 print:text-blue-800 print:border-blue-200">
                             CODE: {course.code}
                         </Badge>
-                        <span className="text-blue-200/50">|</span>
-                        <Badge className="bg-white/10 hover:bg-white/20 text-white border-transparent backdrop-blur-sm">
+                        <span className="text-blue-200/50 print:hidden">|</span>
+                        <Badge className="bg-white/10 hover:bg-white/20 text-white border-transparent backdrop-blur-sm print:bg-slate-100 print:text-slate-800 print:border-slate-200">
                             NIVEL {course.level}
                         </Badge>
                         {course.startDate && (
                             <>
-                                <span className="text-blue-200/50">|</span>
-                                <div className="flex items-center gap-2 text-blue-100 text-sm font-medium">
+                                <span className="text-blue-200/50 print:hidden">|</span>
+                                <div className="flex items-center gap-2 text-blue-100 text-sm font-medium print:text-blue-900">
                                     <Calendar className="h-4 w-4" />
                                     <span>Inicio: {new Date(course.startDate).toLocaleDateString()}</span>
                                 </div>
@@ -142,8 +179,8 @@ export default function PublicCoursePage() {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 -mt-10 relative z-20">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="container mx-auto px-4 -mt-10 relative z-20 print:mt-0 print:px-0">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:grid-cols-2 print:gap-6">
                     {/* Main Info */}
                     <div className="lg:col-span-2 space-y-6">
                         <Card className="border-none shadow-xl shadow-slate-200/60 overflow-hidden">
@@ -158,8 +195,8 @@ export default function PublicCoursePage() {
                                 </p>
 
                                 {benefitsList.length > 0 && (
-                                    <div className="mt-12">
-                                        <h3 className="text-slate-900 font-bold text-xl mb-6 flex items-center gap-2">
+                                    <div className="mt-12 print:mt-6">
+                                        <h3 className="text-slate-900 font-bold text-xl mb-6 flex items-center gap-2 print:text-lg print:mb-3">
                                             <div className="h-8 w-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">✓</div>
                                             ¿Qué aprenderás con este curso?
                                         </h3>
@@ -175,9 +212,9 @@ export default function PublicCoursePage() {
                                 )}
 
                                 {course.modules && course.modules.length > 0 && (
-                                    <div className="mt-12 bg-slate-50 p-8 rounded-3xl border border-slate-100">
-                                        <h3 className="text-slate-900 font-extrabold text-2xl mb-8 flex items-center gap-3">
-                                            <div className="h-10 w-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-lg"><BookOpen className="h-5 w-5" /></div>
+                                    <div className="mt-12 bg-slate-50 p-8 rounded-3xl border border-slate-100 print:mt-6 print:p-4 print:bg-white print:border-slate-200">
+                                        <h3 className="text-slate-900 font-extrabold text-2xl mb-8 flex items-center gap-3 print:text-lg print:mb-4">
+                                            <div className="h-10 w-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-lg print:h-8 print:w-8 print:shadow-none"><BookOpen className="h-5 w-5" /></div>
                                             Contenido del Programa
                                         </h3>
                                         <div className="space-y-4">
@@ -194,7 +231,7 @@ export default function PublicCoursePage() {
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-12 pt-8 border-t border-slate-100">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-12 pt-8 border-t border-slate-100 print:mt-6 print:pt-4 print:gap-4">
                                     <div className="flex items-start space-x-4">
                                         <div className="p-3 bg-blue-50 rounded-2xl"><Clock className="h-6 w-6 text-blue-600" /></div>
                                         <div>
@@ -217,42 +254,46 @@ export default function PublicCoursePage() {
                     </div>
 
                     {/* Sidebar CTA */}
-                    <div className="space-y-6">
-                        <Card className="border-none shadow-2xl bg-white sticky top-6 overflow-hidden">
-                            <div className="bg-blue-600 h-2 w-full" />
-                            <CardContent className="p-8">
-                                <div className="text-center mb-6">
-                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">Inversión del curso</p>
+                    <div className="space-y-6 print:space-y-4">
+                        <Card className="border-none shadow-2xl bg-white sticky top-6 overflow-hidden print:static print:shadow-none print:border print:border-slate-200">
+                            <div className="bg-blue-600 h-2 w-full print:bg-blue-700" />
+                            <CardContent className="p-8 print:p-6">
+                                <div className="text-center mb-6 print:mb-4">
+                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 print:mb-2 print:text-blue-800">Inversión del curso</p>
 
-                                    <div className="space-y-4">
-                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                            <p className="text-slate-500 text-[10px] font-bold uppercase mb-1">General</p>
-                                            <span className="text-3xl font-extrabold text-slate-900">
-                                                {course.price ? `€${course.price.toFixed(2)}` : 'Consultar'}
-                                            </span>
-                                            {course.priceUnit && <span className="text-xs font-bold text-slate-500 ml-1">
-                                                {course.priceUnit === 'FULL' ? '' :
-                                                    course.priceUnit === 'SESSION' ? '/ Sesión' :
-                                                        course.priceUnit === 'MONTH' ? '/ Mes' :
-                                                            course.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
-                                                                course.priceUnit === 'YEAR' ? '/ Año' : ''}
-                                            </span>}
-                                        </div>
-
-                                        {course.affiliatePrice && (
-                                            <div className="bg-green-50 p-4 rounded-2xl border border-green-100 relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 p-1">
-                                                    <Badge className="bg-green-500 text-[8px] font-bold">DTO. AFILIADOS</Badge>
-                                                </div>
-                                                <p className="text-green-600 text-[10px] font-bold uppercase mb-1">Afiliados UGT</p>
-                                                <span className="text-3xl font-extrabold text-green-700">€{course.affiliatePrice.toFixed(2)}</span>
-                                                {course.priceUnit && <span className="text-xs font-bold text-green-600/70 ml-1">
+                                    <div className="space-y-4 print:space-y-2">
+                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 print:bg-white print:border-slate-200">
+                                            <p className="text-blue-600 text-[10px] font-black uppercase mb-1 tracking-tighter">Inversión General</p>
+                                            <div className="flex items-baseline justify-center gap-1">
+                                                <span className="text-4xl font-black text-slate-900 tracking-tight">
+                                                    {course.price ? `€${course.price.toFixed(2)}` : 'Consultar'}
+                                                </span>
+                                                {course.priceUnit && <span className="text-sm font-black text-blue-500 uppercase">
                                                     {course.priceUnit === 'FULL' ? '' :
                                                         course.priceUnit === 'SESSION' ? '/ Sesión' :
                                                             course.priceUnit === 'MONTH' ? '/ Mes' :
                                                                 course.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
                                                                     course.priceUnit === 'YEAR' ? '/ Año' : ''}
                                                 </span>}
+                                            </div>
+                                        </div>
+
+                                        {course.affiliatePrice && (
+                                            <div className="bg-green-50 p-4 rounded-2xl border border-green-100 relative overflow-hidden print:bg-white print:border-green-600 print:border-2">
+                                                <div className="absolute top-0 right-0 p-1">
+                                                    <Badge className="bg-green-500 text-[8px] font-bold print:bg-green-600">DTO. AFILIADOS</Badge>
+                                                </div>
+                                                <p className="text-green-600 text-[10px] font-black uppercase mb-1 tracking-tighter">Precio Afiliados UGT</p>
+                                                <div className="flex items-baseline justify-center gap-1">
+                                                    <span className="text-4xl font-black text-green-700 tracking-tight">€{course.affiliatePrice.toFixed(2)}</span>
+                                                    {course.priceUnit && <span className="text-xs font-bold text-green-600/70 uppercase">
+                                                        {course.priceUnit === 'FULL' ? '' :
+                                                            course.priceUnit === 'SESSION' ? '/ Sesión' :
+                                                                course.priceUnit === 'MONTH' ? '/ Mes' :
+                                                                    course.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
+                                                                        course.priceUnit === 'YEAR' ? '/ Año' : ''}
+                                                    </span>}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -285,37 +326,39 @@ export default function PublicCoursePage() {
 
                                 </div>
 
-                                <Button className="w-full h-14 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98] group" onClick={handleInterest}>
-                                    <MessageSquare className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Reservar Plaza
-                                </Button>
+                                <div className="no-print">
+                                    <Button className="w-full h-14 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98] group" onClick={handleInterest}>
+                                        <MessageSquare className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Reservar Plaza
+                                    </Button>
+                                </div>
 
                                 {course.callUrl && (
                                     <Button
                                         variant="outline"
-                                        className="w-full h-12 mt-3 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold rounded-2xl transition-all"
+                                        className="w-full h-12 mt-3 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold rounded-2xl transition-all print:border-2 print:h-10 print:mt-1 print:text-xs"
                                         onClick={() => window.open(course.callUrl, '_blank')}
                                     >
                                         <ExternalLink className="mr-2 h-4 w-4" /> Ver Convocatoria
                                     </Button>
                                 )}
 
-                                <div className="sidebar-cta-extra">
-                                    <div className="mt-8 pt-6 border-t border-slate-100 space-y-3">
+                                <div className="sidebar-cta-extra print:mt-4">
+                                    <div className="mt-8 pt-6 border-t border-slate-100 space-y-3 print:mt-4 print:pt-2">
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Contacto de Formación</p>
-                                        <div className="flex flex-col gap-2">
-                                            <a href="mailto:formacion.salamanca@ugt-sp.ugt.org" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1">
+                                        <div className="flex flex-col gap-2 print:gap-1">
+                                            <a href="mailto:formacion.salamanca@ugt-sp.ugt.org" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[10px]">
                                                 formacion.salamanca@ugt-sp.ugt.org
                                             </a>
-                                            <a href="mailto:fespugtsalamanca@gmail.com" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1">
+                                            <a href="mailto:fespugtsalamanca@gmail.com" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[10px]">
                                                 fespugtsalamanca@gmail.com
                                             </a>
-                                            <p className="text-xs text-slate-700 font-bold flex items-center gap-1">
+                                            <p className="text-xs text-slate-700 font-bold flex items-center gap-1 print:text-[10px]">
                                                 Tel: <span className="text-slate-900">+34 600 43 71 34</span>
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="mt-8 flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100 cursor-default">
+                                    <div className="mt-8 flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100 cursor-default print:mt-4 print:opacity-100">
                                         <img src="/logo-ugt.png" alt="Logo UGT" className="h-6 w-6 object-contain" />
                                         <p className="text-center text-[8px] uppercase font-black text-slate-500 tracking-[0.2em]">
                                             Formación UGT Salamanca

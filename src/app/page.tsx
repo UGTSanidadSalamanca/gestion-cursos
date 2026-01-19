@@ -111,8 +111,7 @@ export default function Home() {
             <OperationsModule />
           </TabsContent>
         </Tabs>
-        <div className="mt-8">
-          <h2 className="text-3xl font-bold mb-4 text-center text-white">Precios</h2>
+        <div className="mt-16 bg-slate-50/50 -mx-6 px-6 py-16 border-y border-slate-100">
           <PriceModule />
         </div>
       </div>
