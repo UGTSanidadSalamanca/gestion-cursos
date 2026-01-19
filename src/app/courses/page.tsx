@@ -821,7 +821,9 @@ export default function CoursesPage() {
                             {course.duration}h
                           </span>
                         </TableCell>
-                        <TableCell className="font-medium text-slate-900">€{course.price.toFixed(2)}</TableCell>
+                        <TableCell className="font-medium text-slate-900">
+                          {course.price ? `€${course.price.toFixed(2)}` : 'Gratis / Consultar'}
+                        </TableCell>
                         <TableCell className="text-center">
                           <span className="font-bold text-blue-600">{course._count?.enrollments || 0}</span>
                           <span className="text-slate-400"> / {course.maxStudents}</span>
@@ -896,7 +898,7 @@ export default function CoursesPage() {
                         <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Precio Gral.</p>
                         <div className="flex items-center gap-2">
                           <Euro className="h-4 w-4 text-slate-600" />
-                          <span className="text-xs font-bold text-slate-700">€{selectedCourse.price}</span>
+                          <span className="text-xs font-bold text-slate-700">{selectedCourse.price ? `€${selectedCourse.price}` : 'Consultar'}</span>
                         </div>
                       </div>
                       <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
