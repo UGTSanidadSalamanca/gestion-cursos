@@ -157,10 +157,22 @@ export default function PublicCoursePage() {
           .print-full-width { width: 100% !important; }
           .print-no-break { break-inside: avoid; }
         }
+
+        /* Fix Android touch areas and prevent accidental text selection on header */
+        .no-print button {
+          touch-action: manipulation;
+          -webkit-tap-highlight-color: transparent;
+          position: relative;
+          z-index: 50;
+        }
+        .header-visual {
+            user-select: none;
+            -webkit-user-select: none;
+        }
       `}</style>
 
             {/* Header Visual */}
-            <div className="bg-gradient-to-br from-blue-700 to-indigo-800 text-white h-72 flex items-end relative overflow-hidden print:h-48 print:rounded-2xl print:mb-6">
+            <div className="header-visual bg-gradient-to-br from-blue-700 to-indigo-800 text-white h-72 flex items-end relative overflow-hidden print:h-48 print:rounded-2xl print:mb-6">
                 <div className="absolute top-0 right-0 p-8 opacity-10 print:opacity-5">
                     <BookOpen className="h-80 w-80" />
                 </div>
@@ -301,28 +313,41 @@ export default function PublicCoursePage() {
                                 <div className="text-center mb-6 print:mb-2">
                                     <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 print:mb-1 print:text-blue-800">Inversión del curso</p>
 
-                                    <div className="space-y-4 print:space-y-1">
-                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 print:bg-white print:border-slate-200 print:p-2">
-                                            <p className="text-blue-600 text-[10px] font-black uppercase mb-1 tracking-tighter">Inversión General</p>
-                                            <div className="flex items-baseline justify-center gap-1">
-                                                <span className="text-5xl font-black text-slate-900 tracking-tight print:text-2xl">
-                                                    {course.price ? `€${course.price.toFixed(2)}` : 'Consultar'}
-                                                </span>
-                                                <span className="text-sm font-black text-blue-600 uppercase print:text-[10px]">
-                                                    {formatPriceUnit(course.priceUnit)}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {course.affiliatePrice && (
-                                            <div className="bg-green-50 p-4 rounded-2xl border border-green-100 relative overflow-hidden print:bg-white print:border-green-600 print:border-2 print:p-2">
-                                                <div className="absolute top-0 right-0 p-1 print:hidden">
-                                                    <Badge className="bg-green-500 text-[8px] font-bold">DTO. AFILIADOS</Badge>
+                                    <div className="flex flex-col gap-3 print:gap-1">
+                                        {course.affiliatePrice ? (
+                                            <>
+                                                {/* Precio Afiliados (Principal) */}
+                                                <div className="bg-green-50 p-5 rounded-2xl border-2 border-green-200 relative overflow-hidden print:bg-white print:border-green-600 print:p-2">
+                                                    <p className="text-green-600 text-[10px] font-black uppercase mb-1 tracking-tighter">Precio Final Afiliados UGT</p>
+                                                    <div className="flex items-baseline justify-center gap-1">
+                                                        <span className="text-5xl font-black text-green-700 tracking-tight print:text-3xl">€{course.affiliatePrice.toFixed(2)}</span>
+                                                        <span className="text-sm font-bold text-green-600 uppercase print:text-[10px]">
+                                                            {formatPriceUnit(course.priceUnit)}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <p className="text-green-600 text-[10px] font-black uppercase mb-1 tracking-tighter">Precio Afiliados UGT</p>
+
+                                                {/* Precio General (Secundario) */}
+                                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 opacity-80 print:bg-white print:border-slate-200 print:p-1 print:opacity-100">
+                                                    <p className="text-slate-500 text-[9px] font-bold uppercase mb-0.5 tracking-tight text-center">Inversión General (No afiliados)</p>
+                                                    <div className="flex items-baseline justify-center gap-1">
+                                                        <span className="text-2xl font-bold text-slate-400 line-through decoration-slate-300 print:text-lg print:no-underline print:text-slate-600">
+                                                            {course.price ? `€${course.price.toFixed(2)}` : 'Consultar'}
+                                                        </span>
+                                                        <span className="text-[10px] font-medium text-slate-400 uppercase print:text-[8px]">
+                                                            {formatPriceUnit(course.priceUnit)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 print:bg-white print:border-slate-200 print:p-2">
+                                                <p className="text-blue-600 text-[10px] font-black uppercase mb-1 tracking-tighter">Inversión General</p>
                                                 <div className="flex items-baseline justify-center gap-1">
-                                                    <span className="text-4xl font-black text-green-700 tracking-tight print:text-xl">€{course.affiliatePrice.toFixed(2)}</span>
-                                                    <span className="text-xs font-bold text-green-600 uppercase print:text-[10px]">
+                                                    <span className="text-5xl font-black text-slate-900 tracking-tight print:text-2xl">
+                                                        {course.price ? `€${course.price.toFixed(2)}` : 'Consultar'}
+                                                    </span>
+                                                    <span className="text-sm font-black text-blue-600 uppercase print:text-[10px]">
                                                         {formatPriceUnit(course.priceUnit)}
                                                     </span>
                                                 </div>
@@ -359,8 +384,12 @@ export default function PublicCoursePage() {
                                 </div>
 
                                 <div className="no-print">
-                                    <Button className="w-full h-14 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98] group" onClick={handleInterest}>
-                                        <MessageSquare className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Reservar Plaza
+                                    <Button className="w-full h-16 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98] group flex flex-col items-center justify-center leading-tight py-2" onClick={handleInterest}>
+                                        <div className="flex items-center gap-2">
+                                            <MessageSquare className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                                            Contacta y reserva por WhatsApp
+                                        </div>
+                                        <span className="text-[10px] font-medium opacity-80 uppercase tracking-widest mt-1">Respuesta inmediata</span>
                                     </Button>
                                 </div>
 
