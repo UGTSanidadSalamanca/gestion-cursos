@@ -501,10 +501,16 @@ export default function PublicCoursePage() {
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 flex items-center space-x-3 cursor-pointer select-none" onClick={() => setFormData({ ...formData, isAffiliated: !formData.isAffiliated })}>
-                                                                <Checkbox checked={formData.isAffiliated} onCheckedChange={(checked) => setFormData({ ...formData, isAffiliated: !!checked })} />
-                                                                <div>
-                                                                    <Label className="text-xs font-bold text-blue-900 cursor-pointer">Soy afiliado/a a UGT</Label>
+                                                            <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 flex items-center space-x-3 select-none">
+                                                                <Checkbox
+                                                                    id="is-affiliated"
+                                                                    checked={formData.isAffiliated}
+                                                                    onCheckedChange={(checked) => setFormData({ ...formData, isAffiliated: !!checked })}
+                                                                />
+                                                                <div className="flex-1 cursor-pointer">
+                                                                    <Label htmlFor="is-affiliated" className="text-xs font-bold text-blue-900 cursor-pointer block">
+                                                                        Soy afiliado/a a UGT
+                                                                    </Label>
                                                                     <p className="text-[9px] text-blue-600/70 font-medium">Activa esta casilla para aplicar el precio reducido.</p>
                                                                 </div>
                                                             </div>
