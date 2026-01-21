@@ -535,7 +535,16 @@ export default function PublicCoursePage() {
                                                     <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 mb-8 text-left space-y-4">
                                                         <div className="space-y-1">
                                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                                                <CreditCard className="h-3 w-3" /> Datos para el pago
+                                                                <Euro className="h-3 w-3" /> Importe a pagar
+                                                            </p>
+                                                            <p className="text-xl font-black text-blue-700 select-all block p-2 bg-blue-50/50 rounded-lg border border-blue-100 text-center">
+                                                                {formData.isAffiliated ? (course.affiliatePrice || 0) : (course.price || 0)}€
+                                                                <span className="text-[10px] ml-2 font-medium opacity-60 italic">({formData.isAffiliated ? 'Tarifa Afiliado' : 'Tarifa General'})</span>
+                                                            </p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                                <CreditCard className="h-3 w-3" /> Datos para el pago (IBAN)
                                                             </p>
                                                             <p className="text-sm font-bold text-slate-700 select-all block p-2 bg-white rounded-lg border border-slate-100 text-center">ES59 2103 2347 4000 3377 9482</p>
                                                         </div>
