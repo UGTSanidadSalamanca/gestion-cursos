@@ -230,6 +230,7 @@ model Enrollment {
 }
 
 enum EnrollmentStatus {
+  PENDING
   ENROLLED
   IN_PROGRESS
   COMPLETED

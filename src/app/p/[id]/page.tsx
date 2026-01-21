@@ -5,7 +5,12 @@ import { useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { BookOpen, Clock, Users, Euro, Calendar, CheckCircle, MessageSquare, ShieldCheck, ExternalLink, Printer } from "lucide-react"
+import { BookOpen, Clock, Users, Euro, Calendar, CheckCircle, MessageSquare, ShieldCheck, ExternalLink, Printer, User, Mail, Phone, Fingerprint, CreditCard, Info } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import { toast } from "sonner"
 
 interface PublicCourse {
     title: string
@@ -36,6 +41,16 @@ export default function PublicCoursePage() {
     const params = useParams()
     const [course, setCourse] = useState<PublicCourse | null>(null)
     const [loading, setLoading] = useState(true)
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [showSuccess, setShowSuccess] = useState(false)
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        dni: '',
+        isAffiliated: false
+    })
 
     useEffect(() => {
         const fetchCourse = async () => {
@@ -93,6 +108,38 @@ export default function PublicCoursePage() {
         const message = `¡Hola! Estoy interesado en el curso: ${course.title} (${course.code}). ¿Podríais enviarme más información?`
         window.open(`https://wa.me/34600437134?text=${encodeURIComponent(message)}`, '_blank')
     }
+
+    const handleEnroll = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!course) return
+
+        setIsSubmitting(true)
+        try {
+            const response = await fetch('/api/public/enroll', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...formData,
+                    courseId: params.id
+                })
+            })
+
+            if (response.ok) {
+                setShowSuccess(true)
+            } else {
+                const error = await response.json()
+                toast.error(error.error || "Error al procesar la inscripción")
+            }
+        } catch (error) {
+            console.error("Enrollment error:", error)
+            toast.error("Error técnico al procesar la inscripción")
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    const currentYear = new Date().getFullYear()
+    const paymentConcept = course ? `${course.code}${currentYear}` : ''
 
     const benefitsList = course.benefits ? course.benefits.split(/,|\n/).map(b => b.trim()).filter(b => b !== "") : []
 
@@ -384,12 +431,116 @@ export default function PublicCoursePage() {
                                 </div>
 
                                 <div className="no-print">
-                                    <Button className="w-full h-16 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98] group flex flex-col items-center justify-center leading-tight py-2" onClick={handleInterest}>
-                                        <div className="flex items-center gap-2">
-                                            <MessageSquare className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                                            Contacta y reserva por WhatsApp
-                                        </div>
-                                        <span className="text-[10px] font-medium opacity-80 uppercase tracking-widest mt-1">Respuesta inmediata</span>
+                                    <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                                        setIsDialogOpen(open)
+                                        if (!open) {
+                                            setShowSuccess(false)
+                                            setFormData({ name: '', email: '', phone: '', dni: '', isAffiliated: false })
+                                        }
+                                    }}>
+                                        <DialogTrigger asChild>
+                                            <Button className="w-full h-16 mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98] group flex flex-col items-center justify-center leading-tight py-2">
+                                                <div className="flex items-center gap-2">
+                                                    <CheckCircle className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                                                    Inscribirme al curso
+                                                </div>
+                                                <span className="text-[10px] font-medium opacity-80 uppercase tracking-widest mt-1">Plazas limitadas</span>
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[500px] border-none shadow-2xl p-0 overflow-hidden bg-white">
+                                            {!showSuccess ? (
+                                                <form onSubmit={handleEnroll}>
+                                                    <DialogHeader className="p-8 bg-slate-50 border-b">
+                                                        <DialogTitle className="text-2xl font-black text-slate-900 leading-tight">Formulario de Inscripción</DialogTitle>
+                                                        <DialogDescription className="text-slate-500 font-medium">Completa tus datos para reservar tu plaza en: <br /><span className="text-blue-600 font-bold">{course.title}</span></DialogDescription>
+                                                    </DialogHeader>
+                                                    <div className="p-8 space-y-5">
+                                                        <div className="grid grid-cols-1 gap-5">
+                                                            <div className="space-y-2">
+                                                                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Nombre y Apellidos *</Label>
+                                                                <div className="relative">
+                                                                    <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                                                    <Input required className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white" placeholder="Juan Pérez..." value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                                                                </div>
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">DNI / NIE *</Label>
+                                                                <div className="relative">
+                                                                    <Fingerprint className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                                                    <Input required className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white" placeholder="12345678X" value={formData.dni} onChange={e => setFormData({ ...formData, dni: e.target.value })} />
+                                                                </div>
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-4">
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Teléfono</Label>
+                                                                    <div className="relative">
+                                                                        <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                                                        <Input className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white" placeholder="600000000" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Email</Label>
+                                                                    <div className="relative">
+                                                                        <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                                                        <Input className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white" type="email" placeholder="email@ejemplo.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 flex items-center space-x-3 cursor-pointer select-none" onClick={() => setFormData({ ...formData, isAffiliated: !formData.isAffiliated })}>
+                                                                <Checkbox checked={formData.isAffiliated} onCheckedChange={(checked) => setFormData({ ...formData, isAffiliated: !!checked })} />
+                                                                <div>
+                                                                    <Label className="text-xs font-bold text-blue-900 cursor-pointer">Soy afiliado/a a UGT</Label>
+                                                                    <p className="text-[9px] text-blue-600/70 font-medium">Activa esta casilla para aplicar el precio reducido.</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <DialogFooter className="p-8 bg-slate-50 border-t flex flex-col gap-3">
+                                                        <Button type="submit" disabled={isSubmitting} className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-blue-100">
+                                                            {isSubmitting ? "Procesando..." : "Confirmar Pre-inscripción"}
+                                                        </Button>
+                                                        <p className="text-[9px] text-slate-400 text-center leading-relaxed">Al inscribirte, tus datos quedarán registrados para la gestión del curso. Deberás completar el pago para confirmar tu plaza.</p>
+                                                    </DialogFooter>
+                                                </form>
+                                            ) : (
+                                                <div className="p-10 text-center animate-in zoom-in-95 duration-300">
+                                                    <div className="h-20 w-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                                        <CheckCircle className="h-10 w-10" />
+                                                    </div>
+                                                    <h2 className="text-3xl font-black text-slate-900 mb-2">¡Pre-inscripción recibida!</h2>
+                                                    <p className="text-slate-500 font-medium mb-8">Tu plaza ha quedado reservada en estado "pendiente de pago".</p>
+
+                                                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 mb-8 text-left space-y-4">
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                                <CreditCard className="h-3 w-3" /> Datos para el pago
+                                                            </p>
+                                                            <p className="text-sm font-bold text-slate-700 select-all block p-2 bg-white rounded-lg border border-slate-100 text-center">ES59 2103 2347 4000 3377 9482</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                                <Info className="h-3 w-3" /> Concepto de transferencia
+                                                            </p>
+                                                            <p className="text-sm font-black text-blue-700 select-all block p-2 bg-blue-50/50 rounded-lg border border-blue-100 text-center tracking-widest">{paymentConcept}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-4">
+                                                        <p className="text-xs text-slate-500 leading-relaxed font-medium italic">
+                                                            "Por favor, envía el justificante de la transferencia por <b>Email</b> o <b>WhatsApp</b> para que la inscripción definitiva sea efectiva."
+                                                        </p>
+                                                        <Button onClick={() => setIsDialogOpen(false)} className="w-full h-12 bg-slate-900 border hover:bg-black text-white font-bold rounded-xl mt-4">
+                                                            Cerrar y volver
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </DialogContent>
+                                    </Dialog>
+
+                                    <Button className="w-full h-14 mt-3 bg-green-500/10 hover:bg-green-500/20 text-green-700 border border-green-200 font-bold text-sm rounded-2xl shadow-sm transition-all active:scale-[0.98] group" onClick={handleInterest}>
+                                        <MessageSquare className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                                        Dudas por WhatsApp
                                     </Button>
                                 </div>
 

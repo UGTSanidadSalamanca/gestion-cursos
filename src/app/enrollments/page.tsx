@@ -28,7 +28,7 @@ interface Enrollment {
   studentName: string
   courseName: string
   enrollmentDate: string
-  status: 'ENROLLED' | 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED' | 'FAILED'
+  status: 'PENDING' | 'ENROLLED' | 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED' | 'FAILED'
   progress: number
   grade?: number
   certificate?: string
@@ -73,6 +73,8 @@ export default function EnrollmentsPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'PENDING':
+        return <Badge variant="outline" className="border-yellow-500 text-yellow-600 bg-yellow-50">Pago Pendiente</Badge>
       case 'ENROLLED':
         return <Badge className="bg-blue-500">Inscrito</Badge>
       case 'IN_PROGRESS':
@@ -90,6 +92,8 @@ export default function EnrollmentsPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
+      case 'PENDING':
+        return <Clock className="h-4 w-4 text-yellow-500" animate-pulse />
       case 'ENROLLED':
         return <FileText className="h-4 w-4 text-blue-500" />
       case 'IN_PROGRESS':
@@ -107,6 +111,7 @@ export default function EnrollmentsPage() {
 
   const stats = {
     total: enrollments.length,
+    pending: enrollments.filter(e => e.status === 'PENDING').length,
     enrolled: enrollments.filter(e => e.status === 'ENROLLED').length,
     inProgress: enrollments.filter(e => e.status === 'IN_PROGRESS').length,
     completed: enrollments.filter(e => e.status === 'COMPLETED').length
@@ -132,7 +137,7 @@ export default function EnrollmentsPage() {
         </div>
 
         {/* Estadísticas */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Matrículas</CardTitle>
@@ -142,6 +147,18 @@ export default function EnrollmentsPage() {
               <div className="text-2xl font-bold">{stats.total}</div>
               <p className="text-xs text-muted-foreground">
                 Matrículas registradas
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-yellow-200 bg-yellow-50/30">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-yellow-800">Pagos Pendientes</CardTitle>
+              <Clock className="h-4 w-4 text-yellow-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-700">{stats.pending}</div>
+              <p className="text-xs text-yellow-600/70">
+                Inscripciones web esperando pago
               </p>
             </CardContent>
           </Card>
@@ -248,7 +265,8 @@ export default function EnrollmentsPage() {
                       <div className="w-20 bg-slate-200 rounded-full h-2">
                         <div
                           className={`h-2 rounded-full ${selectedEnrollment.status === 'COMPLETED' ? 'bg-green-500' :
-                              selectedEnrollment.status === 'IN_PROGRESS' ? 'bg-blue-500' : 'bg-red-500'
+                            selectedEnrollment.status === 'IN_PROGRESS' || selectedEnrollment.status === 'ENROLLED' ? 'bg-blue-500' :
+                              selectedEnrollment.status === 'PENDING' ? 'bg-yellow-400' : 'bg-red-500'
                             }`}
                           style={{ width: `${selectedEnrollment.progress}%` }}
                         ></div>
@@ -324,7 +342,8 @@ export default function EnrollmentsPage() {
                         <div className="w-20 bg-slate-200 rounded-full h-2">
                           <div
                             className={`h-2 rounded-full ${enrollment.status === 'COMPLETED' ? 'bg-green-500' :
-                                enrollment.status === 'IN_PROGRESS' ? 'bg-blue-500' : 'bg-red-500'
+                              enrollment.status === 'IN_PROGRESS' || enrollment.status === 'ENROLLED' ? 'bg-blue-500' :
+                                enrollment.status === 'PENDING' ? 'bg-yellow-400' : 'bg-red-500'
                               }`}
                             style={{ width: `${enrollment.progress}%` }}
                           ></div>
