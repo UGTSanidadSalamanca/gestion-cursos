@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,6 +14,24 @@ import {
 } from "@/components/modules"
 
 export default function Home() {
+  const [stats, setStats] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/dashboard/stats')
+        const data = await response.json()
+        setStats(data.stats)
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStats()
+  }, [])
+
   return (
     <MainLayout>
       <div className="container mx-auto p-6 space-y-6">
@@ -41,12 +59,12 @@ export default function Home() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Usuarios Activos</CardTitle>
+              <CardTitle className="text-sm font-medium">Alumnos Activos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">348</div>
+              <div className="text-2xl font-bold">{loading ? '...' : stats?.totalStudents || 0}</div>
               <p className="text-xs text-muted-foreground">
-                +12% respecto al mes anterior
+                Registrados en el sistema
               </p>
             </CardContent>
           </Card>
@@ -55,9 +73,9 @@ export default function Home() {
               <CardTitle className="text-sm font-medium">Cursos Activos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">24</div>
+              <div className="text-2xl font-bold">{loading ? '...' : stats?.activeCourses || 0}</div>
               <p className="text-xs text-muted-foreground">
-                156 alumnos inscritos
+                {stats?.activeEnrollments || 0} inscripciones activas
               </p>
             </CardContent>
           </Card>
@@ -66,9 +84,9 @@ export default function Home() {
               <CardTitle className="text-sm font-medium">Ingresos Mensuales</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">€24,580</div>
+              <div className="text-2xl font-bold">€{loading ? '...' : (stats?.monthlyRevenue || 0).toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                +8% respecto al mes anterior
+                {stats?.revenueTrend > 0 ? '+' : ''}{stats?.revenueTrend || 0}% respecto al mes anterior
               </p>
             </CardContent>
           </Card>
@@ -77,7 +95,7 @@ export default function Home() {
               <CardTitle className="text-sm font-medium">Satisfacción</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">4.7/5</div>
+              <div className="text-2xl font-bold">{loading ? '...' : stats?.satisfaction || '4.8'}/5</div>
               <p className="text-xs text-muted-foreground">
                 Calificación promedio
               </p>
@@ -100,15 +118,15 @@ export default function Home() {
           </TabsList>
 
           <TabsContent value="academic" className="space-y-4">
-            <AcademicModule />
+            <AcademicModule stats={stats} />
           </TabsContent>
 
           <TabsContent value="financial" className="space-y-4">
-            <FinancialModule />
+            <FinancialModule stats={stats} />
           </TabsContent>
 
           <TabsContent value="operations" className="space-y-4">
-            <OperationsModule />
+            <OperationsModule stats={stats} />
           </TabsContent>
         </Tabs>
         <div className="mt-16 bg-slate-50/50 -mx-6 px-6 py-16 border-y border-slate-100">

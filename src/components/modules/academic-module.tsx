@@ -3,10 +3,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { 
-  Users, 
-  BookOpen, 
-  TrendingUp, 
+import {
+  Users,
+  BookOpen,
+  TrendingUp,
   Star,
   GraduationCap,
   MessageSquare,
@@ -14,7 +14,16 @@ import {
   Clock
 } from "lucide-react"
 
-export function AcademicModule() {
+interface AcademicModuleProps {
+  stats?: {
+    totalStudents: number
+    activeCourses: number
+    activeEnrollments: number
+    totalTeachers: number
+  }
+}
+
+export function AcademicModule({ stats }: AcademicModuleProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {/* Gestión de Alumnos */}
@@ -39,8 +48,8 @@ export function AcademicModule() {
                 <Users className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium">Alumnos Totales</span>
               </div>
-              <div className="text-2xl font-bold text-blue-600">156</div>
-              <div className="text-xs text-blue-500">+24 nuevos este mes</div>
+              <div className="text-2xl font-bold text-blue-600">{stats?.totalStudents || 0}</div>
+              <div className="text-xs text-blue-500">Alumnos activos</div>
             </div>
             <div className="bg-green-50 p-3 rounded-lg">
               <div className="flex items-center space-x-2">
@@ -116,7 +125,7 @@ export function AcademicModule() {
                 <BookOpen className="h-4 w-4 text-green-600" />
                 <span className="text-sm font-medium">Cursos Activos</span>
               </div>
-              <div className="text-2xl font-bold text-green-600">24</div>
+              <div className="text-2xl font-bold text-green-600">{stats?.activeCourses || 0}</div>
               <div className="text-xs text-green-500">En este período</div>
             </div>
             <div className="bg-blue-50 p-3 rounded-lg">
@@ -124,7 +133,7 @@ export function AcademicModule() {
                 <Users className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium">Alumnos Inscritos</span>
               </div>
-              <div className="text-2xl font-bold text-blue-600">156</div>
+              <div className="text-2xl font-bold text-blue-600">{stats?.activeEnrollments || 0}</div>
               <div className="text-xs text-blue-500">Total en cursos</div>
             </div>
             <div className="bg-purple-50 p-3 rounded-lg">
@@ -140,8 +149,8 @@ export function AcademicModule() {
                 <Award className="h-4 w-4 text-orange-600" />
                 <span className="text-sm font-medium">Instructores</span>
               </div>
-              <div className="text-2xl font-bold text-orange-600">18</div>
-              <div className="text-xs text-orange-500">Asignados</div>
+              <div className="text-2xl font-bold text-orange-600">{stats?.totalTeachers || 0}</div>
+              <div className="text-xs text-orange-500">En plantilla</div>
             </div>
           </div>
 

@@ -3,10 +3,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { 
-  CreditCard, 
-  DollarSign, 
-  TrendingUp, 
+import {
+  CreditCard,
+  DollarSign,
+  TrendingUp,
   TrendingDown,
   AlertTriangle,
   CheckCircle,
@@ -14,7 +14,16 @@ import {
   Calendar
 } from "lucide-react"
 
-export function FinancialModule() {
+interface FinancialModuleProps {
+  stats?: {
+    monthlyRevenue: number
+    pendingRevenue: number
+    overdueRevenue: number
+    totalTeachers: number
+  }
+}
+
+export function FinancialModule({ stats }: FinancialModuleProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {/* Gestión de Pagos */}
@@ -39,7 +48,7 @@ export function FinancialModule() {
                 <DollarSign className="h-4 w-4 text-green-600" />
                 <span className="text-sm font-medium">Ingresos</span>
               </div>
-              <div className="text-2xl font-bold text-green-600">€24,580</div>
+              <div className="text-2xl font-bold text-green-600">€{(stats?.monthlyRevenue || 0).toLocaleString()}</div>
               <div className="text-xs text-green-500">Total mensual</div>
             </div>
             <div className="bg-yellow-50 p-3 rounded-lg">
@@ -47,7 +56,7 @@ export function FinancialModule() {
                 <AlertTriangle className="h-4 w-4 text-yellow-600" />
                 <span className="text-sm font-medium">Pendientes</span>
               </div>
-              <div className="text-2xl font-bold text-yellow-600">€8,420</div>
+              <div className="text-2xl font-bold text-yellow-600">€{(stats?.pendingRevenue || 0).toLocaleString()}</div>
               <div className="text-xs text-yellow-500">Por cobrar</div>
             </div>
             <div className="bg-blue-50 p-3 rounded-lg">
@@ -63,7 +72,7 @@ export function FinancialModule() {
                 <TrendingDown className="h-4 w-4 text-red-600" />
                 <span className="text-sm font-medium">Morosidad</span>
               </div>
-              <div className="text-2xl font-bold text-red-600">€2,150</div>
+              <div className="text-2xl font-bold text-red-600">€{(stats?.overdueRevenue || 0).toLocaleString()}</div>
               <div className="text-xs text-red-500">Vencidos</div>
             </div>
           </div>
@@ -124,7 +133,7 @@ export function FinancialModule() {
                 <Users className="h-4 w-4 text-green-600" />
                 <span className="text-sm font-medium">Instructores</span>
               </div>
-              <div className="text-2xl font-bold text-green-600">18</div>
+              <div className="text-2xl font-bold text-green-600">{stats?.totalTeachers || 0}</div>
               <div className="text-xs text-green-600">Pagados</div>
             </div>
             <div className="bg-blue-50 p-3 rounded-lg">

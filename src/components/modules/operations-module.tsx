@@ -3,10 +3,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { 
-  Package, 
-  Settings, 
-  Server, 
+import {
+  Package,
+  Settings,
+  Server,
   Shield,
   TrendingUp,
   Clock,
@@ -14,7 +14,14 @@ import {
   Database
 } from "lucide-react"
 
-export function OperationsModule() {
+interface OperationsModuleProps {
+  stats?: {
+    totalMaterials: number
+    totalSuppliers: number
+  }
+}
+
+export function OperationsModule({ stats }: OperationsModuleProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {/* Recursos y Materiales */}
@@ -39,7 +46,7 @@ export function OperationsModule() {
                 <Package className="h-4 w-4 text-orange-600" />
                 <span className="text-sm font-medium">Materiales</span>
               </div>
-              <div className="text-2xl font-bold text-orange-600">156</div>
+              <div className="text-2xl font-bold text-orange-600">{stats?.totalMaterials || 0}</div>
               <div className="text-xs text-orange-600">Total en inventario</div>
             </div>
             <div className="bg-blue-50 p-3 rounded-lg">
@@ -55,7 +62,7 @@ export function OperationsModule() {
                 <Database className="h-4 w-4 text-green-600" />
                 <span className="text-sm font-medium">Contactos</span>
               </div>
-              <div className="text-2xl font-bold text-green-600">89</div>
+              <div className="text-2xl font-bold text-green-600">{stats?.totalSuppliers || 0}</div>
               <div className="text-xs text-green-600">Proveedores</div>
             </div>
             <div className="bg-purple-50 p-3 rounded-lg">
