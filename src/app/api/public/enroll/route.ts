@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { NotificationService } from '@/lib/notification-service'
-import { notifyNewEnrollment } from '@/lib/email-service'
 
 export async function POST(request: NextRequest) {
+    let body;
     try {
-        const body = await request.json()
-        const { name, email, phone, dni, isAffiliated, courseId } = body
+        body = await request.json()
+    } catch (e) {
+        return NextResponse.json({ error: 'Formato de datos inválido' }, { status: 400 })
+    }
 
+    const { name, email, phone, dni, isAffiliated, courseId } = body
+
+    try {
         if (!name || !dni || !courseId) {
             return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
         }
@@ -19,14 +23,14 @@ export async function POST(request: NextRequest) {
                 name: name,
                 email: email || undefined,
                 phone: phone || undefined,
-                isAffiliated: isAffiliated ?? false,
+                isAffiliated: !!isAffiliated,
             },
             create: {
                 name: name,
                 dni: dni,
                 email: email || undefined,
                 phone: phone || undefined,
-                isAffiliated: isAffiliated ?? false,
+                isAffiliated: !!isAffiliated,
             }
         })
 
@@ -37,7 +41,8 @@ export async function POST(request: NextRequest) {
                     studentId: student.id,
                     courseId: courseId
                 }
-            }
+            },
+            include: { course: true }
         })
 
         if (existingEnrollment) {
@@ -60,39 +65,35 @@ export async function POST(request: NextRequest) {
             }
         })
 
-        // 4. Notificaciones (Interna y Email) - Ejecutadas de forma asíncrona pero sin bloquear la respuesta
-        // En Next.js App Router (Server Actions/Routes), para asegurar que se ejecuten antes de cerrar la función
-        // podemos envolverlas en promesas pero no necesariamente esperar a que terminen si queremos rapidez,
-        // aunque en Serverless es mejor esperarlas para evitar que se maten prematuramente.
-        // Vamos a esperarlas pero con un try/catch muy robusto.
+        // 4. Notificaciones (Interna y Email) - SIN BLOQUEAR la respuesta
+        // Usamos import dinámico para evitar problemas de dependencias en frío
         try {
-            // Notificación interna
-            NotificationService.create({
-                title: 'Nueva Pre-inscripción Web',
-                message: `${name} se ha inscrito en ${enrollment.course.title}`,
-                type: 'INFO',
-                priority: 'HIGH',
-                category: 'STUDENT',
-                actionUrl: '/enrollments'
-            }).catch(e => console.error('Error notif interna:', e));
+            import('@/lib/notification-service').then(({ NotificationService }) => {
+                NotificationService.create({
+                    title: 'Nueva Pre-inscripción Web',
+                    message: `${name} se ha inscrito en ${enrollment.course.title}`,
+                    type: 'INFO',
+                    priority: 'HIGH',
+                    category: 'STUDENT',
+                    actionUrl: '/enrollments'
+                }).catch(err => console.error('Error notif interna:', err))
+            })
 
-            // Notificación por Email
-            notifyNewEnrollment({
-                studentName: name,
-                studentDni: dni,
-                courseName: enrollment.course.title,
-                isAffiliated: !!isAffiliated,
-                phone: phone,
-                email: email,
-                price: !!isAffiliated ? enrollment.course.affiliatePrice : enrollment.course.price,
-                priceUnit: enrollment.course.priceUnit
-            }).catch(e => console.error('Error notify email:', e));
-
+            import('@/lib/email-service').then(({ notifyNewEnrollment }) => {
+                notifyNewEnrollment({
+                    studentName: name,
+                    studentDni: dni,
+                    courseName: enrollment.course.title,
+                    isAffiliated: !!isAffiliated,
+                    phone: phone,
+                    email: email,
+                    price: !!isAffiliated ? enrollment.course.affiliatePrice : enrollment.course.price,
+                    priceUnit: enrollment.course.priceUnit
+                }).catch(err => console.error('Error notify email:', err))
+            })
         } catch (notifyError) {
-            console.error('Error disparando notificaciones:', notifyError)
+            console.error('Error disparando notificaciones asíncronas:', notifyError)
         }
-
-        console.log(`Inscripción exitosa: ${name} en ${enrollment.course.title}`);
 
         return NextResponse.json({
             message: 'Inscripción realizada con éxito',
@@ -100,7 +101,10 @@ export async function POST(request: NextRequest) {
         }, { status: 201 })
 
     } catch (error) {
-        console.error('Error in public enroll:', error)
-        return NextResponse.json({ error: 'Error al procesar la inscripción' }, { status: 500 })
+        console.error('CRITICAL ERROR in public enroll API:', error)
+        return NextResponse.json({
+            error: 'Error técnico al procesar la inscripción',
+            details: error instanceof Error ? error.message : String(error)
+        }, { status: 500 })
     }
 }
