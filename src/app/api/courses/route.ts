@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
       maxStudents,
       price,
       priceUnit,
+      paymentFrequency,
       affiliatePrice,
       isActive = true,
       startDate,
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
         maxStudents: maxStudents ? parseInt(maxStudents) : null,
         price: price ? parseFloat(price) : null,
         priceUnit,
+        paymentFrequency,
         affiliatePrice: affiliatePrice ? parseFloat(affiliatePrice) : null,
         isActive: isActive !== undefined ? isActive : true,
         startDate: startDate ? new Date(startDate) : null,
@@ -101,7 +103,8 @@ export async function POST(request: NextRequest) {
         benefits,
         features,
         callUrl,
-        hasMaterials,
+        hasCertificate: hasCertificate !== undefined ? hasCertificate : true,
+        hasMaterials: hasMaterials !== undefined ? hasMaterials : true,
         teacherId: teacherId || null,
         modules: {
           deleteMany: {},
@@ -127,6 +130,7 @@ export async function POST(request: NextRequest) {
         maxStudents: maxStudents ? parseInt(maxStudents) : null,
         price: price ? parseFloat(price) : null,
         priceUnit,
+        paymentFrequency,
         affiliatePrice: affiliatePrice ? parseFloat(affiliatePrice) : null,
         isActive: isActive !== undefined ? isActive : true,
         startDate: startDate ? new Date(startDate) : null,
@@ -135,7 +139,8 @@ export async function POST(request: NextRequest) {
         benefits,
         features,
         callUrl,
-        hasMaterials,
+        hasCertificate: hasCertificate !== undefined ? hasCertificate : true,
+        hasMaterials: hasMaterials !== undefined ? hasMaterials : true,
         teacherId: teacherId || null,
         modules: {
           create: modules.map((m: any) => ({

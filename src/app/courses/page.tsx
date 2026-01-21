@@ -65,6 +65,7 @@ interface Course {
   maxStudents: number
   price?: number
   priceUnit?: string
+  paymentFrequency?: string
   affiliatePrice?: number
   isActive: boolean
   startDate?: string
@@ -130,6 +131,7 @@ export default function CoursesPage() {
     syllabusUrl: '',
     price: '',
     priceUnit: '',
+    paymentFrequency: '',
     affiliatePrice: '',
     startDate: '',
     endDate: '',
@@ -195,8 +197,9 @@ export default function CoursesPage() {
           durationMonths: courseFormData.durationMonths ? parseInt(courseFormData.durationMonths) : null,
           price: courseFormData.price ? parseFloat(courseFormData.price) : null,
           priceUnit: courseFormData.priceUnit,
+          paymentFrequency: courseFormData.paymentFrequency,
           affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
-          maxStudents: parseInt(courseFormData.maxStudents),
+          maxStudents: courseFormData.maxStudents ? parseInt(courseFormData.maxStudents) : 0,
         }),
       })
 
@@ -232,8 +235,9 @@ export default function CoursesPage() {
           durationMonths: courseFormData.durationMonths ? parseInt(courseFormData.durationMonths) : null,
           price: courseFormData.price ? parseFloat(courseFormData.price) : null,
           priceUnit: courseFormData.priceUnit,
+          paymentFrequency: courseFormData.paymentFrequency,
           affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
-          maxStudents: parseInt(courseFormData.maxStudents),
+          maxStudents: courseFormData.maxStudents ? parseInt(courseFormData.maxStudents) : 0,
         }),
       })
 
@@ -284,6 +288,7 @@ export default function CoursesPage() {
       syllabusUrl: '',
       price: '',
       priceUnit: '',
+      paymentFrequency: '',
       affiliatePrice: '',
       startDate: '',
       endDate: '',
@@ -315,6 +320,7 @@ export default function CoursesPage() {
       syllabusUrl: course.syllabusUrl || '',
       price: course.price?.toString() || '',
       priceUnit: course.priceUnit || '',
+      paymentFrequency: course.paymentFrequency || '',
       affiliatePrice: course.affiliatePrice?.toString() || '',
       startDate: course.startDate ? (typeof course.startDate === 'string' ? course.startDate.split('T')[0] : (course.startDate as any).toISOString().split('T')[0]) : '',
       endDate: course.endDate ? (typeof course.endDate === 'string' ? course.endDate.split('T')[0] : (course.endDate as any).toISOString().split('T')[0]) : '',
@@ -632,6 +638,16 @@ export default function CoursesPage() {
                                 <SelectItem value="YEAR">Año</SelectItem>
                               </SelectContent>
                             </Select>
+                            <Select value={courseFormData.paymentFrequency} onValueChange={(value) => setCourseFormData({ ...courseFormData, paymentFrequency: value })}>
+                              <SelectTrigger className="w-[120px] bg-slate-50 border-slate-200 h-11">
+                                <SelectValue placeholder="Frecuencia" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="MONTHLY">Mensual</SelectItem>
+                                <SelectItem value="TRIMESTER">Trimestral</SelectItem>
+                                <SelectItem value="SINGLE">Pago Único</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
                         <div className="space-y-2">
@@ -843,8 +859,23 @@ export default function CoursesPage() {
                             {course.duration}h
                           </span>
                         </TableCell>
-                        <TableCell className="font-medium text-slate-900">
-                          {course.price ? `€${course.price.toFixed(2)}` : 'Gratis / Consultar'}
+                        <TableCell className="font-medium text-slate-900 leading-tight">
+                          {course.price ? (
+                            <span>{`€${course.price.toFixed(2)}`}</span>
+                          ) : course.affiliatePrice ? (
+                            <span className="text-green-600 font-bold">{`€${course.affiliatePrice.toFixed(2)} `} <span className="text-[10px] uppercase font-black text-green-500/50 block tracking-tighter">(Solo Afiliados)</span></span>
+                          ) : (
+                            <span className="text-slate-400 italic">Gratis / Consultar</span>
+                          )}
+                          {(course.price || course.affiliatePrice) && course.priceUnit && (
+                            <span className="text-[10px] text-slate-400 block font-normal">
+                              {course.priceUnit === 'MONTH' ? '/ Mes' :
+                                course.priceUnit === 'SESSION' ? '/ Sesión' :
+                                  course.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
+                                    course.priceUnit === 'YEAR' ? '/ Año' : ''}
+                              {course.paymentFrequency === 'TRIMESTER' && ' (Cobro trimestral)'}
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell className="text-center">
                           <span className="font-bold text-blue-600">{course._count?.enrollments || 0}</span>
@@ -921,14 +952,17 @@ export default function CoursesPage() {
                         <div className="flex items-center gap-2">
                           <Euro className="h-4 w-4 text-slate-600" />
                           <span className="text-xs font-bold text-slate-700">
-                            {selectedCourse.price ? `€${selectedCourse.price}` : 'Consultar'}
-                            {selectedCourse.priceUnit && (
+                            {selectedCourse.price ? `€${selectedCourse.price}` :
+                              selectedCourse.affiliatePrice ? `€${selectedCourse.affiliatePrice}*` : 'Consultar'}
+                            {selectedCourse.priceUnit && (selectedCourse.price || selectedCourse.affiliatePrice) && (
                               <span className="text-[10px] text-slate-500 ml-1">
                                 {selectedCourse.priceUnit === 'FULL' ? '' :
                                   selectedCourse.priceUnit === 'SESSION' ? '/ Sesión' :
                                     selectedCourse.priceUnit === 'MONTH' ? '/ Mes' :
                                       selectedCourse.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
                                         selectedCourse.priceUnit === 'YEAR' ? '/ Año' : ''}
+                                {selectedCourse.paymentFrequency === 'TRIMESTER' && ' (Trimestral)'}
+                                {selectedCourse.paymentFrequency === 'MONTHLY' && ' (Mensual)'}
                               </span>
                             )}
                           </span>
@@ -939,14 +973,16 @@ export default function CoursesPage() {
                         <div className="flex items-center gap-2">
                           <Euro className="h-4 w-4 text-green-700" />
                           <span className="text-xs font-bold text-green-700">
-                            €{selectedCourse.affiliatePrice || '---'}
-                            {selectedCourse.priceUnit && selectedCourse.affiliatePrice && (
+                            €{selectedCourse.affiliatePrice || selectedCourse.price || '---'}
+                            {selectedCourse.priceUnit && (selectedCourse.affiliatePrice || selectedCourse.price) && (
                               <span className="text-[10px] text-green-600/70 ml-1">
                                 {selectedCourse.priceUnit === 'FULL' ? '' :
                                   selectedCourse.priceUnit === 'SESSION' ? '/ Sesión' :
                                     selectedCourse.priceUnit === 'MONTH' ? '/ Mes' :
                                       selectedCourse.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
                                         selectedCourse.priceUnit === 'YEAR' ? '/ Año' : ''}
+                                {selectedCourse.paymentFrequency === 'TRIMESTER' && ' (Trimestral)'}
+                                {selectedCourse.paymentFrequency === 'MONTHLY' && ' (Mensual)'}
                               </span>
                             )}
                           </span>
@@ -1231,6 +1267,16 @@ export default function CoursesPage() {
                             <SelectItem value="MONTH">Mes</SelectItem>
                             <SelectItem value="TRIMESTER">Trimestre</SelectItem>
                             <SelectItem value="YEAR">Año</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select value={courseFormData.paymentFrequency} onValueChange={(value) => setCourseFormData({ ...courseFormData, paymentFrequency: value })}>
+                          <SelectTrigger className="w-[120px] bg-slate-50 border-slate-200 h-11">
+                            <SelectValue placeholder="Frecuencia" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="MONTHLY">Mensual</SelectItem>
+                            <SelectItem value="TRIMESTER">Trimestral</SelectItem>
+                            <SelectItem value="SINGLE">Pago Único</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

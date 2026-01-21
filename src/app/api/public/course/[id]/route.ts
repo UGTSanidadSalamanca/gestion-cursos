@@ -18,6 +18,7 @@ export async function GET(
                 durationPeriod: true,
                 price: true,
                 priceUnit: true,
+                paymentFrequency: true,
                 affiliatePrice: true,
                 isActive: true,
                 startDate: true,

@@ -113,6 +113,7 @@ model Course {
   sessionDuration   Float?
   syllabusUrl       String?
   priceUnit         String?
+  paymentFrequency  String?
   materials         CourseMaterial[]
   modules           CourseModule[]
   teacher           Teacher?         @relation(fields: [teacherId], references: [id])

@@ -23,6 +23,7 @@ interface PublicCourse {
     durationPeriod?: string
     price?: number
     priceUnit?: string
+    paymentFrequency?: string
     affiliatePrice?: number
     startDate?: string
     features?: string
@@ -143,15 +144,24 @@ export default function PublicCoursePage() {
 
     const benefitsList = course.benefits ? course.benefits.split(/,|\n/).map(b => b.trim()).filter(b => b !== "") : []
 
-    const formatPriceUnit = (unit?: string) => {
-        if (!unit) return '';
-        const u = unit.toUpperCase();
-        if (u === 'FULL' || u === 'TOTAL') return '';
-        if (u === 'SESSION' || u === 'SESIÓN' || u === 'SESION') return '/ Sesión';
-        if (u === 'MONTH' || u === 'MES') return '/ Mes';
-        if (u === 'TRIMESTER' || u === 'TRIMESTRE') return '/ Trimestre';
-        if (u === 'YEAR' || u === 'AÑO' || u === 'ANO') return '/ Año';
-        return `/ ${unit}`;
+    const formatPriceUnit = (unit?: string, frequency?: string) => {
+        if (!unit && !frequency) return '';
+        let result = '';
+        if (unit) {
+            const u = unit.toUpperCase();
+            if (u === 'SESSION' || u === 'SESIÓN' || u === 'SESION') result = '/ Sesión';
+            else if (u === 'MONTH' || u === 'MES') result = '/ Mes';
+            else if (u === 'TRIMESTER' || u === 'TRIMESTRE') result = '/ Trimestre';
+            else if (u === 'YEAR' || u === 'AÑO' || u === 'ANO') result = '/ Año';
+            else if (u !== 'FULL' && u !== 'TOTAL') result = `/ ${unit}`;
+        }
+
+        if (frequency === 'TRIMESTER') {
+            result += ' (Pago trimestral)';
+        } else if (frequency === 'MONTHLY') {
+            result += ' (Pago mensual)';
+        }
+        return result;
     }
 
     return (
@@ -361,45 +371,31 @@ export default function PublicCoursePage() {
                                     <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 print:mb-1 print:text-blue-800">Inversión del curso</p>
 
                                     <div className="flex flex-col gap-3 print:gap-1">
-                                        {course.affiliatePrice ? (
-                                            <>
-                                                {/* Precio Afiliados (Principal) */}
-                                                <div className="bg-green-50 p-5 rounded-2xl border-2 border-green-200 relative overflow-hidden print:bg-white print:border-green-600 print:p-2">
-                                                    <p className="text-green-600 text-[10px] font-black uppercase mb-1 tracking-tighter">Precio Final Afiliados UGT</p>
-                                                    <div className="flex items-baseline justify-center gap-1">
-                                                        <span className="text-5xl font-black text-green-700 tracking-tight print:text-3xl">€{course.affiliatePrice.toFixed(2)}</span>
-                                                        <span className="text-sm font-bold text-green-600 uppercase print:text-[10px]">
-                                                            {formatPriceUnit(course.priceUnit)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                {/* Precio General (Secundario) */}
-                                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 opacity-80 print:bg-white print:border-slate-200 print:p-1 print:opacity-100">
-                                                    <p className="text-slate-500 text-[9px] font-bold uppercase mb-0.5 tracking-tight text-center">Inversión General (No afiliados)</p>
-                                                    <div className="flex items-baseline justify-center gap-1">
-                                                        <span className="text-2xl font-bold text-slate-400 line-through decoration-slate-300 print:text-lg print:no-underline print:text-slate-600">
-                                                            {course.price ? `€${course.price.toFixed(2)}` : 'Consultar'}
-                                                        </span>
-                                                        <span className="text-[10px] font-medium text-slate-400 uppercase print:text-[8px]">
-                                                            {formatPriceUnit(course.priceUnit)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 print:bg-white print:border-slate-200 print:p-2">
-                                                <p className="text-blue-600 text-[10px] font-black uppercase mb-1 tracking-tighter">Inversión General</p>
-                                                <div className="flex items-baseline justify-center gap-1">
-                                                    <span className="text-5xl font-black text-slate-900 tracking-tight print:text-2xl">
-                                                        {course.price ? `€${course.price.toFixed(2)}` : 'Consultar'}
-                                                    </span>
-                                                    <span className="text-sm font-black text-blue-600 uppercase print:text-[10px]">
-                                                        {formatPriceUnit(course.priceUnit)}
-                                                    </span>
-                                                </div>
+                                        {/* Bloque Precio Afiliados */}
+                                        <div className={`p-5 rounded-2xl border-2 relative overflow-hidden print:bg-white print:p-2 ${course.affiliatePrice ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
+                                            <p className={`text-[10px] font-black uppercase mb-1 tracking-tighter ${course.affiliatePrice ? 'text-green-600' : 'text-slate-400'}`}>Precio Afiliados UGT</p>
+                                            <div className="flex items-baseline justify-center gap-1">
+                                                <span className={`text-5xl font-black tracking-tight print:text-3xl ${course.affiliatePrice ? 'text-green-700' : 'text-slate-400'}`}>
+                                                    €{(course.affiliatePrice || course.price || 0).toFixed(2)}
+                                                </span>
+                                                <span className={`text-sm font-bold uppercase print:text-[10px] ${course.affiliatePrice ? 'text-green-600' : 'text-slate-400'}`}>
+                                                    {formatPriceUnit(course.priceUnit, course.paymentFrequency)}
+                                                </span>
                                             </div>
-                                        )}
+                                        </div>
+
+                                        {/* Bloque Precio General */}
+                                        <div className={`p-4 rounded-2xl border relative overflow-hidden print:bg-white print:p-2 ${course.price ? 'bg-blue-50/30 border-blue-100' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
+                                            <p className={`text-[10px] font-black uppercase mb-1 tracking-tighter ${course.price ? 'text-blue-600' : 'text-slate-400'}`}>Precio General</p>
+                                            <div className="flex items-baseline justify-center gap-1">
+                                                <span className={`text-3xl font-black tracking-tight print:text-2xl ${course.price ? 'text-slate-900' : 'text-slate-400'}`}>
+                                                    €{(course.price || course.affiliatePrice || 0).toFixed(2)}
+                                                </span>
+                                                <span className={`text-xs font-bold uppercase print:text-[10px] ${course.price ? 'text-blue-600' : 'text-slate-400'}`}>
+                                                    {formatPriceUnit(course.priceUnit, course.paymentFrequency)}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -539,8 +535,8 @@ export default function PublicCoursePage() {
                                                             </p>
                                                             <div className="bg-blue-50/50 rounded-lg border border-blue-100 p-3 text-center">
                                                                 <p className="text-2xl font-black text-blue-700 select-all">
-                                                                    {formData.isAffiliated ? (course.affiliatePrice || 0) : (course.price || 0)}€
-                                                                    <span className="text-sm ml-1 font-bold text-blue-500">{formatPriceUnit(course.priceUnit)}</span>
+                                                                    {formData.isAffiliated ? (course.affiliatePrice || course.price || 0) : (course.price || course.affiliatePrice || 0)}€
+                                                                    <span className="text-sm ml-1 font-bold text-blue-500">{formatPriceUnit(course.priceUnit, course.paymentFrequency)}</span>
                                                                 </p>
                                                                 <p className="text-[10px] font-medium text-blue-600/70 mt-1 italic">
                                                                     Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}
