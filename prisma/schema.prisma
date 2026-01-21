@@ -1,6 +1,3 @@
-// Sistema de Gestión Integral de Cursos - Configuración Vercel Postgres
-// Modelo completo para gestión de alumnos, docentes, proveedores, pagos y materiales
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,21 +7,304 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Usuarios del sistema (administradores, personal)
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      UserRole @default(ADMIN)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Relaciones
-  contacts Contact[]
-  notifications Notification[]
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  name                    String?
+  role                    UserRole                 @default(ADMIN)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  contacts                Contact[]
   notificationPreferences NotificationPreference[]
-  
+  notifications           Notification[]
+
   @@map("users")
+}
+
+model Student {
+  id               String        @id @default(cuid())
+  name             String
+  email            String?       @unique
+  phone            String?
+  address          String?
+  dni              String?       @unique
+  birthDate        DateTime?
+  isAffiliated     Boolean       @default(false)
+  affiliateNumber  String?       @unique
+  emergencyContact String?
+  emergencyPhone   String?
+  medicalInfo      String?
+  status           StudentStatus @default(ACTIVE)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  contacts         Contact[]
+  enrollments      Enrollment[]
+  payments         Payment[]
+
+  @@map("students")
+}
+
+model Teacher {
+  id           String         @id @default(cuid())
+  name         String?
+  email        String?        @unique
+  phone        String?
+  address      String?
+  dni          String?        @unique
+  specialty    String?
+  experience   String?
+  cv           String?
+  contractType ContractType   @default(FREELANCE)
+  hourlyRate   Float?
+  status       TeacherStatus  @default(ACTIVE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  contacts     Contact[]
+  modules      CourseModule[]
+  courses      Course[]
+
+  @@map("teachers")
+}
+
+model Provider {
+  id          String           @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  taxId       String?          @unique
+  category    ProviderCategory
+  description String?
+  website     String?
+  status      ProviderStatus   @default(ACTIVE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  contacts    Contact[]
+  materials   Material[]
+
+  @@map("providers")
+}
+
+model Course {
+  id                String           @id @default(cuid())
+  title             String
+  description       String?
+  code              String           @unique
+  level             CourseLevel
+  duration          Int?
+  maxStudents       Int?
+  price             Float?
+  isActive          Boolean          @default(true)
+  startDate         DateTime?
+  endDate           DateTime?
+  teacherId         String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  benefits          String?
+  publicDescription String?
+  affiliatePrice    Float?
+  hasCertificate    Boolean          @default(true)
+  hasMaterials      Boolean          @default(true)
+  features          String?
+  callUrl           String?
+  durationMonths    Int?
+  durationPeriod    String?
+  durationSessions  Int?
+  sessionDuration   Float?
+  syllabusUrl       String?
+  priceUnit         String?
+  materials         CourseMaterial[]
+  modules           CourseModule[]
+  teacher           Teacher?         @relation(fields: [teacherId], references: [id])
+  enrollments       Enrollment[]
+  payments          Payment[]
+  schedules         Schedule[]
+
+  @@map("courses")
+}
+
+model CourseModule {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  courseId    String
+  teacherId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  teacher     Teacher? @relation(fields: [teacherId], references: [id])
+
+  @@map("course_modules")
+}
+
+model Enrollment {
+  id             String           @id @default(cuid())
+  studentId      String
+  courseId       String
+  enrollmentDate DateTime         @default(now())
+  status         EnrollmentStatus @default(ENROLLED)
+  progress       Float            @default(0)
+  grade          Float?
+  certificate    String?
+  notes          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student        Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
+  @@map("enrollments")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  studentId     String?
+  courseId      String?
+  amount        Float
+  currency      String        @default("EUR")
+  paymentDate   DateTime      @default(now())
+  paymentMethod PaymentMethod
+  reference     String?       @unique
+  description   String?
+  status        PaymentStatus @default(PENDING)
+  dueDate       DateTime?
+  paidDate      DateTime?
+  invoiceNumber String?       @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  course        Course?       @relation(fields: [courseId], references: [id])
+  student       Student?      @relation(fields: [studentId], references: [id])
+
+  @@map("payments")
+}
+
+model Material {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  type        MaterialType
+  quantity    Int              @default(0)
+  unitPrice   Float?
+  location    String?
+  providerId  String?
+  isAvailable Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  courses     CourseMaterial[]
+  provider    Provider?        @relation(fields: [providerId], references: [id])
+
+  @@map("materials")
+}
+
+model CourseMaterial {
+  id         String   @id @default(cuid())
+  courseId   String
+  materialId String
+  quantity   Int      @default(1)
+  isRequired Boolean  @default(true)
+  notes      String?
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, materialId])
+  @@map("course_materials")
+}
+
+model Schedule {
+  id          String    @id @default(cuid())
+  courseId    String
+  dayOfWeek   DayOfWeek
+  startTime   DateTime
+  endTime     DateTime
+  classroom   String?
+  isRecurring Boolean   @default(true)
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("schedules")
+}
+
+model Contact {
+  id         String          @id @default(cuid())
+  name       String
+  email      String?
+  phone      String?
+  mobile     String?
+  address    String?
+  company    String?
+  position   String?
+  category   ContactCategory
+  notes      String?
+  isPrimary  Boolean         @default(false)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  studentId  String?
+  teacherId  String?
+  providerId String?
+  userId     String?
+  provider   Provider?       @relation(fields: [providerId], references: [id])
+  student    Student?        @relation(fields: [studentId], references: [id])
+  teacher    Teacher?        @relation(fields: [teacherId], references: [id])
+  user       User?           @relation(fields: [userId], references: [id])
+
+  @@map("contacts")
+}
+
+model Software {
+  id           String       @id @default(cuid())
+  name         String
+  version      String?
+  type         SoftwareType
+  license      String?
+  licenseKey   String?
+  expiryDate   DateTime?
+  provider     String?
+  description  String?
+  isActive     Boolean      @default(true)
+  maxUsers     Int?
+  currentUsers Int          @default(0)
+  url          String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@map("software")
+}
+
+model Notification {
+  id         String               @id @default(cuid())
+  title      String
+  message    String
+  type       NotificationType
+  priority   NotificationPriority @default(MEDIUM)
+  category   NotificationCategory
+  isRead     Boolean              @default(false)
+  targetUser String?
+  targetRole UserRole?
+  actionUrl  String?
+  expiresAt  DateTime?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  user       User?                @relation(fields: [targetUser], references: [id])
+
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id        String               @id @default(cuid())
+  userId    String
+  category  NotificationCategory
+  enabled   Boolean              @default(true)
+  email     Boolean              @default(true)
+  inApp     Boolean              @default(true)
+  push      Boolean              @default(false)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category])
+  @@map("notification_preferences")
 }
 
 enum UserRole {
@@ -33,62 +313,11 @@ enum UserRole {
   STAFF
 }
 
-// Alumnos (afiliados y no afiliados)
-model Student {
-  id              String        @id @default(cuid())
-  name            String
-  email           String?        @unique
-  phone           String?
-  address         String?
-  dni             String?       @unique
-  birthDate       DateTime?
-  isAffiliated    Boolean       @default(false)
-  affiliateNumber String?       @unique
-  emergencyContact String?
-  emergencyPhone  String?
-  medicalInfo     String?
-  status          StudentStatus @default(ACTIVE)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
-  // Relaciones
-  enrollments Enrollment[]
-  payments    Payment[]
-  contacts    Contact[]
-  
-  @@map("students")
-}
-
 enum StudentStatus {
   ACTIVE
   INACTIVE
   SUSPENDED
   GRADUATED
-}
-
-// Docentes
-model Teacher {
-  id          String      @id @default(cuid())
-  name        String?
-  email       String?     @unique
-  phone       String?
-  address     String?
-  dni         String?     @unique
-  specialty   String?
-  experience  String?
-  cv          String?     // URL a archivo CV
-  contractType ContractType @default(FREELANCE)
-  hourlyRate  Float?
-  status      TeacherStatus @default(ACTIVE)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  
-  // Relaciones
-  courses Course[]
-  modules CourseModule[]
-  contacts Contact[]
-  
-  @@map("teachers")
 }
 
 enum ContractType {
@@ -102,28 +331,6 @@ enum TeacherStatus {
   ACTIVE
   INACTIVE
   ON_LEAVE
-}
-
-// Proveedores
-model Provider {
-  id          String       @id @default(cuid())
-  name        String
-  email       String?
-  phone       String?
-  address     String?
-  taxId       String?      @unique
-  category    ProviderCategory
-  description String?
-  website     String?
-  status      ProviderStatus @default(ACTIVE)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  
-  // Relaciones
-  materials Material[]
-  contacts  Contact[]
-  
-  @@map("providers")
 }
 
 enum ProviderCategory {
@@ -141,64 +348,6 @@ enum ProviderStatus {
   BLACKLISTED
 }
 
-// Cursos
-model Course {
-  id          String        @id @default(cuid())
-  title       String
-  description String?
-  code        String        @unique
-  level       CourseLevel
-  duration           Int?          // duración total en horas
-  durationSessions   Int?          // número de sesiones/clases
-  sessionDuration    Float?        // duración de cada sesión en horas
-  durationMonths     Int?          // duración en meses
-  durationPeriod     String?       // periodo de tiempo (ej: "cuatro meses")
-  syllabusUrl        String?       // Enlace a temarios (Drive, etc.)
-  maxStudents Int?
-  price       Float?         // Precio para no afiliados
-  priceUnit   String?        // Unidad del precio (mes, clase, trimestre, curso)
-  affiliatePrice Float?    // Precio para afiliados
-  isActive    Boolean       @default(true)
-  startDate   DateTime?
-  endDate     DateTime?
-  publicDescription String?    // Descripción para la landing page pública
-  benefits          String?    // Lo que el alumno aprenderá (separado por comas o líneas)
-  features          String?    // Características adicionales separadas por comas (Ej: Certificado, Materiales)
-  callUrl           String?    // Enlace a la convocatoria oficial
-  hasCertificate    Boolean    @default(true)
-  hasMaterials      Boolean    @default(true)
-  teacherId   String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  
-  // Relaciones
-  teacher     Teacher?      @relation(fields: [teacherId], references: [id])
-  modules     CourseModule[]
-  enrollments Enrollment[]
-  materials   CourseMaterial[]
-  schedules   Schedule[]
-  payments    Payment[]
-  
-  @@map("courses")
-}
-
-// Módulos o Temas de un curso
-model CourseModule {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  courseId    String
-  teacherId   String?
-  
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  teacher     Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("course_modules")
-}
-
 enum CourseLevel {
   BEGINNER
   INTERMEDIATE
@@ -207,61 +356,14 @@ enum CourseLevel {
   PREPARACION_OPOSICIONES
 }
 
-// Matrículas/Inscripciones
-model Enrollment {
-  id          String           @id @default(cuid())
-  studentId   String
-  courseId    String
-  enrollmentDate DateTime        @default(now())
-  status      EnrollmentStatus @default(ENROLLED)
-  progress    Float            @default(0)
-  grade       Float?
-  certificate String?          // URL a certificado
-  notes       String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  
-  // Relaciones
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  
-  @@unique([studentId, courseId])
-  @@map("enrollments")
-}
-
 enum EnrollmentStatus {
-  PENDING
   ENROLLED
   IN_PROGRESS
   COMPLETED
   DROPPED
   FAILED
+  PENDING
   CANCELLED
-}
-
-// Pagos
-model Payment {
-  id            String        @id @default(cuid())
-  studentId     String?
-  courseId      String?
-  amount        Float
-  currency      String        @default("EUR")
-  paymentDate   DateTime      @default(now())
-  paymentMethod PaymentMethod
-  reference     String?       @unique
-  description   String?
-  status        PaymentStatus @default(PENDING)
-  dueDate       DateTime?
-  paidDate      DateTime?
-  invoiceNumber String?       @unique
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  
-  // Relaciones
-  student Student? @relation(fields: [studentId], references: [id], onDelete: SetNull)
-  course  Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
-  
-  @@map("payments")
 }
 
 enum PaymentMethod {
@@ -281,27 +383,6 @@ enum PaymentStatus {
   REFUNDED
 }
 
-// Materiales y Recursos
-model Material {
-  id          String        @id @default(cuid())
-  name        String
-  description String?
-  type        MaterialType
-  quantity    Int           @default(0)
-  unitPrice   Float?
-  location    String?
-  providerId  String?
-  isAvailable Boolean       @default(true)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  
-  // Relaciones
-  provider  Provider?         @relation(fields: [providerId], references: [id], onDelete: SetNull)
-  courses   CourseMaterial[]
-  
-  @@map("materials")
-}
-
 enum MaterialType {
   BOOK
   SOFTWARE
@@ -310,42 +391,6 @@ enum MaterialType {
   CONSUMABLE
   DIGITAL_RESOURCE
   OTHER
-}
-
-// Relación muchos a muchos entre Cursos y Materiales
-model CourseMaterial {
-  id         String   @id @default(cuid())
-  courseId   String
-  materialId String
-  quantity   Int      @default(1)
-  isRequired Boolean  @default(true)
-  notes      String?
-  
-  // Relaciones
-  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
-  
-  @@unique([courseId, materialId])
-  @@map("course_materials")
-}
-
-// Horarios de Clases
-model Schedule {
-  id          String      @id @default(cuid())
-  courseId    String
-  dayOfWeek   DayOfWeek
-  startTime   DateTime
-  endTime     DateTime
-  classroom   String?
-  isRecurring Boolean     @default(true)
-  notes       String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  
-  // Relaciones
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  
-  @@map("schedules")
 }
 
 enum DayOfWeek {
@@ -358,36 +403,6 @@ enum DayOfWeek {
   SUNDAY
 }
 
-// Contactos (para todos los tipos: alumnos, docentes, proveedores)
-model Contact {
-  id          String       @id @default(cuid())
-  name        String
-  email       String?
-  phone       String?
-  mobile      String?
-  address     String?
-  company     String?
-  position    String?
-  category    ContactCategory
-  notes       String?
-  isPrimary   Boolean      @default(false)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  
-  // Relaciones polimórficas
-  studentId   String?
-  teacherId   String?
-  providerId  String?
-  userId      String?
-  
-  student  Student?   @relation(fields: [studentId], references: [id], onDelete: SetNull)
-  teacher  Teacher?   @relation(fields: [teacherId], references: [id], onDelete: SetNull)
-  provider Provider?  @relation(fields: [providerId], references: [id], onDelete: SetNull)
-  user     User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
-  @@map("contacts")
-}
-
 enum ContactCategory {
   PERSONAL
   WORK
@@ -398,27 +413,6 @@ enum ContactCategory {
   OTHER
 }
 
-// Software y Plataformas Online
-model Software {
-  id          String        @id @default(cuid())
-  name        String
-  version     String?
-  type        SoftwareType
-  license     String?
-  licenseKey  String?
-  expiryDate  DateTime?
-  provider    String?
-  description String?
-  isActive    Boolean       @default(true)
-  maxUsers    Int?
-  currentUsers Int          @default(0)
-  url         String?       // URL para acceso online
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  
-  @@map("software")
-}
-
 enum SoftwareType {
   LMS
   VIDEO_CONFERENCE
@@ -427,28 +421,6 @@ enum SoftwareType {
   PROGRAMMING
   ACCOUNTING
   OTHER
-}
-
-// Notificaciones del Sistema
-model Notification {
-  id          String           @id @default(cuid())
-  title       String
-  message     String
-  type        NotificationType
-  priority    NotificationPriority @default(MEDIUM)
-  category    NotificationCategory
-  isRead      Boolean          @default(false)
-  targetUser  String?          // ID de usuario específico, o null para todos
-  targetRole  UserRole?        // Rol específico de usuarios
-  actionUrl   String?          // URL para acción relacionada
-  expiresAt   DateTime?        // Fecha de expiración
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  
-  // Relaciones
-  user        User?            @relation(fields: [targetUser], references: [id], onDelete: SetNull)
-  
-  @@map("notifications")
 }
 
 enum NotificationType {
@@ -474,23 +446,4 @@ enum NotificationCategory {
   SYSTEM
   SECURITY
   MAINTENANCE
-}
-
-// Configuración de Notificaciones por Usuario
-model NotificationPreference {
-  id          String                @id @default(cuid())
-  userId      String
-  category    NotificationCategory
-  enabled     Boolean               @default(true)
-  email       Boolean               @default(true)
-  inApp       Boolean               @default(true)
-  push        Boolean               @default(false)
-  createdAt   DateTime              @default(now())
-  updatedAt   DateTime              @updatedAt
-  
-  // Relaciones
-  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([userId, category])
-  @@map("notification_preferences")
 }

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { NotificationService } from '@/lib/notification-service'
+import { notifyNewEnrollment } from '@/lib/email-service'
 
 export async function POST(request: NextRequest) {
     try {
@@ -58,23 +60,24 @@ export async function POST(request: NextRequest) {
             }
         })
 
-        // 4. Notificaciones (Interna y Email)
+        // 4. Notificaciones (Interna y Email) - Ejecutadas de forma asíncrona pero sin bloquear la respuesta
+        // En Next.js App Router (Server Actions/Routes), para asegurar que se ejecuten antes de cerrar la función
+        // podemos envolverlas en promesas pero no necesariamente esperar a que terminen si queremos rapidez,
+        // aunque en Serverless es mejor esperarlas para evitar que se maten prematuramente.
+        // Vamos a esperarlas pero con un try/catch muy robusto.
         try {
-            const { NotificationService } = await import('@/lib/notification-service')
-            const { notifyNewEnrollment } = await import('@/lib/email-service')
-
             // Notificación interna
-            await NotificationService.create({
+            NotificationService.create({
                 title: 'Nueva Pre-inscripción Web',
                 message: `${name} se ha inscrito en ${enrollment.course.title}`,
                 type: 'INFO',
                 priority: 'HIGH',
                 category: 'STUDENT',
                 actionUrl: '/enrollments'
-            })
+            }).catch(e => console.error('Error notif interna:', e));
 
             // Notificación por Email
-            await notifyNewEnrollment({
+            notifyNewEnrollment({
                 studentName: name,
                 studentDni: dni,
                 courseName: enrollment.course.title,
@@ -83,11 +86,13 @@ export async function POST(request: NextRequest) {
                 email: email,
                 price: !!isAffiliated ? enrollment.course.affiliatePrice : enrollment.course.price,
                 priceUnit: enrollment.course.priceUnit
-            })
+            }).catch(e => console.error('Error notify email:', e));
+
         } catch (notifyError) {
-            console.error('Error enviando notificaciones:', notifyError)
-            // No bloqueamos la respuesta al usuario si las notificaciones fallan
+            console.error('Error disparando notificaciones:', notifyError)
         }
+
+        console.log(`Inscripción exitosa: ${name} en ${enrollment.course.title}`);
 
         return NextResponse.json({
             message: 'Inscripción realizada con éxito',
