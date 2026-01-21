@@ -90,8 +90,6 @@ export async function notifyNewEnrollment(data: {
     - Importe indicado al alumno: ${priceText}
     - Estado: PENDIENTE DE PAGO
     
-    IMPORTANTE: El alumno ha sido informado de que este es el importe inicial/periodo y que cualquier plan de pagos fraccionados o importes pactados serán confirmados por administración al recibir el justificante.
-    
     Puedes ver más detalles en el panel de administración:
     http://localhost:3000/enrollments
   `
@@ -117,7 +115,6 @@ export async function notifyNewEnrollment(data: {
           <h2 style="margin-top: 0; font-size: 16px; color: #1e40af;">Curso y Pago</h2>
           <p style="margin: 8px 0; font-size: 16px; font-weight: bold; color: #1e3a8a;">${data.courseName}</p>
           <p style="margin: 8px 0; color: #3b82f6;"><strong>Importe mostrado:</strong> <span style="font-size: 18px; font-weight: bold;">${priceText}</span></p>
-          <p style="margin: 8px 0; color: #64748b; font-size: 12px; font-style: italic;">Nota: El alumno sabe que este importe puede variar si hay acuerdos especiales o pagos fraccionados.</p>
         </div>
         
         <div style="text-align: center; margin-top: 30px;">

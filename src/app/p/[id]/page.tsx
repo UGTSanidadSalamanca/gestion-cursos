@@ -546,11 +546,7 @@ export default function PublicCoursePage() {
                                                                     Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}
                                                                 </p>
                                                             </div>
-                                                            {(course.priceUnit && !['FULL', 'TOTAL'].includes(course.priceUnit.toUpperCase())) && (
-                                                                <p className="text-[10px] text-slate-500 font-medium text-center mt-2 bg-white/50 py-1 rounded-md border border-slate-100 italic">
-                                                                    * Al ser un curso {formatPriceUnit(course.priceUnit).replace('/', '')}, este es el importe por cada periodo.
-                                                                </p>
-                                                            )}
+                                                            </div>
                                                         </div>
                                                         <div className="space-y-1">
                                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -567,11 +563,6 @@ export default function PublicCoursePage() {
                                                     </div>
 
                                                     <div className="space-y-4">
-                                                        <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-left">
-                                                            <p className="text-[9px] text-amber-800 font-medium leading-relaxed">
-                                                                <b>Nota importante:</b> Si has acordado un importe diferente, el curso requiere pagos fraccionados o tienes dudas sobre el plan de pagos, puedes proceder con el primer ingreso y nosotros confirmaremos tu plan personalizado al recibir el justificante.
-                                                            </p>
-                                                        </div>
                                                         <p className="text-xs text-slate-500 leading-relaxed font-medium italic">
                                                             "Por favor, envía el justificante de la transferencia por <b>Email</b> o <b>WhatsApp</b> para que la inscripción definitiva sea efectiva."
                                                         </p>
@@ -581,48 +572,48 @@ export default function PublicCoursePage() {
                                                     </div>
                                                 </div>
                                             )}
-                                        </DialogContent>
-                                    </Dialog>
-                                </div>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
 
-                                {course.callUrl && (
-                                    <Button
-                                        variant="outline"
-                                        className="w-full h-12 mt-3 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold rounded-2xl transition-all print:border-2 print:h-10 print:mt-1 print:text-xs"
-                                        onClick={() => window.open(course.callUrl, '_blank')}
-                                    >
-                                        <ExternalLink className="mr-2 h-4 w-4" /> Ver Convocatoria
-                                    </Button>
-                                )}
+                            {course.callUrl && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full h-12 mt-3 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold rounded-2xl transition-all print:border-2 print:h-10 print:mt-1 print:text-xs"
+                                    onClick={() => window.open(course.callUrl, '_blank')}
+                                >
+                                    <ExternalLink className="mr-2 h-4 w-4" /> Ver Convocatoria
+                                </Button>
+                            )}
 
-                                <div className="sidebar-cta-extra print:mt-4">
-                                    <div className="mt-8 pt-6 border-t border-slate-100 space-y-3 print:mt-4 print:pt-2">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Contacto de Formación</p>
-                                        <div className="flex flex-col gap-2 print:gap-1">
-                                            <a href="mailto:formacion.salamanca@ugt-sp.ugt.org" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[10px]">
-                                                formacion.salamanca@ugt-sp.ugt.org
-                                            </a>
-                                            <a href="mailto:fespugtsalamanca@gmail.com" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[10px]">
-                                                fespugtsalamanca@gmail.com
-                                            </a>
-                                            <p className="text-xs text-slate-700 font-bold flex items-center gap-1 print:text-[10px]">
-                                                Tel: <span className="text-slate-900">+34 600 43 71 34</span>
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-8 flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100 cursor-default print:mt-4 print:opacity-100">
-                                        <img src="/logo-ugt.png" alt="Logo UGT" className="h-6 w-6 object-contain" />
-                                        <p className="text-center text-[8px] uppercase font-black text-slate-500 tracking-[0.2em]">
-                                            Formación UGT Salamanca
+                            <div className="sidebar-cta-extra print:mt-4">
+                                <div className="mt-8 pt-6 border-t border-slate-100 space-y-3 print:mt-4 print:pt-2">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Contacto de Formación</p>
+                                    <div className="flex flex-col gap-2 print:gap-1">
+                                        <a href="mailto:formacion.salamanca@ugt-sp.ugt.org" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[10px]">
+                                            formacion.salamanca@ugt-sp.ugt.org
+                                        </a>
+                                        <a href="mailto:fespugtsalamanca@gmail.com" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[10px]">
+                                            fespugtsalamanca@gmail.com
+                                        </a>
+                                        <p className="text-xs text-slate-700 font-bold flex items-center gap-1 print:text-[10px]">
+                                            Tel: <span className="text-slate-900">+34 600 43 71 34</span>
                                         </p>
                                     </div>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+
+                                <div className="mt-8 flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100 cursor-default print:mt-4 print:opacity-100">
+                                    <img src="/logo-ugt.png" alt="Logo UGT" className="h-6 w-6 object-contain" />
+                                    <p className="text-center text-[8px] uppercase font-black text-slate-500 tracking-[0.2em]">
+                                        Formación UGT Salamanca
+                                    </p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
+        </div>
         </div >
     )
 }
