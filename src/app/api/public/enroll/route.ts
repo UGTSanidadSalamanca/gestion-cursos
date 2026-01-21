@@ -52,8 +52,40 @@ export async function POST(request: NextRequest) {
                 courseId: courseId,
                 status: 'PENDING',
                 notes: `Auto-inscripción web. Afiliado: ${isAffiliated ? 'SÍ' : 'NO'}`
+            },
+            include: {
+                course: true
             }
         })
+
+        // 4. Notificaciones (Interna y Email)
+        try {
+            const { NotificationService } = await import('@/lib/notification-service')
+            const { notifyNewEnrollment } = await import('@/lib/email-service')
+
+            // Notificación interna
+            await NotificationService.create({
+                title: 'Nueva Pre-inscripción Web',
+                message: `${name} se ha inscrito en ${enrollment.course.title}`,
+                type: 'INFO',
+                priority: 'HIGH',
+                category: 'STUDENT',
+                actionUrl: '/enrollments'
+            })
+
+            // Notificación por Email
+            await notifyNewEnrollment({
+                studentName: name,
+                studentDni: dni,
+                courseName: enrollment.course.title,
+                isAffiliated: !!isAffiliated,
+                phone: phone,
+                email: email
+            })
+        } catch (notifyError) {
+            console.error('Error enviando notificaciones:', notifyError)
+            // No bloqueamos la respuesta al usuario si las notificaciones fallan
+        }
 
         return NextResponse.json({
             message: 'Inscripción realizada con éxito',
