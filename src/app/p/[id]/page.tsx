@@ -537,10 +537,20 @@ export default function PublicCoursePage() {
                                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                                                 <Euro className="h-3 w-3" /> Importe a pagar
                                                             </p>
-                                                            <p className="text-xl font-black text-blue-700 select-all block p-2 bg-blue-50/50 rounded-lg border border-blue-100 text-center">
-                                                                {formData.isAffiliated ? (course.affiliatePrice || 0) : (course.price || 0)}€
-                                                                <span className="text-[10px] ml-2 font-medium opacity-60 italic">({formData.isAffiliated ? 'Tarifa Afiliado' : 'Tarifa General'})</span>
-                                                            </p>
+                                                            <div className="bg-blue-50/50 rounded-lg border border-blue-100 p-3 text-center">
+                                                                <p className="text-2xl font-black text-blue-700 select-all">
+                                                                    {formData.isAffiliated ? (course.affiliatePrice || 0) : (course.price || 0)}€
+                                                                    <span className="text-sm ml-1 font-bold text-blue-500">{formatPriceUnit(course.priceUnit)}</span>
+                                                                </p>
+                                                                <p className="text-[10px] font-medium text-blue-600/70 mt-1 italic">
+                                                                    Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}
+                                                                </p>
+                                                            </div>
+                                                            {(course.priceUnit && !['FULL', 'TOTAL'].includes(course.priceUnit.toUpperCase())) && (
+                                                                <p className="text-[10px] text-slate-500 font-medium text-center mt-2 bg-white/50 py-1 rounded-md border border-slate-100 italic">
+                                                                    * Al ser un curso {formatPriceUnit(course.priceUnit).replace('/', '')}, este es el importe por cada periodo.
+                                                                </p>
+                                                            )}
                                                         </div>
                                                         <div className="space-y-1">
                                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -557,6 +567,11 @@ export default function PublicCoursePage() {
                                                     </div>
 
                                                     <div className="space-y-4">
+                                                        <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-left">
+                                                            <p className="text-[9px] text-amber-800 font-medium leading-relaxed">
+                                                                <b>Nota importante:</b> Si has acordado un importe diferente, el curso requiere pagos fraccionados o tienes dudas sobre el plan de pagos, puedes proceder con el primer ingreso y nosotros confirmaremos tu plan personalizado al recibir el justificante.
+                                                            </p>
+                                                        </div>
                                                         <p className="text-xs text-slate-500 leading-relaxed font-medium italic">
                                                             "Por favor, envía el justificante de la transferencia por <b>Email</b> o <b>WhatsApp</b> para que la inscripción definitiva sea efectiva."
                                                         </p>

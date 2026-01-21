@@ -80,7 +80,9 @@ export async function POST(request: NextRequest) {
                 courseName: enrollment.course.title,
                 isAffiliated: !!isAffiliated,
                 phone: phone,
-                email: email
+                email: email,
+                price: !!isAffiliated ? enrollment.course.affiliatePrice : enrollment.course.price,
+                priceUnit: enrollment.course.priceUnit
             })
         } catch (notifyError) {
             console.error('Error enviando notificaciones:', notifyError)

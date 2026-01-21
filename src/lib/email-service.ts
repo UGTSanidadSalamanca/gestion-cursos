@@ -3,64 +3,79 @@ import nodemailer from 'nodemailer'
 // Configuración de transporte
 // Estos valores deberían venir de variables de entorno en producción
 const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_SERVER_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
-    secure: process.env.EMAIL_SERVER_SECURE === 'true', // true para 465, false para otros
-    auth: {
-        user: process.env.EMAIL_SERVER_USER,
-        pass: process.env.EMAIL_SERVER_PASSWORD,
-    },
+  host: process.env.EMAIL_SERVER_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
+  secure: process.env.EMAIL_SERVER_SECURE === 'true', // true para 465, false para otros
+  auth: {
+    user: process.env.EMAIL_SERVER_USER,
+    pass: process.env.EMAIL_SERVER_PASSWORD,
+  },
 })
 
 interface EmailOptions {
-    to: string
-    subject: string
-    text: string
-    html?: string
+  to: string
+  subject: string
+  text: string
+  html?: string
 }
 
 export async function sendEmail({ to, subject, text, html }: EmailOptions) {
-    // Si no hay credenciales configuradas, informamos en consola
-    if (!process.env.EMAIL_SERVER_USER || !process.env.EMAIL_SERVER_PASSWORD) {
-        console.warn('⚠️ EMAIL_SERVER_USER o EMAIL_SERVER_PASSWORD no configurados. Saltando envío de email.')
-        console.log('--- EMAIL SIMULADO ---')
-        console.log(`Para: ${to}`)
-        console.log(`Asunto: ${subject}`)
-        console.log(`Mensaje: ${text}`)
-        console.log('----------------------')
-        return { success: false, message: 'Falta configuración de correo' }
-    }
+  // Si no hay credenciales configuradas, informamos en consola
+  if (!process.env.EMAIL_SERVER_USER || !process.env.EMAIL_SERVER_PASSWORD) {
+    console.warn('⚠️ EMAIL_SERVER_USER o EMAIL_SERVER_PASSWORD no configurados. Saltando envío de email.')
+    console.log('--- EMAIL SIMULADO ---')
+    console.log(`Para: ${to}`)
+    console.log(`Asunto: ${subject}`)
+    console.log(`Mensaje: ${text}`)
+    console.log('----------------------')
+    return { success: false, message: 'Falta configuración de correo' }
+  }
 
-    try {
-        const info = await transporter.sendMail({
-            from: process.env.EMAIL_FROM || '"Gestión Cursos UGT" <formacion.salamanca@ugt-sp.ugt.org>',
-            to,
-            subject,
-            text,
-            html: html || text,
-        })
+  try {
+    const info = await transporter.sendMail({
+      from: process.env.EMAIL_FROM || '"Gestión Cursos UGT" <formacion.salamanca@ugt-sp.ugt.org>',
+      to,
+      subject,
+      text,
+      html: html || text,
+    })
 
-        console.log('Email enviado: %s', info.messageId)
-        return { success: true, messageId: info.messageId }
-    } catch (error) {
-        console.error('Error enviando email:', error)
-        return { success: false, error }
-    }
+    console.log('Email enviado: %s', info.messageId)
+    return { success: true, messageId: info.messageId }
+  } catch (error) {
+    console.error('Error enviando email:', error)
+    return { success: false, error }
+  }
 }
 
 export async function notifyNewEnrollment(data: {
-    studentName: string
-    studentDni: string
-    courseName: string
-    isAffiliated: boolean
-    phone?: string
-    email?: string
+  studentName: string
+  studentDni: string
+  courseName: string
+  isAffiliated: boolean
+  phone?: string
+  email?: string
+  price?: number | null
+  priceUnit?: string | null
 }) {
-    const adminEmail = 'fespugtsalamanca@gmail.com'
+  const adminEmail = 'fespugtsalamanca@gmail.com'
 
-    const subject = `🚀 Nueva Pre-inscripción: ${data.studentName} - ${data.courseName}`
+  const subject = `🚀 Nueva Pre-inscripción: ${data.studentName} - ${data.courseName}`
 
-    const text = `
+  const formatPriceUnit = (unit?: string | null) => {
+    if (!unit) return '';
+    const u = unit.toUpperCase();
+    if (['FULL', 'TOTAL'].includes(u)) return '';
+    if (['MONTH', 'MES'].includes(u)) return '/ Mes';
+    if (['TRIMESTER', 'TRIMESTRE'].includes(u)) return '/ Trimestre';
+    return `/ ${unit}`;
+  }
+
+  const priceText = data.price !== undefined && data.price !== null
+    ? `${data.price}€${formatPriceUnit(data.priceUnit)}`
+    : 'Pendiente de definir';
+
+  const text = `
     Se ha recibido una nueva pre-inscripción a través de la web.
     
     DETALLES DEL ALUMNO:
@@ -70,16 +85,18 @@ export async function notifyNewEnrollment(data: {
     - Email: ${data.email || 'No facilitado'}
     - Afiliado UGT: ${data.isAffiliated ? 'SÍ' : 'NO'}
     
-    CURSO:
-    - Nombre: ${data.courseName}
+    CURSO Y PAGO:
+    - Curso: ${data.courseName}
+    - Importe indicado al alumno: ${priceText}
+    - Estado: PENDIENTE DE PAGO
     
-    Estado: PENDIENTE DE PAGO
+    IMPORTANTE: El alumno ha sido informado de que este es el importe inicial/periodo y que cualquier plan de pagos fraccionados o importes pactados serán confirmados por administración al recibir el justificante.
     
     Puedes ver más detalles en el panel de administración:
     http://localhost:3000/enrollments
   `
 
-    const html = `
+  const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
       <div style="background-color: #2563eb; color: white; padding: 20px; text-align: center;">
         <h1 style="margin: 0; font-size: 20px;">Nueva Pre-inscripción Web</h1>
@@ -97,9 +114,10 @@ export async function notifyNewEnrollment(data: {
         </div>
         
         <div style="background-color: #eff6ff; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #dbeafe;">
-          <h2 style="margin-top: 0; font-size: 16px; color: #1e40af;">Curso Seleccionado</h2>
-          <p style="margin: 8px 0; font-size: 18px; font-weight: bold; color: #1e3a8a;">${data.courseName}</p>
-          <p style="margin: 8px 0; color: #3b82f6;"><strong>Estado:</strong> PAGO PENDIENTE</p>
+          <h2 style="margin-top: 0; font-size: 16px; color: #1e40af;">Curso y Pago</h2>
+          <p style="margin: 8px 0; font-size: 16px; font-weight: bold; color: #1e3a8a;">${data.courseName}</p>
+          <p style="margin: 8px 0; color: #3b82f6;"><strong>Importe mostrado:</strong> <span style="font-size: 18px; font-weight: bold;">${priceText}</span></p>
+          <p style="margin: 8px 0; color: #64748b; font-size: 12px; font-style: italic;">Nota: El alumno sabe que este importe puede variar si hay acuerdos especiales o pagos fraccionados.</p>
         </div>
         
         <div style="text-align: center; margin-top: 30px;">
@@ -114,5 +132,5 @@ export async function notifyNewEnrollment(data: {
     </div>
   `
 
-    return sendEmail({ to: adminEmail, subject, text, html })
+  return sendEmail({ to: adminEmail, subject, text, html })
 }
