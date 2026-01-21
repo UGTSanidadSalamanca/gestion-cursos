@@ -28,7 +28,7 @@ interface Enrollment {
   studentName: string
   courseName: string
   enrollmentDate: string
-  status: 'PENDING' | 'ENROLLED' | 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED' | 'FAILED'
+  status: 'PENDING' | 'ENROLLED' | 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED' | 'FAILED' | 'CANCELLED'
   progress: number
   grade?: number
   certificate?: string
@@ -85,6 +85,8 @@ export default function EnrollmentsPage() {
         return <Badge className="bg-red-500">Abandonado</Badge>
       case 'FAILED':
         return <Badge className="bg-red-600">Reprobado</Badge>
+      case 'CANCELLED':
+        return <Badge variant="secondary" className="bg-slate-200 text-slate-600">Cancelado</Badge>
       default:
         return <Badge variant="outline">Desconocido</Badge>
     }
@@ -104,6 +106,8 @@ export default function EnrollmentsPage() {
         return <XCircle className="h-4 w-4 text-red-500" />
       case 'FAILED':
         return <XCircle className="h-4 w-4 text-red-600" />
+      case 'CANCELLED':
+        return <XCircle className="h-4 w-4 text-slate-400" />
       default:
         return <FileText className="h-4 w-4 text-gray-500" />
     }
@@ -266,7 +270,8 @@ export default function EnrollmentsPage() {
                         <div
                           className={`h-2 rounded-full ${selectedEnrollment.status === 'COMPLETED' ? 'bg-green-500' :
                             selectedEnrollment.status === 'IN_PROGRESS' || selectedEnrollment.status === 'ENROLLED' ? 'bg-blue-500' :
-                              selectedEnrollment.status === 'PENDING' ? 'bg-yellow-400' : 'bg-red-500'
+                              selectedEnrollment.status === 'PENDING' ? 'bg-yellow-400' :
+                                selectedEnrollment.status === 'CANCELLED' ? 'bg-slate-300' : 'bg-red-500'
                             }`}
                           style={{ width: `${selectedEnrollment.progress}%` }}
                         ></div>
@@ -283,6 +288,56 @@ export default function EnrollmentsPage() {
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">Fecha de Matrícula</Label>
                     <p className="font-medium">{new Date(selectedEnrollment.enrollmentDate).toLocaleDateString()}</p>
+                  </div>
+                </div>
+
+                {/* Acciones de gestión */}
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-4">
+                  <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Acciones de Gestión</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedEnrollment.status === 'PENDING' && (
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                        onClick={async () => {
+                          const res = await fetch(`/api/enrollments/${selectedEnrollment.id}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status: 'ENROLLED' })
+                          })
+                          if (res.ok) {
+                            setSelectedEnrollment({ ...selectedEnrollment, status: 'ENROLLED' })
+                            fetchEnrollments()
+                          }
+                        }}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Confirmar Pago
+                      </Button>
+                    )}
+                    {selectedEnrollment.status !== 'CANCELLED' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600 border-red-200 hover:bg-red-50"
+                        onClick={async () => {
+                          if (confirm('¿Marcar esta matrícula como cancelada?')) {
+                            const res = await fetch(`/api/enrollments/${selectedEnrollment.id}`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ status: 'CANCELLED' })
+                            })
+                            if (res.ok) {
+                              setSelectedEnrollment({ ...selectedEnrollment, status: 'CANCELLED' })
+                              fetchEnrollments()
+                            }
+                          }
+                        }}
+                      >
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Cancelar Matrícula
+                      </Button>
+                    )}
                   </div>
                 </div>
 
@@ -343,12 +398,30 @@ export default function EnrollmentsPage() {
                           <div
                             className={`h-2 rounded-full ${enrollment.status === 'COMPLETED' ? 'bg-green-500' :
                               enrollment.status === 'IN_PROGRESS' || enrollment.status === 'ENROLLED' ? 'bg-blue-500' :
-                                enrollment.status === 'PENDING' ? 'bg-yellow-400' : 'bg-red-500'
+                                enrollment.status === 'PENDING' ? 'bg-yellow-400' :
+                                  enrollment.status === 'CANCELLED' ? 'bg-slate-300' : 'bg-red-500'
                               }`}
                             style={{ width: `${enrollment.progress}%` }}
                           ></div>
                         </div>
                       </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-500 hover:bg-red-50 border-red-100"
+                        onClick={async () => {
+                          if (confirm('¿Estás seguro de que deseas eliminar esta matriculación?')) {
+                            try {
+                              const res = await fetch(`/api/enrollments/${enrollment.id}`, { method: 'DELETE' })
+                              if (res.ok) fetchEnrollments()
+                            } catch (e) {
+                              console.error(e)
+                            }
+                          }
+                        }}
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"

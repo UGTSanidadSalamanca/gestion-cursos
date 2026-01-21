@@ -236,6 +236,7 @@ enum EnrollmentStatus {
   COMPLETED
   DROPPED
   FAILED
+  CANCELLED
 }
 
 // Pagos

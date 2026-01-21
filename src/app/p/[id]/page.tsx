@@ -430,7 +430,21 @@ export default function PublicCoursePage() {
 
                                 </div>
 
-                                <div className="no-print">
+                                <div className="no-print space-y-4">
+                                    <Button className="w-full h-16 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98] group flex flex-col items-center justify-center leading-tight py-2" onClick={handleInterest}>
+                                        <div className="flex items-center gap-2">
+                                            <MessageSquare className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                                            Contacta y reserva por WhatsApp
+                                        </div>
+                                        <span className="text-[10px] font-medium opacity-80 uppercase tracking-widest mt-1">Dudas e información inicial</span>
+                                    </Button>
+
+                                    <div className="relative py-2 flex items-center">
+                                        <div className="flex-grow border-t border-slate-200"></div>
+                                        <span className="flex-shrink mx-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">O BIEN</span>
+                                        <div className="flex-grow border-t border-slate-200"></div>
+                                    </div>
+
                                     <Dialog open={isDialogOpen} onOpenChange={(open) => {
                                         setIsDialogOpen(open)
                                         if (!open) {
@@ -439,20 +453,21 @@ export default function PublicCoursePage() {
                                         }
                                     }}>
                                         <DialogTrigger asChild>
-                                            <Button className="w-full h-16 mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98] group flex flex-col items-center justify-center leading-tight py-2">
-                                                <div className="flex items-center gap-2">
-                                                    <CheckCircle className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                                                    Inscribirme al curso
-                                                </div>
-                                                <span className="text-[10px] font-medium opacity-80 uppercase tracking-widest mt-1">Plazas limitadas</span>
+                                            <Button variant="outline" className="w-full h-14 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center">
+                                                <CheckCircle className="h-5 w-5 mr-2" />
+                                                Tengo la decisión tomada: Inscribirme
                                             </Button>
                                         </DialogTrigger>
                                         <DialogContent className="sm:max-w-[500px] border-none shadow-2xl p-0 overflow-hidden bg-white">
                                             {!showSuccess ? (
                                                 <form onSubmit={handleEnroll}>
                                                     <DialogHeader className="p-8 bg-slate-50 border-b">
+                                                        <div className="bg-blue-100 text-blue-700 text-[9px] font-black px-2 py-0.5 rounded-full w-fit mb-3 tracking-widest uppercase">Paso 1 de 2: Mis datos</div>
                                                         <DialogTitle className="text-2xl font-black text-slate-900 leading-tight">Formulario de Inscripción</DialogTitle>
-                                                        <DialogDescription className="text-slate-500 font-medium">Completa tus datos para reservar tu plaza en: <br /><span className="text-blue-600 font-bold">{course.title}</span></DialogDescription>
+                                                        <DialogDescription className="text-slate-500 font-medium leading-relaxed mt-1">
+                                                            Completa tus datos para reservar tu plaza. <br />
+                                                            <span className="text-blue-600 font-bold">Tras este paso verás los datos de pago y concepto.</span>
+                                                        </DialogDescription>
                                                     </DialogHeader>
                                                     <div className="p-8 space-y-5">
                                                         <div className="grid grid-cols-1 gap-5">
@@ -507,6 +522,7 @@ export default function PublicCoursePage() {
                                                     <div className="h-20 w-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                                                         <CheckCircle className="h-10 w-10" />
                                                     </div>
+                                                    <div className="bg-green-100 text-green-700 text-[9px] font-black px-2 py-0.5 rounded-full w-fit mb-3 tracking-widest uppercase mx-auto">Paso 2 de 2: Pago</div>
                                                     <h2 className="text-3xl font-black text-slate-900 mb-2">¡Pre-inscripción recibida!</h2>
                                                     <p className="text-slate-500 font-medium mb-8">Tu plaza ha quedado reservada en estado "pendiente de pago".</p>
 
@@ -537,11 +553,6 @@ export default function PublicCoursePage() {
                                             )}
                                         </DialogContent>
                                     </Dialog>
-
-                                    <Button className="w-full h-14 mt-3 bg-green-500/10 hover:bg-green-500/20 text-green-700 border border-green-200 font-bold text-sm rounded-2xl shadow-sm transition-all active:scale-[0.98] group" onClick={handleInterest}>
-                                        <MessageSquare className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                                        Dudas por WhatsApp
-                                    </Button>
                                 </div>
 
                                 {course.callUrl && (
