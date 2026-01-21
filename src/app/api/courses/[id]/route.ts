@@ -17,6 +17,14 @@ export async function GET(
                 },
                 _count: {
                     select: { enrollments: true }
+                },
+                enrollments: {
+                    include: {
+                        student: true
+                    },
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
                 }
             }
         })

@@ -80,6 +80,17 @@ interface Course {
     name: string
   }
   modules?: CourseModule[]
+  enrollments?: {
+    id: string
+    status: string
+    createdAt: string
+    student: {
+      name: string
+      dni?: string
+      phone?: string
+      isAffiliated: boolean
+    }
+  }[]
   _count?: {
     enrollments: number
   }
@@ -326,9 +337,20 @@ export default function CoursesPage() {
     setIsEditDialogOpen(true)
   }
 
-  const handleViewClick = (course: Course) => {
+  const handleViewClick = async (course: Course) => {
     setSelectedCourse(course)
     setIsViewDialogOpen(true)
+
+    // Fetch full details including students
+    try {
+      const response = await fetch(`/api/courses/${course.id}`)
+      if (response.ok) {
+        const fullCourse = await response.json()
+        setSelectedCourse(fullCourse)
+      }
+    } catch (error) {
+      console.error('Error fetching full course details:', error)
+    }
   }
 
   const handlePrint = () => {
@@ -996,6 +1018,50 @@ export default function CoursesPage() {
                               <span className="text-[9px] font-black text-slate-400 italic uppercase">{module.teacher?.name.split(' ')[0]}</span>
                             </div>
                           ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Alumnos Inscritos */}
+                    {selectedCourse.enrollments && selectedCourse.enrollments.length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest pl-1 flex items-center gap-2">
+                          <Users className="h-3 w-3" /> Listado de Alumnos ({selectedCourse.enrollments.length})
+                        </h3>
+                        <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                          <Table>
+                            <TableHeader className="bg-slate-50">
+                              <TableRow className="h-8">
+                                <TableHead className="text-[9px] font-black uppercase text-slate-500 py-0">Alumno</TableHead>
+                                <TableHead className="text-[9px] font-black uppercase text-slate-500 py-0">DNI</TableHead>
+                                <TableHead className="text-[9px] font-black uppercase text-slate-500 py-0">Tipo</TableHead>
+                                <TableHead className="text-[9px] font-black uppercase text-slate-500 py-0">Estado</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {selectedCourse.enrollments.map((enr) => (
+                                <TableRow key={enr.id} className="h-10 hover:bg-slate-50/50">
+                                  <TableCell className="py-2">
+                                    <div className="flex flex-col">
+                                      <span className="text-[11px] font-bold text-slate-700">{enr.student.name}</span>
+                                      <span className="text-[9px] text-slate-400">{enr.student.phone || '--'}</span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="py-2 text-[10px] font-mono text-slate-600">{enr.student.dni || '--'}</TableCell>
+                                  <TableCell className="py-2">
+                                    <Badge variant="outline" className={`text-[8px] font-black h-4 px-1 ${enr.student.isAffiliated ? 'border-green-200 text-green-700 bg-green-50' : 'border-slate-200 text-slate-500 bg-slate-50'}`}>
+                                      {enr.student.isAffiliated ? 'AFILIADO' : 'GENERAL'}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="py-2">
+                                    <span className={`text-[9px] font-bold ${enr.status === 'PENDING' ? 'text-amber-600' : 'text-blue-600'}`}>
+                                      {enr.status === 'PENDING' ? 'PAG. PEND.' : 'INSCRITO'}
+                                    </span>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
                         </div>
                       </div>
                     )}
