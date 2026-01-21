@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -72,19 +72,45 @@ function Sidebar({ className }: SidebarProps) {
           <div className="space-y-1">
             {navigation.map((item) => {
               const isActive = pathname === item.href
+              const [unreadCount, setUnreadCount] = useState(0)
+
+              useEffect(() => {
+                if (item.name === 'Notificaciones') {
+                  const checkNotifications = async () => {
+                    try {
+                      const res = await fetch('/api/notifications?unread=true&limit=1')
+                      const data = await res.json()
+                      setUnreadCount(data.pagination?.total || 0)
+                    } catch (e) {
+                      console.error('Error fetching unread count', e)
+                    }
+                  }
+                  checkNotifications()
+                  const interval = setInterval(checkNotifications, 30000)
+                  return () => clearInterval(interval)
+                }
+              }, [])
+
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    'flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    'flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                     isActive
                       ? 'bg-blue-600 text-white'
                       : 'text-slate-300 hover:bg-slate-700 hover:text-white'
                   )}
                 >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.name}
+                  <div className="flex items-center">
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.name}
+                  </div>
+                  {item.name === 'Notificaciones' && unreadCount > 0 && (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-slate-900 animate-pulse">
+                      {unreadCount > 9 ? '+9' : unreadCount}
+                    </span>
+                  )}
                 </Link>
               )
             })}

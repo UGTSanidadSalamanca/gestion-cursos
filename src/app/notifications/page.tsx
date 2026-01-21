@@ -7,10 +7,34 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { NotificationPanel } from "@/components/notifications/notification-panel"
-import { Bell, Settings, Plus, Filter, Download } from "lucide-react"
+import { Bell, Settings, Plus, Filter, Download, RefreshCw } from "lucide-react"
 
 export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState("all")
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/notifications?limit=100')
+        const data = await res.json()
+        setNotifications(data.notifications || [])
+      } catch (e) {
+        console.error(e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStats()
+  }, [])
+
+  const unreadCount = notifications.filter(n => !n.isRead).length
+  const urgentCount = notifications.filter(n => n.priority === 'HIGH' || n.priority === 'URGENT').length
+  const todayCount = notifications.filter(n => {
+    const today = new Date().toDateString()
+    return new Date(n.createdAt).toDateString() === today
+  }).length
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -19,82 +43,66 @@ export default function NotificationsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Notificaciones</h1>
           <p className="text-muted-foreground mt-2">
-            Gestiona todas las alertas y notificaciones del sistema
+            Gestiona todas las alertas y notificaciones reales del sistema
           </p>
         </div>
         <div className="mt-4 md:mt-0 flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            Filtrar
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Notificación
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Actualizar
           </Button>
         </div>
       </div>
 
       {/* Estadísticas Rápidas */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card shadow-sm>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Notificaciones</CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium uppercase tracking-tighter text-slate-500">Total Histórico</CardTitle>
+            <Bell className="h-4 w-4 text-slate-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-muted-foreground">
-              +3 desde ayer
-            </p>
+            <div className="text-2xl font-bold">{notifications.length}</div>
+            <p className="text-[10px] text-slate-400">Notificaciones registradas</p>
           </CardContent>
         </Card>
-        
-        <Card>
+
+        <Card shadow-sm className={unreadCount > 0 ? "border-red-100 bg-red-50/30" : ""}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">No Leídas</CardTitle>
-            <Badge variant="destructive" className="h-6 w-6 rounded-full p-0 flex items-center justify-center">
-              8
+            <CardTitle className="text-sm font-medium uppercase tracking-tighter text-slate-500">No Leídas</CardTitle>
+            <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold ${unreadCount > 0 ? "bg-red-500 text-white animate-pulse" : "bg-slate-100 text-slate-400"}`}>
+              {unreadCount}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{unreadCount}</div>
+            <p className="text-[10px] text-slate-400">Pendientes de revisión</p>
+          </CardContent>
+        </Card>
+
+        <Card shadow-sm>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium uppercase tracking-tighter text-slate-500">Urgentes</CardTitle>
+            <Badge variant={urgentCount > 0 ? "destructive" : "outline"} className="text-[10px] uppercase">
+              {urgentCount > 0 ? 'Atención' : 'Normal'}
             </Badge>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
-            <p className="text-xs text-muted-foreground">
-              Requieren atención
-            </p>
+            <div className="text-2xl font-bold">{urgentCount}</div>
+            <p className="text-[10px] text-slate-400">Prioridad alta o urgente</p>
           </CardContent>
         </Card>
-        
-        <Card>
+
+        <Card shadow-sm>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Urgentes</CardTitle>
-            <Badge variant="destructive" className="text-xs">
-              Urgente
+            <CardTitle className="text-sm font-medium uppercase tracking-tighter text-slate-500">Hoy</CardTitle>
+            <Badge variant="secondary" className="text-[10px] uppercase bg-blue-100 text-blue-700">
+              Nuevas
             </Badge>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2</div>
-            <p className="text-xs text-muted-foreground">
-              Acción inmediata
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Hoy</CardTitle>
-            <Badge variant="secondary" className="text-xs">
-              Hoy
-            </Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">
-              Nuevas hoy
-            </p>
+            <div className="text-2xl font-bold">{todayCount}</div>
+            <p className="text-[10px] text-slate-400">Recibidas en las últimas 24h</p>
           </CardContent>
         </Card>
       </div>
@@ -117,7 +125,7 @@ export default function NotificationsPage() {
               <TabsTrigger value="templates">Plantillas</TabsTrigger>
               <TabsTrigger value="automation">Automatización</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="preferences" className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <Card>
@@ -148,7 +156,7 @@ export default function NotificationsPage() {
                     ))}
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Frecuencia de Notificaciones</CardTitle>
@@ -179,7 +187,7 @@ export default function NotificationsPage() {
                 </Card>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="templates">
               <Card>
                 <CardContent className="pt-6">
@@ -187,7 +195,7 @@ export default function NotificationsPage() {
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="automation">
               <Card>
                 <CardContent className="pt-6">

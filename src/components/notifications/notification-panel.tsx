@@ -15,89 +15,74 @@ export function NotificationPanel() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("all")
 
-  // Mock data para demostración
-  const mockNotifications: Notification[] = [
-    {
-      id: "1",
-      title: "Pago Pendiente",
-      message: "El alumno Juan Pérez tiene un pago pendiente de €250 por el curso de JavaScript Avanzado",
-      type: "WARNING",
-      priority: "HIGH",
-      category: "PAYMENT",
-      isRead: false,
-      actionUrl: "/payments",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: "2",
-      title: "Nuevo Curso Próximo",
-      message: "El curso 'React Native para Móviles' comienza el próximo lunes. Quedan 5 plazas disponibles.",
-      type: "INFO",
-      priority: "MEDIUM",
-      category: "COURSE",
-      isRead: false,
-      actionUrl: "/courses",
-      createdAt: new Date(Date.now() - 3600000).toISOString(),
-      updatedAt: new Date(Date.now() - 3600000).toISOString()
-    },
-    {
-      id: "3",
-      title: "Certificado Generado",
-      message: "Se ha generado el certificado para María García por completar el curso de Diseño Web",
-      type: "SUCCESS",
-      priority: "LOW",
-      category: "STUDENT",
-      isRead: true,
-      actionUrl: "/students",
-      createdAt: new Date(Date.now() - 7200000).toISOString(),
-      updatedAt: new Date(Date.now() - 7200000).toISOString()
-    },
-    {
-      id: "4",
-      title: "Mantenimiento Programado",
-      message: "El sistema estará en mantenimiento este sábado de 02:00 a 04:00 AM",
-      type: "ALERT",
-      priority: "MEDIUM",
-      category: "MAINTENANCE",
-      isRead: false,
-      createdAt: new Date(Date.now() - 10800000).toISOString(),
-      updatedAt: new Date(Date.now() - 10800000).toISOString()
-    }
-  ]
-
   useEffect(() => {
-    // Simular carga de datos
-    const loadData = async () => {
-      setLoading(true)
-      // Aquí iría la llamada a la API
-      setTimeout(() => {
-        setNotifications(mockNotifications)
-        setLoading(false)
-      }, 1000)
-    }
-
-    loadData()
+    fetchNotifications()
   }, [])
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, isRead: true }
-          : notification
-      )
-    )
+  const fetchNotifications = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/notifications?limit=50')
+      const data = await response.json()
+      if (data.notifications) {
+        setNotifications(data.notifications)
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleDismiss = (id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id))
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      const response = await fetch(`/api/notifications/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isRead: true })
+      })
+      if (response.ok) {
+        setNotifications(prev =>
+          prev.map(notification =>
+            notification.id === id
+              ? { ...notification, isRead: true }
+              : notification
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error)
+    }
   }
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, isRead: true }))
-    )
+  const handleDismiss = async (id: string) => {
+    try {
+      const response = await fetch(`/api/notifications/${id}`, {
+        method: 'DELETE'
+      })
+      if (response.ok) {
+        setNotifications(prev => prev.filter(notification => notification.id !== id))
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error)
+    }
+  }
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      const response = await fetch('/api/notifications/mark-all-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}) // Ajustar si se requiere userId/role
+      })
+      if (response.ok) {
+        setNotifications(prev =>
+          prev.map(notification => ({ ...notification, isRead: true }))
+        )
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error)
+    }
   }
 
   const filteredNotifications = notifications.filter(notification => {
@@ -164,7 +149,7 @@ export function NotificationPanel() {
             <TabsTrigger value="course">Cursos</TabsTrigger>
             <TabsTrigger value="student">Estudiantes</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value={activeTab} className="mt-4">
             <ScrollArea className="h-96">
               {filteredNotifications.length > 0 ? (
