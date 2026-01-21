@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
+import { QRCodeSVG } from "qrcode.react"
 
 interface PublicCourse {
     title: string
@@ -141,6 +142,7 @@ export default function PublicCoursePage() {
 
     const currentYear = new Date().getFullYear()
     const paymentConcept = course ? `${course.code}${currentYear}` : ''
+    const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
 
     const benefitsList = course.benefits ? course.benefits.split(/,|\n/).map(b => b.trim()).filter(b => b !== "") : []
 
@@ -153,13 +155,16 @@ export default function PublicCoursePage() {
             else if (u === 'MONTH' || u === 'MES') result = '/ Mes';
             else if (u === 'TRIMESTER' || u === 'TRIMESTRE') result = '/ Trimestre';
             else if (u === 'YEAR' || u === 'AÑO' || u === 'ANO') result = '/ Año';
-            else if (u !== 'FULL' && u !== 'TOTAL') result = `/ ${unit}`;
+            else if (u === 'FULL' || u === 'TOTAL') result = '';
+            else result = `/ ${unit}`;
         }
 
         if (frequency === 'TRIMESTER') {
             result += ' (Pago trimestral)';
         } else if (frequency === 'MONTHLY') {
             result += ' (Pago mensual)';
+        } else if (frequency === 'SINGLE') {
+            result += ' (Pago único)';
         }
         return result;
     }
@@ -170,13 +175,14 @@ export default function PublicCoursePage() {
         @media print {
           @page {
             size: A4;
-            margin: 5mm;
+            margin: 10mm;
           }
           body {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             background-color: white !important;
-            font-size: 12px;
+            font-size: 11px;
+            color: #1e293b;
           }
           .no-print {
             display: none !important;
@@ -185,43 +191,52 @@ export default function PublicCoursePage() {
             padding-bottom: 0 !important;
             background-color: white !important;
           }
-          .print-scale {
-            zoom: 0.85;
-          }
           .print-compact-gap {
-            gap: 0.75rem !important;
+            gap: 0.5rem !important;
           }
           .print-no-shadow {
             box-shadow: none !important;
             border: 1px solid #e2e8f0 !important;
           }
           /* Forzar que todo quepa en una página */
-          h1 { font-size: 24pt !important; line-height: 1.1 !important; }
-          .container { max-width: 100% !important; width: 100% !important; padding: 0 !important; }
-          .card-content { padding: 1rem !important; }
-          .mt-12 { margin-top: 1rem !important; }
-          .mt-8 { margin-top: 0.5rem !important; }
-          .mb-8 { margin-bottom: 0.5rem !important; }
+          h1 { font-size: 24pt !important; line-height: 1.1 !important; margin-bottom: 5pt !important; }
+          .container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+          .card-content { padding: 0.75rem !important; }
           .p-8 { padding: 1rem !important; }
           .p-6 { padding: 0.75rem !important; }
-          .h-72 { height: 160px !important; }
-          .h-32 { height: 80px !important; }
+          .p-4 { padding: 0.5rem !important; }
           .mt-12 { margin-top: 0.75rem !important; }
-          .mb-12 { margin-bottom: 0.75rem !important; }
+          .mt-8 { margin-top: 0.5rem !important; }
+          .mb-8 { margin-bottom: 0.4rem !important; }
+          .mb-6 { margin-bottom: 0.3rem !important; }
+          .h-72 { height: 140px !important; }
+          .h-32 { height: 70px !important; }
           .gap-8 { gap: 0.5rem !important; }
+          
           /* Ajuste de columnas en print */
-          .print-grid-layout { grid-template-columns: 2.2fr 1fr !important; display: grid !important; gap: 10px !important; }
+          .print-grid-layout { 
+            grid-template-columns: 1.8fr 1.2fr !important; 
+            display: grid !important; 
+            gap: 15px !important; 
+          }
           .print-full-width { width: 100% !important; }
           .print-no-break { break-inside: avoid; }
+          .print-rounded { border-radius: 12px !important; }
+          
+          /* Colores vivos en print */
+          .bg-blue-600 { background-color: #2563eb !important; }
+          .bg-green-600 { background-color: #16a34a !important; }
+          .text-blue-600 { color: #2563eb !important; }
+          .text-green-700 { color: #15803d !important; }
+          
+          /* Ajustes de badges en print */
+          .badge-print { 
+            background-color: #f1f5f9 !important; 
+            color: #334155 !important; 
+            border: 1px solid #e2e8f0 !important;
+          }
         }
 
-        /* Fix Android touch areas and prevent accidental text selection on header */
-        .no-print button {
-          touch-action: manipulation;
-          -webkit-tap-highlight-color: transparent;
-          position: relative;
-          z-index: 50;
-        }
         .header-visual {
             user-select: none;
             -webkit-user-select: none;
@@ -229,9 +244,9 @@ export default function PublicCoursePage() {
       `}</style>
 
             {/* Header Visual */}
-            <div className="header-visual bg-gradient-to-br from-blue-700 to-indigo-800 text-white h-72 flex items-end relative overflow-hidden print:h-48 print:rounded-2xl print:mb-6">
-                <div className="absolute top-0 right-0 p-8 opacity-10 print:opacity-5">
-                    <BookOpen className="h-80 w-80" />
+            <div className="header-visual bg-gradient-to-br from-blue-700 to-indigo-800 text-white h-72 flex items-end relative overflow-hidden print:h-40 print:rounded-b-[2rem] print:mb-4">
+                <div className="absolute top-0 right-0 p-8 opacity-10 print:opacity-5 print:p-2">
+                    <BookOpen className="h-80 w-80 print:h-40 print:w-40" />
                 </div>
                 {/* Botón Imprimir Flotante (no-print) */}
                 <div className="absolute top-6 right-6 no-print flex gap-3">
@@ -252,24 +267,24 @@ export default function PublicCoursePage() {
                     </Button>
                 </div>
                 <div className="container mx-auto px-4 pb-12 relative z-10 print:pb-6">
-                    <Badge className="bg-blue-400/30 text-white border-blue-400/50 mb-3 px-3 py-1 text-xs print:bg-blue-600/20">
+                    <Badge className="bg-blue-400/30 text-white border-blue-400/50 mb-3 px-3 py-1 text-xs print:bg-blue-600/20 print:text-blue-100">
                         PROGRAMA FORMATIVO
                     </Badge>
                     <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight max-w-4xl leading-tight print:text-3xl">
                         {course.title}
                     </h1>
-                    <div className="flex flex-wrap items-center gap-3 mt-4 print:mt-2">
-                        <Badge variant="outline" className="border-blue-300/30 text-blue-100 font-bold px-3 py-1 print:text-blue-800 print:border-blue-200">
+                    <div className="flex flex-wrap items-center gap-3 mt-4 print:mt-1">
+                        <Badge variant="outline" className="border-blue-300/30 text-blue-100 font-bold px-3 py-1 print:text-blue-100 print:border-blue-300/30">
                             CODE: {course.code}
                         </Badge>
                         <span className="text-blue-200/50 print:hidden">|</span>
-                        <Badge className="bg-white/10 hover:bg-white/20 text-white border-transparent backdrop-blur-sm print:bg-slate-100 print:text-slate-800 print:border-slate-200">
+                        <Badge className="bg-white/10 hover:bg-white/20 text-white border-transparent backdrop-blur-sm print:bg-white/10 print:text-white">
                             NIVEL {course.level}
                         </Badge>
                         {course.startDate && (
                             <>
                                 <span className="text-blue-200/50 print:hidden">|</span>
-                                <div className="flex items-center gap-2 text-blue-100 text-sm font-medium print:text-blue-900">
+                                <div className="flex items-center gap-2 text-blue-100 text-sm font-medium print:text-blue-50 print:text-xs">
                                     <Calendar className="h-4 w-4" />
                                     <span>Inicio: {new Date(course.startDate).toLocaleDateString()}</span>
                                 </div>
@@ -370,30 +385,42 @@ export default function PublicCoursePage() {
                                 <div className="text-center mb-6 print:mb-2">
                                     <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 print:mb-1 print:text-blue-800">Inversión del curso</p>
 
-                                    <div className="flex flex-col gap-3 print:gap-1">
+                                    <div className="flex flex-col gap-3 print:gap-2">
                                         {/* Bloque Precio Afiliados */}
-                                        <div className={`p-5 rounded-2xl border-2 relative overflow-hidden print:bg-white print:p-2 ${course.affiliatePrice ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
+                                        <div className={`p-5 rounded-2xl border-2 relative overflow-hidden print:p-2 print:border print:rounded-xl ${course.affiliatePrice ? 'bg-green-50 border-green-200 print:bg-green-50/50' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
                                             <p className={`text-[10px] font-black uppercase mb-1 tracking-tighter ${course.affiliatePrice ? 'text-green-600' : 'text-slate-400'}`}>Precio Afiliados UGT</p>
                                             <div className="flex items-baseline justify-center gap-1">
-                                                <span className={`text-5xl font-black tracking-tight print:text-3xl ${course.affiliatePrice ? 'text-green-700' : 'text-slate-400'}`}>
-                                                    €{(course.affiliatePrice || course.price || 0).toFixed(2)}
-                                                </span>
-                                                <span className={`text-sm font-bold uppercase print:text-[10px] ${course.affiliatePrice ? 'text-green-600' : 'text-slate-400'}`}>
-                                                    {formatPriceUnit(course.priceUnit, course.paymentFrequency)}
-                                                </span>
+                                                {course.affiliatePrice && course.affiliatePrice > 0 ? (
+                                                    <>
+                                                        <span className="text-5xl font-black tracking-tight print:text-2xl text-green-700">
+                                                            €{(course.affiliatePrice).toFixed(2)}
+                                                        </span>
+                                                        <span className="text-sm font-bold uppercase print:text-[8px] text-green-600">
+                                                            {formatPriceUnit(course.priceUnit, course.paymentFrequency)}
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-xl font-bold text-slate-400 uppercase tracking-widest py-2 italic print:text-base print:py-1">Consultar</span>
+                                                )}
                                             </div>
                                         </div>
 
                                         {/* Bloque Precio General */}
-                                        <div className={`p-4 rounded-2xl border relative overflow-hidden print:bg-white print:p-2 ${course.price ? 'bg-blue-50/30 border-blue-100' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
+                                        <div className={`p-4 rounded-2xl border relative overflow-hidden print:p-2 print:rounded-xl ${course.price ? 'bg-blue-50/30 border-blue-100 print:bg-blue-50/10' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
                                             <p className={`text-[10px] font-black uppercase mb-1 tracking-tighter ${course.price ? 'text-blue-600' : 'text-slate-400'}`}>Precio General</p>
                                             <div className="flex items-baseline justify-center gap-1">
-                                                <span className={`text-3xl font-black tracking-tight print:text-2xl ${course.price ? 'text-slate-900' : 'text-slate-400'}`}>
-                                                    €{(course.price || course.affiliatePrice || 0).toFixed(2)}
-                                                </span>
-                                                <span className={`text-xs font-bold uppercase print:text-[10px] ${course.price ? 'text-blue-600' : 'text-slate-400'}`}>
-                                                    {formatPriceUnit(course.priceUnit, course.paymentFrequency)}
-                                                </span>
+                                                {course.price && course.price > 0 ? (
+                                                    <>
+                                                        <span className="text-3xl font-black tracking-tight print:text-xl text-slate-900">
+                                                            €{(course.price).toFixed(2)}
+                                                        </span>
+                                                        <span className="text-xs font-bold uppercase print:text-[8px] text-blue-600">
+                                                            {formatPriceUnit(course.priceUnit, course.paymentFrequency)}
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-lg font-bold text-slate-400 uppercase tracking-tight py-1 italic print:text-sm">Consultar</span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -535,8 +562,12 @@ export default function PublicCoursePage() {
                                                             </p>
                                                             <div className="bg-blue-50/50 rounded-lg border border-blue-100 p-3 text-center">
                                                                 <p className="text-2xl font-black text-blue-700 select-all">
-                                                                    {formData.isAffiliated ? (course.affiliatePrice || course.price || 0) : (course.price || course.affiliatePrice || 0)}€
-                                                                    <span className="text-sm ml-1 font-bold text-blue-500">{formatPriceUnit(course.priceUnit, course.paymentFrequency)}</span>
+                                                                    {formData.isAffiliated
+                                                                        ? (course.affiliatePrice ? `${course.affiliatePrice.toFixed(2)}€` : 'Por consultar')
+                                                                        : (course.price ? `${course.price.toFixed(2)}€` : 'Por consultar')}
+                                                                    {(formData.isAffiliated ? course.affiliatePrice : course.price) && (
+                                                                        <span className="text-sm ml-1 font-bold text-blue-500">{formatPriceUnit(course.priceUnit, course.paymentFrequency)}</span>
+                                                                    )}
                                                                 </p>
                                                                 <p className="text-[10px] font-medium text-blue-600/70 mt-1 italic">
                                                                     Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}
@@ -581,23 +612,30 @@ export default function PublicCoursePage() {
                                     </Button>
                                 )}
 
-                                <div className="sidebar-cta-extra print:mt-4">
-                                    <div className="mt-8 pt-6 border-t border-slate-100 space-y-3 print:mt-4 print:pt-2">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Contacto de Formación</p>
+                                <div className="sidebar-cta-extra print:mt-2">
+                                    <div className="mt-8 pt-6 border-t border-slate-100 space-y-3 print:mt-2 print:pt-2 print:space-y-1">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 print:mb-1">Contacto de Formación</p>
                                         <div className="flex flex-col gap-2 print:gap-1">
-                                            <a href="mailto:formacion.salamanca@ugt-sp.ugt.org" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[10px]">
+                                            <a href="mailto:formacion.salamanca@ugt-sp.ugt.org" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[9px]">
                                                 formacion.salamanca@ugt-sp.ugt.org
                                             </a>
-                                            <a href="mailto:fespugtsalamanca@gmail.com" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[10px]">
+                                            <a href="mailto:fespugtsalamanca@gmail.com" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[9px]">
                                                 fespugtsalamanca@gmail.com
                                             </a>
-                                            <p className="text-xs text-slate-700 font-bold flex items-center gap-1 print:text-[10px]">
+                                            <p className="text-xs text-slate-700 font-bold flex items-center gap-1 print:text-[9px]">
                                                 Tel: <span className="text-slate-900">+34 600 43 71 34</span>
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="mt-8 flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100 cursor-default print:mt-4 print:opacity-100">
+                                    <div className="md:hidden print:flex flex-col items-center gap-2 mt-4 pt-4 border-t border-slate-100 border-dashed">
+                                        <div className="bg-white p-2 border rounded-xl shadow-sm">
+                                            <QRCodeSVG value={currentUrl} size={64} level="M" />
+                                        </div>
+                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center">Escanea para ir a la web e inscribirte</p>
+                                    </div>
+
+                                    <div className="mt-8 flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100 cursor-default print:mt-4 print:opacity-100 print:grayscale-0">
                                         <img src="/logo-ugt.png" alt="Logo UGT" className="h-6 w-6 object-contain" />
                                         <p className="text-center text-[8px] uppercase font-black text-slate-500 tracking-[0.2em]">
                                             Formación UGT Salamanca
