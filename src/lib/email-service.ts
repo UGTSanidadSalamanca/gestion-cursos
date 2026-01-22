@@ -18,15 +18,17 @@ interface EmailOptions {
   subject: string
   text: string
   html?: string
+  replyTo?: string
 }
 
-export async function sendEmail({ to, bcc, subject, text, html }: EmailOptions) {
+export async function sendEmail({ to, bcc, subject, text, html, replyTo }: EmailOptions) {
   // Si no hay credenciales configuradas, informamos en consola
   if (!process.env.EMAIL_SERVER_USER || !process.env.EMAIL_SERVER_PASSWORD) {
     console.warn('⚠️ EMAIL_SERVER_USER o EMAIL_SERVER_PASSWORD no configurados. Saltando envío de email.')
     console.log('--- EMAIL SIMULADO ---')
     console.log(`Para: ${to || 'Recipientes BCC'}`)
     if (bcc) console.log(`BCC: ${Array.isArray(bcc) ? bcc.join(', ') : bcc}`)
+    if (replyTo) console.log(`Reply-To: ${replyTo}`)
     console.log(`Asunto: ${subject}`)
     console.log(`Mensaje: ${text}`)
     console.log('----------------------')
@@ -41,6 +43,7 @@ export async function sendEmail({ to, bcc, subject, text, html }: EmailOptions) 
       from: process.env.EMAIL_FROM || `"${fromName}" <${fromEmail}>`,
       to,
       bcc,
+      replyTo,
       subject,
       text,
       html: html || text,

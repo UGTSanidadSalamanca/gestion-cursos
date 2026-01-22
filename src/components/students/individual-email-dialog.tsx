@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useSession } from "next-auth/react"
 import {
     Dialog,
     DialogContent,
@@ -31,6 +32,7 @@ export function IndividualEmailDialog({
     isOpen,
     onOpenChange,
 }: IndividualEmailDialogProps) {
+    const { data: session } = useSession()
     const [subject, setSubject] = useState("")
     const [message, setMessage] = useState("")
     const [sending, setSending] = useState(false)
@@ -50,7 +52,11 @@ export function IndividualEmailDialog({
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ subject, message }),
+                body: JSON.stringify({
+                    subject,
+                    message,
+                    replyTo: session?.user?.email
+                }),
             })
 
             const data = await response.json()

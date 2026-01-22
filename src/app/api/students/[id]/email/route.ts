@@ -8,7 +8,7 @@ export async function POST(
 ) {
     try {
         const { id: studentId } = params
-        const { subject, message } = await request.json()
+        const { subject, message, replyTo } = await request.json()
 
         if (!subject || !message) {
             return NextResponse.json(
@@ -51,6 +51,7 @@ export async function POST(
         </div>
         <div style="background-color: #f1f5f9; color: #94a3b8; padding: 15px; text-align: center; font-size: 11px;">
           Este es un mensaje enviado desde el centro de formación UGT Salamanca.
+          ${replyTo ? `<br/>Puede responder directamente a este correo para contactar con el remitente.` : ''}
         </div>
       </div>
     `
@@ -59,7 +60,8 @@ export async function POST(
             to: student.email,
             subject: subject,
             text: message,
-            html
+            html,
+            replyTo
         })
 
         if (result.success) {
