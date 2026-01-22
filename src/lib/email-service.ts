@@ -35,7 +35,7 @@ export async function sendEmail({ to, bcc, subject, text, html }: EmailOptions) 
 
   try {
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || '"Gestión Cursos UGT" <formacion.salamanca@ugt-sp.ugt.org>',
+      from: process.env.EMAIL_FROM || '"UGT Formación Salamanca" <formacion.salamanca@ugt-sp.ugt.org>',
       to,
       bcc,
       subject,
@@ -55,7 +55,7 @@ export async function sendGroupEmail(emails: string[], subject: string, message:
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
       <div style="background-color: #ef4444; color: white; padding: 20px; text-align: center;">
-        <h1 style="margin: 0; font-size: 20px;">Comunicado General - UGT Sanidad Salamanca</h1>
+        <h1 style="margin: 0; font-size: 20px;">UGT Formación Salamanca</h1>
       </div>
       <div style="padding: 20px; color: #334155; line-height: 1.6;">
         <p style="white-space: pre-wrap;">${message}</p>
