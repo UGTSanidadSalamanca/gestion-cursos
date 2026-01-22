@@ -38,8 +38,12 @@ import {
   MapPin,
   Calendar,
   BookOpen,
-  DollarSign
+  DollarSign,
+  Shield,
+  KeyRound
 } from 'lucide-react'
+import { CreateUserDialog } from '@/components/teachers/create-user-dialog'
+import { toast } from 'sonner'
 
 interface Teacher {
   id: string
@@ -55,6 +59,7 @@ interface Teacher {
   hourlyRate?: number
   status: 'ACTIVE' | 'INACTIVE' | 'ON_LEAVE'
   createdAt: string
+  userId?: string
 }
 
 const mockTeachers: Teacher[] = [
@@ -156,6 +161,7 @@ export default function TeachersPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false)
 
   useEffect(() => {
     fetchTeachers()
@@ -568,6 +574,27 @@ export default function TeachersPage() {
                     <TableCell>{getStatusBadge(teacher.status)}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
+                        {!teacher.userId && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                            title="Crear Acceso Portal"
+                            onClick={() => {
+                              setSelectedTeacher(teacher)
+                              setIsUserDialogOpen(true)
+                            }}
+                          >
+                            <Shield className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {teacher.userId && (
+                          <div className="px-2 py-1 bg-green-50 text-green-700 rounded text-[10px] font-bold border border-green-200 flex items-center gap-1" title="Acceso Habilitado">
+                            <KeyRound className="h-3 w-3" />
+                            ACCESO OK
+                          </div>
+                        )}
+
                         <Dialog open={isViewDialogOpen && selectedTeacher?.id === teacher.id} onOpenChange={(open) => {
                           setIsViewDialogOpen(open)
                           if (open) setSelectedTeacher(teacher)
@@ -626,6 +653,17 @@ export default function TeachersPage() {
             </Table>
           </CardContent>
         </Card>
+
+        {selectedTeacher && (
+          <CreateUserDialog
+            teacherId={selectedTeacher.id}
+            teacherName={selectedTeacher.name || ""}
+            teacherEmail={selectedTeacher.email}
+            isOpen={isUserDialogOpen}
+            onOpenChange={setIsUserDialogOpen}
+            onSuccess={fetchTeachers}
+          />
+        )}
       </div>
     </MainLayout>
   )
