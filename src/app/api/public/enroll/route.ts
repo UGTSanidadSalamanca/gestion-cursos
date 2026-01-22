@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { NotificationService } from '@/lib/notification-service'
+import { notifyNewEnrollment } from '@/lib/email-service'
 
 export async function POST(request: NextRequest) {
     let body;
@@ -65,34 +67,30 @@ export async function POST(request: NextRequest) {
             }
         })
 
-        // 4. Notificaciones (Interna y Email) - SIN BLOQUEAR la respuesta
-        // Usamos import dinámico para evitar problemas de dependencias en frío
+        // 4. Notificaciones (Interna y Email) - AHORA AWAIT para asegurar envío en Vercel
         try {
-            import('@/lib/notification-service').then(({ NotificationService }) => {
-                NotificationService.create({
-                    title: 'Nueva Pre-inscripción Web',
-                    message: `${name} se ha inscrito en ${enrollment.course.title}`,
-                    type: 'INFO',
-                    priority: 'HIGH',
-                    category: 'STUDENT',
-                    actionUrl: '/enrollments'
-                }).catch(err => console.error('Error notif interna:', err))
+            await NotificationService.create({
+                title: 'Nueva Pre-inscripción Web',
+                message: `${name} se ha inscrito en ${enrollment.course.title}`,
+                type: 'INFO',
+                priority: 'HIGH',
+                category: 'STUDENT',
+                actionUrl: '/enrollments'
             })
 
-            import('@/lib/email-service').then(({ notifyNewEnrollment }) => {
-                notifyNewEnrollment({
-                    studentName: name,
-                    studentDni: dni,
-                    courseName: enrollment.course.title,
-                    isAffiliated: !!isAffiliated,
-                    phone: phone,
-                    email: email,
-                    price: !!isAffiliated ? enrollment.course.affiliatePrice : enrollment.course.price,
-                    priceUnit: enrollment.course.priceUnit
-                }).catch(err => console.error('Error notify email:', err))
+            await notifyNewEnrollment({
+                studentName: name,
+                studentDni: dni,
+                courseName: enrollment.course.title,
+                isAffiliated: !!isAffiliated,
+                phone: phone,
+                email: email,
+                price: !!isAffiliated ? enrollment.course.affiliatePrice : enrollment.course.price,
+                priceUnit: enrollment.course.priceUnit
             })
         } catch (notifyError) {
-            console.error('Error disparando notificaciones asíncronas:', notifyError)
+            console.error('Error disparando notificaciones:', notifyError)
+            // No bloqueamos la respuesta al usuario si fallan las notificaciones
         }
 
         return NextResponse.json({

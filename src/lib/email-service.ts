@@ -34,8 +34,11 @@ export async function sendEmail({ to, bcc, subject, text, html }: EmailOptions) 
   }
 
   try {
+    const fromName = "UGT Formación Salamanca"
+    const fromEmail = process.env.EMAIL_SERVER_USER || "formacion.salamanca@ugt-sp.ugt.org"
+
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || '"UGT Formación Salamanca" <formacion.salamanca@ugt-sp.ugt.org>',
+      from: process.env.EMAIL_FROM || `"${fromName}" <${fromEmail}>`,
       to,
       bcc,
       subject,
