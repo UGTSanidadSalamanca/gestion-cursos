@@ -523,7 +523,7 @@ export default function CoursesPage() {
     const ws = XLSX.utils.json_to_sheet(data)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, "Alumnos")
-    XLSX.utils.writeFile(wb, `Alumnos_${fullCourse.code}_${fullCourse.title.replace(/[^a-z0-9]/gi, '_')}.xlsx`)
+    XLSX.writeFile(wb, `Alumnos_${fullCourse.code}_${fullCourse.title.replace(/[^a-z0-9]/gi, '_')}.xlsx`)
     toast.success("Excel generado correctamente")
   }
 
