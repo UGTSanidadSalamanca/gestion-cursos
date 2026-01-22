@@ -43,8 +43,10 @@ import {
   MessageSquare,
   UserCheck,
   Printer,
-  Mail
+  Mail,
+  FileSpreadsheet
 } from "lucide-react"
+import * as XLSX from "xlsx"
 import { GroupEmailDialog } from "@/components/courses/group-email-dialog"
 import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
 import { toast } from "sonner"
@@ -485,6 +487,46 @@ export default function CoursesPage() {
     }
   }
 
+  const handleExportStudents = async (course: Course) => {
+    let fullCourse = course
+    if (!course.enrollments) {
+      const toastId = toast.loading("Cargando datos de alumnos...")
+      try {
+        const response = await fetch(`/api/courses/${course.id}`)
+        if (response.ok) {
+          fullCourse = await response.json()
+          toast.dismiss(toastId)
+        } else {
+          toast.error("Error al cargar alumnos", { id: toastId })
+          return
+        }
+      } catch (error) {
+        toast.error("Error técnico", { id: toastId })
+        return
+      }
+    }
+
+    if (!fullCourse.enrollments || fullCourse.enrollments.length === 0) {
+      toast.error("No hay alumnos inscritos en este curso")
+      return
+    }
+
+    const data = fullCourse.enrollments.map(e => ({
+      'Nombre': e.student.name,
+      'DNI': e.student.dni || '---',
+      'Teléfono': e.student.phone || '---',
+      'Estado': e.status,
+      'Afiliado': e.student.isAffiliated ? 'SÍ' : 'NO',
+      'Fecha Inscripción': new Date(e.createdAt).toLocaleDateString('es-ES')
+    }))
+
+    const ws = XLSX.utils.json_to_sheet(data)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, "Alumnos")
+    XLSX.utils.writeFile(wb, `Alumnos_${fullCourse.code}_${fullCourse.title.replace(/[^a-z0-9]/gi, '_')}.xlsx`)
+    toast.success("Excel generado correctamente")
+  }
+
   const getLevelBadge = (level: string) => {
     switch (level) {
       case "BEGINNER":
@@ -921,6 +963,15 @@ export default function CoursesPage() {
                             >
                               <Mail className="h-4 w-4" />
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-slate-500 hover:text-green-600"
+                              title="Exportar Alumnos (Excel)"
+                              onClick={() => handleExportStudents(course)}
+                            >
+                              <FileSpreadsheet className="h-4 w-4" />
+                            </Button>
                             <EnrollmentForm courseId={course.id} onSuccess={fetchCourses} />
                           </div>
                         </TableCell>
@@ -1075,8 +1126,19 @@ export default function CoursesPage() {
                     {/* Alumnos Inscritos */}
                     {selectedCourse.enrollments && selectedCourse.enrollments.length > 0 && (
                       <div className="mb-6">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest pl-1 flex items-center gap-2">
-                          <Users className="h-3 w-3" /> Listado de Alumnos ({selectedCourse.enrollments.length})
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest pl-1 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-3 w-3" /> Listado de Alumnos ({selectedCourse.enrollments.length})
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 text-[9px] font-bold uppercase text-green-600 hover:text-green-700 hover:bg-green-50 px-2"
+                            onClick={() => handleExportStudents(selectedCourse)}
+                          >
+                            <FileSpreadsheet className="h-3 w-3 mr-1" />
+                            Exportar Excel
+                          </Button>
                         </h3>
                         <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
                           <Table>
