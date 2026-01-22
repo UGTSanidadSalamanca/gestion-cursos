@@ -42,8 +42,10 @@ import {
   ExternalLink,
   MessageSquare,
   UserCheck,
-  Printer
+  Printer,
+  Mail
 } from "lucide-react"
+import { GroupEmailDialog } from "@/components/courses/group-email-dialog"
 import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
 import { toast } from "sonner"
 import { jsPDF } from "jspdf"
@@ -117,6 +119,7 @@ export default function CoursesPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false)
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
 
   const [courseFormData, setCourseFormData] = useState({
@@ -357,6 +360,10 @@ export default function CoursesPage() {
     } catch (error) {
       console.error('Error fetching full course details:', error)
     }
+  }
+  const handleEmailClick = (course: Course) => {
+    setSelectedCourse(course)
+    setIsEmailDialogOpen(true)
   }
 
   const handlePrint = () => {
@@ -905,6 +912,15 @@ export default function CoursesPage() {
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-orange-600" onClick={() => handleEditClick(course)}>
                               <Edit className="h-4 w-4" />
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-slate-500 hover:text-red-500"
+                              title="Enviar email grupal"
+                              onClick={() => handleEmailClick(course)}
+                            >
+                              <Mail className="h-4 w-4" />
+                            </Button>
                             <EnrollmentForm courseId={course.id} onSuccess={fetchCourses} />
                           </div>
                         </TableCell>
@@ -1413,7 +1429,16 @@ export default function CoursesPage() {
             </form>
           </DialogContent>
         </Dialog>
-      </div >
+
+        {selectedCourse && (
+          <GroupEmailDialog
+            courseId={selectedCourse.id}
+            courseTitle={selectedCourse.title}
+            isOpen={isEmailDialogOpen}
+            onOpenChange={setIsEmailDialogOpen}
+          />
+        )}
+      </div>
     </MainLayout >
   )
 }

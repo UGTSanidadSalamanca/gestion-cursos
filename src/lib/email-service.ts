@@ -13,18 +13,20 @@ const transporter = nodemailer.createTransport({
 })
 
 interface EmailOptions {
-  to: string
+  to?: string
+  bcc?: string | string[]
   subject: string
   text: string
   html?: string
 }
 
-export async function sendEmail({ to, subject, text, html }: EmailOptions) {
+export async function sendEmail({ to, bcc, subject, text, html }: EmailOptions) {
   // Si no hay credenciales configuradas, informamos en consola
   if (!process.env.EMAIL_SERVER_USER || !process.env.EMAIL_SERVER_PASSWORD) {
     console.warn('⚠️ EMAIL_SERVER_USER o EMAIL_SERVER_PASSWORD no configurados. Saltando envío de email.')
     console.log('--- EMAIL SIMULADO ---')
-    console.log(`Para: ${to}`)
+    console.log(`Para: ${to || 'Recipientes BCC'}`)
+    if (bcc) console.log(`BCC: ${Array.isArray(bcc) ? bcc.join(', ') : bcc}`)
     console.log(`Asunto: ${subject}`)
     console.log(`Mensaje: ${text}`)
     console.log('----------------------')
@@ -35,6 +37,7 @@ export async function sendEmail({ to, subject, text, html }: EmailOptions) {
     const info = await transporter.sendMail({
       from: process.env.EMAIL_FROM || '"Gestión Cursos UGT" <formacion.salamanca@ugt-sp.ugt.org>',
       to,
+      bcc,
       subject,
       text,
       html: html || text,
@@ -46,6 +49,36 @@ export async function sendEmail({ to, subject, text, html }: EmailOptions) {
     console.error('Error enviando email:', error)
     return { success: false, error }
   }
+}
+
+export async function sendGroupEmail(emails: string[], subject: string, message: string) {
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
+      <div style="background-color: #ef4444; color: white; padding: 20px; text-align: center;">
+        <h1 style="margin: 0; font-size: 20px;">Comunicado General - UGT Sanidad Salamanca</h1>
+      </div>
+      <div style="padding: 20px; color: #334155; line-height: 1.6;">
+        <p style="white-space: pre-wrap;">${message}</p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #64748b;">
+          <p>Cordialmente,</p>
+          <p><strong>UGT Sanidad Salamanca</strong><br/>
+          Secretaría de Formación</p>
+        </div>
+      </div>
+      <div style="background-color: #f1f5f9; color: #94a3b8; padding: 15px; text-align: center; font-size: 11px;">
+        Este es un mensaje informativo enviado a los alumnos inscritos en nuestros cursos.
+        Por favor, no responda directamente a este email.
+      </div>
+    </div>
+  `
+
+  return sendEmail({
+    bcc: emails,
+    subject: subject,
+    text: message,
+    html
+  })
 }
 
 export async function notifyNewEnrollment(data: {
