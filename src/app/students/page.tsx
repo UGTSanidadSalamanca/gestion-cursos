@@ -42,6 +42,8 @@ import {
   FileSpreadsheet
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
+import { IndividualEmailDialog } from '@/components/students/individual-email-dialog'
+import { toast } from 'sonner'
 
 interface Student {
   id: string
@@ -141,6 +143,7 @@ export default function StudentsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false)
 
   useEffect(() => {
     fetchStudents()
@@ -495,7 +498,23 @@ export default function StudentsPage() {
         <span className="text-sm text-muted-foreground">
           Registrado el: {student.createdAt}
         </span>
-        {getStatusBadge(student.status)}
+        <div className="flex items-center gap-2">
+          {student.email && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+              onClick={() => {
+                setSelectedStudent(student)
+                setIsEmailDialogOpen(true)
+              }}
+            >
+              <Mail className="h-4 w-4 mr-2" />
+              Enviar Email
+            </Button>
+          )}
+          {getStatusBadge(student.status)}
+        </div>
       </div>
     </div>
   )
@@ -634,6 +653,21 @@ export default function StudentsPage() {
                             </DialogContent>
                           </Dialog>
 
+                          {student.email && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-slate-500 hover:text-blue-600"
+                              title="Enviar email"
+                              onClick={() => {
+                                setSelectedStudent(student)
+                                setIsEmailDialogOpen(true)
+                              }}
+                            >
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                          )}
+
                           <Dialog open={isEditDialogOpen && selectedStudent?.id === student.id} onOpenChange={(open) => {
                             setIsEditDialogOpen(open)
                             if (open) setSelectedStudent(student)
@@ -676,6 +710,16 @@ export default function StudentsPage() {
             )}
           </CardContent>
         </Card>
+
+        {selectedStudent && selectedStudent.email && (
+          <IndividualEmailDialog
+            studentId={selectedStudent.id}
+            studentName={selectedStudent.name}
+            studentEmail={selectedStudent.email}
+            isOpen={isEmailDialogOpen}
+            onOpenChange={setIsEmailDialogOpen}
+          />
+        )}
       </div>
     </MainLayout>
   )
