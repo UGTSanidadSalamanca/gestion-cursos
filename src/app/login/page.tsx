@@ -31,11 +31,21 @@ export default function LoginPage() {
                 toast.error("Credenciales incorrectas")
                 setLoading(false)
             } else {
-                toast.success("¡Bienvenido de nuevo!")
-                router.push("/")
+                // Check session to redirect based on role
+                const response = await fetch("/api/auth/session")
+                const session = await response.json()
+
+                toast.success(`¡Bienvenido ${session?.user?.name || ''}!`)
+
+                if (session?.user?.role === 'TEACHER') {
+                    router.push("/teacher-portal")
+                } else {
+                    router.push("/")
+                }
                 router.refresh()
             }
         } catch (error) {
+            console.error(error)
             toast.error("Error al iniciar sesión")
             setLoading(false)
         }
