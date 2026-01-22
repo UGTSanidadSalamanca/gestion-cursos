@@ -93,7 +93,11 @@ interface Course {
       name: string
       dni?: string
       phone?: string
+      email?: string
+      address?: string
       isAffiliated: boolean
+      affiliateNumber?: string
+      status: string
     }
   }[]
   _count?: {
@@ -512,11 +516,15 @@ export default function CoursesPage() {
     }
 
     const data = fullCourse.enrollments.map(e => ({
-      'Nombre': e.student.name,
-      'DNI': e.student.dni || '---',
-      'Teléfono': e.student.phone || '---',
-      'Estado': e.status,
+      'Nombre Completo': e.student.name,
+      'DNI': e.student.dni || '',
+      'Email': e.student.email || '',
+      'Teléfono': e.student.phone || '',
+      'Dirección': e.student.address || '',
       'Afiliado': e.student.isAffiliated ? 'SÍ' : 'NO',
+      'Nº Afiliado': e.student.affiliateNumber || '',
+      'Estado Alumno': e.student.status === 'ACTIVE' ? 'Activo' : e.student.status === 'INACTIVE' ? 'Inactivo' : e.student.status,
+      'Estado Matrícula': e.status === 'ENROLLED' ? 'Matriculado' : e.status === 'PENDING' ? 'Pendiente' : e.status,
       'Fecha Inscripción': new Date(e.createdAt).toLocaleDateString('es-ES')
     }))
 
