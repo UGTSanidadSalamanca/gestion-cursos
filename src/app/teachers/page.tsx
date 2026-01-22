@@ -589,10 +589,19 @@ export default function TeachersPage() {
                           </Button>
                         )}
                         {teacher.userId && (
-                          <div className="px-2 py-1 bg-green-50 text-green-700 rounded text-[10px] font-bold border border-green-200 flex items-center gap-1" title="Acceso Habilitado">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 h-7 text-[10px] font-bold px-2 flex items-center gap-1"
+                            title="Gestionar Acceso"
+                            onClick={() => {
+                              setSelectedTeacher(teacher)
+                              setIsUserDialogOpen(true)
+                            }}
+                          >
                             <KeyRound className="h-3 w-3" />
                             ACCESO OK
-                          </div>
+                          </Button>
                         )}
 
                         <Dialog open={isViewDialogOpen && selectedTeacher?.id === teacher.id} onOpenChange={(open) => {
@@ -659,6 +668,7 @@ export default function TeachersPage() {
             teacherId={selectedTeacher.id}
             teacherName={selectedTeacher.name || ""}
             teacherEmail={selectedTeacher.email}
+            hasAccess={!!selectedTeacher.userId}
             isOpen={isUserDialogOpen}
             onOpenChange={setIsUserDialogOpen}
             onSuccess={fetchTeachers}

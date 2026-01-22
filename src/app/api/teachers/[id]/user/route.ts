@@ -86,3 +86,101 @@ export async function POST(
         )
     }
 }
+
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const { id: teacherId } = params
+        const { password } = await request.json()
+
+        if (!password) {
+            return NextResponse.json(
+                { error: 'La nueva contraseña es requerida' },
+                { status: 400 }
+            )
+        }
+
+        // Verificar si el profesor existe y tiene usuario
+        const teacher = await db.teacher.findUnique({
+            where: { id: teacherId },
+            include: { user: true }
+        })
+
+        if (!teacher || !teacher.userId) {
+            return NextResponse.json(
+                { error: 'El profesor no tiene acceso asignado' },
+                { status: 404 }
+            )
+        }
+
+        const hashedPassword = await hashPassword(password)
+
+        await db.user.update({
+            where: { id: teacher.userId },
+            data: {
+                password: hashedPassword
+            }
+        })
+
+        return NextResponse.json({
+            success: true,
+            message: 'Contraseña actualizada correctamente'
+        })
+    } catch (error) {
+        console.error('Error actualizando contraseña:', error)
+        return NextResponse.json(
+            { error: 'Error interno al actualizar contraseña' },
+            { status: 500 }
+        )
+    }
+}
+
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const { id: teacherId } = params
+
+        // Verificar si el profesor existe
+        const teacher = await db.teacher.findUnique({
+            where: { id: teacherId }
+        })
+
+        if (!teacher || !teacher.userId) {
+            return NextResponse.json(
+                { error: 'El profesor no tiene acceso asignado para revocar' },
+                { status: 404 }
+            )
+        }
+
+        const userId = teacher.userId
+
+        // Transaction to unlink and delete user
+        await db.$transaction(async (tx) => {
+            // 1. Unlink from teacher
+            await tx.teacher.update({
+                where: { id: teacherId },
+                data: { userId: null }
+            })
+
+            // 2. Delete the user
+            await tx.user.delete({
+                where: { id: userId }
+            })
+        })
+
+        return NextResponse.json({
+            success: true,
+            message: 'Acceso revocado correctamente'
+        })
+    } catch (error) {
+        console.error('Error revocando acceso:', error)
+        return NextResponse.json(
+            { error: 'Error interno al revocar acceso' },
+            { status: 500 }
+        )
+    }
+}
