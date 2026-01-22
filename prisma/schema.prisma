@@ -10,6 +10,8 @@ datasource db {
 model User {
   id                      String                   @id @default(cuid())
   email                   String                   @unique
+  username                String?                  @unique
+  password                String?
   name                    String?
   role                    UserRole                 @default(ADMIN)
   createdAt               DateTime                 @default(now())
@@ -17,6 +19,7 @@ model User {
   contacts                Contact[]
   notificationPreferences NotificationPreference[]
   notifications           Notification[]
+  teacher                 Teacher?
 
   @@map("users")
 }
@@ -62,6 +65,8 @@ model Teacher {
   contacts     Contact[]
   modules      CourseModule[]
   courses      Course[]
+  userId       String?        @unique
+  user         User?          @relation(fields: [userId], references: [id])
 
   @@map("teachers")
 }
