@@ -27,13 +27,35 @@ export async function GET(request: NextRequest) {
         const now = new Date()
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
-        // Pagos cobrados este mes
-        const monthlyRevenueData = await db.payment.aggregate({
+        // Pagos cobrados este mes (Cálculo normalizado MRR)
+        const monthlyPayments = await db.payment.findMany({
             where: {
                 status: 'PAID',
                 paidDate: { gte: firstDayOfMonth }
             },
-            _sum: { amount: true }
+            include: {
+                course: {
+                    select: {
+                        priceUnit: true
+                    }
+                }
+            }
+        })
+
+        let monthlyRevenue = 0
+        monthlyPayments.forEach(payment => {
+            const amount = payment.amount
+            const unit = payment.course?.priceUnit?.toUpperCase() || 'MONTH'
+
+            if (unit.includes('TRIMESTR') || unit.includes('QUARTER')) {
+                monthlyRevenue += amount / 3
+            } else if (unit.includes('YEAR') || unit.includes('AÑ') || unit.includes('ANUAL')) {
+                monthlyRevenue += amount / 12
+            } else if (unit.includes('SEMESTR')) {
+                monthlyRevenue += amount / 6
+            } else {
+                monthlyRevenue += amount
+            }
         })
 
         // Pagos pendientes totales
@@ -48,7 +70,6 @@ export async function GET(request: NextRequest) {
             _sum: { amount: true }
         })
 
-        const monthlyRevenue = monthlyRevenueData._sum.amount || 0
         const pendingRevenue = pendingRevenueData._sum.amount || 0
         const overdueRevenue = overdueRevenueData._sum.amount || 0
 
@@ -60,19 +81,74 @@ export async function GET(request: NextRequest) {
         const totalSuppliers = await db.provider.count({ where: { status: 'ACTIVE' } })
         const totalSchedules = await db.schedule.count()
 
+        // 7. Ingresos Previstos (Cálculo basado en matrículas activas)
+        const activeEnrollmentsData = await db.enrollment.findMany({
+            where: {
+                OR: [
+                    { status: 'ENROLLED' },
+                    { status: 'IN_PROGRESS' }
+                ]
+            },
+            include: {
+                course: {
+                    select: {
+                        price: true,
+                        priceUnit: true
+                    }
+                }
+            }
+        })
+
+        let expectedRevenue = 0
+        activeEnrollmentsData.forEach(enrollment => {
+            const price = enrollment.course.price || 0
+            const unit = enrollment.course.priceUnit?.toUpperCase() || 'MONTH'
+
+            if (unit.includes('TRIMESTR') || unit.includes('QUARTER')) {
+                expectedRevenue += price / 3
+            } else if (unit.includes('YEAR') || unit.includes('AÑ') || unit.includes('ANUAL')) {
+                expectedRevenue += price / 12
+            } else if (unit.includes('SEMESTR')) {
+                expectedRevenue += price / 6
+            } else {
+                expectedRevenue += price
+            }
+        })
+
         // 7. Comparativa mes anterior
         const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
         const lastDayOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
 
-        const lastMonthRevenueData = await db.payment.aggregate({
+        const lastMonthPayments = await db.payment.findMany({
             where: {
                 status: 'PAID',
                 paidDate: { gte: firstDayOfLastMonth, lte: lastDayOfLastMonth }
             },
-            _sum: { amount: true }
+            include: {
+                course: {
+                    select: {
+                        priceUnit: true
+                    }
+                }
+            }
         })
 
-        const lastMonthRevenue = lastMonthRevenueData._sum.amount || 0
+        let lastMonthRevenue = 0
+        lastMonthPayments.forEach(payment => {
+            const amount = payment.amount
+            const unit = payment.course?.priceUnit?.toUpperCase() || 'MONTH'
+
+            if (unit.includes('TRIMESTR') || unit.includes('QUARTER')) {
+                lastMonthRevenue += amount / 3
+            } else if (unit.includes('YEAR') || unit.includes('AÑ') || unit.includes('ANUAL')) {
+                lastMonthRevenue += amount / 12
+            } else if (unit.includes('SEMESTR')) {
+                lastMonthRevenue += amount / 6
+            } else {
+                lastMonthRevenue += amount
+            }
+        })
+
         let revenueTrend = 0
         if (lastMonthRevenue > 0) {
             revenueTrend = ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
@@ -91,7 +167,8 @@ export async function GET(request: NextRequest) {
                 totalSuppliers,
                 totalSchedules,
                 revenueTrend: revenueTrend.toFixed(1),
-                satisfaction: 4.8
+                satisfaction: 4.8,
+                expectedRevenue
             }
         })
     } catch (error) {

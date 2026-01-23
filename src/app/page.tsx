@@ -86,7 +86,10 @@ export default function Home() {
             <CardContent>
               <div className="text-2xl font-bold">€{loading ? '...' : (stats?.monthlyRevenue || 0).toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                {stats?.revenueTrend > 0 ? '+' : ''}{stats?.revenueTrend || 0}% respecto al mes anterior
+                Previsto: €{stats?.expectedRevenue ? Math.round(stats.expectedRevenue).toLocaleString() : '0'}
+                {stats?.expectedRevenue > 0 && stats?.monthlyRevenue
+                  ? ` (${Math.round((stats.monthlyRevenue / stats.expectedRevenue) * 100)}% cobrado)`
+                  : ''}
               </p>
             </CardContent>
           </Card>
