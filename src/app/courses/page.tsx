@@ -103,23 +103,6 @@ interface Course {
   _count?: {
     enrollments: number
   }
-  schedules?: {
-    id: string
-    dayOfWeek: string
-    startTime: string
-    endTime: string
-    classroom?: string
-  }[]
-}
-
-const dayMapping: Record<string, string> = {
-  MONDAY: "Lunes",
-  TUESDAY: "Martes",
-  WEDNESDAY: "Miércoles",
-  THURSDAY: "Jueves",
-  FRIDAY: "Viernes",
-  SATURDAY: "Sábado",
-  SUNDAY: "Domingo"
 }
 
 interface CourseModule {
@@ -334,22 +317,41 @@ export default function CoursesPage() {
 
   const handleEditClick = (course: Course) => {
     setSelectedCourse(course)
+
+    // Safely format dates
+    const formatDate = (dateValue: string | Date | undefined | null) => {
+      if (!dateValue) return ''
+      try {
+        // If it's already a string in YYYY-MM-DD format, just return it
+        if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+          return dateValue
+        }
+
+        // Otherwise try to parse it
+        const d = new Date(dateValue)
+        if (isNaN(d.getTime())) return ''
+        return d.toISOString().split('T')[0]
+      } catch (e) {
+        return ''
+      }
+    }
+
     setCourseFormData({
-      title: course.title,
-      code: course.code,
+      title: course.title || '',
+      code: course.code || '',
       level: course.level,
-      duration: course.duration?.toString() || '',
-      durationSessions: course.durationSessions?.toString() || '',
-      sessionDuration: course.sessionDuration?.toString() || '',
-      durationMonths: course.durationMonths?.toString() || '',
+      duration: course.duration != null ? course.duration.toString() : '',
+      durationSessions: course.durationSessions != null ? course.durationSessions.toString() : '',
+      sessionDuration: course.sessionDuration != null ? course.sessionDuration.toString() : '',
+      durationMonths: course.durationMonths != null ? course.durationMonths.toString() : '',
       durationPeriod: course.durationPeriod || '',
       syllabusUrl: course.syllabusUrl || '',
-      price: course.price?.toString() || '',
+      price: course.price != null ? course.price.toString() : '',
       priceUnit: course.priceUnit || '',
       paymentFrequency: course.paymentFrequency || '',
-      affiliatePrice: course.affiliatePrice?.toString() || '',
-      startDate: course.startDate ? new Date(course.startDate).toISOString().split('T')[0] : '',
-      endDate: course.endDate ? new Date(course.endDate).toISOString().split('T')[0] : '',
+      affiliatePrice: course.affiliatePrice != null ? course.affiliatePrice.toString() : '',
+      startDate: formatDate(course.startDate),
+      endDate: formatDate(course.endDate),
       teacherId: (course as any).teacherId || (course.teacher?.id) || '',
       description: course.description || '',
       publicDescription: course.publicDescription || '',
@@ -361,7 +363,7 @@ export default function CoursesPage() {
       hasMaterials: course.hasMaterials ?? true,
       maxStudents: (course.maxStudents || 0).toString(),
       modules: (course.modules || []).map(m => ({
-        title: m.title,
+        title: m.title || '',
         description: m.description || '',
         teacherId: m.teacherId || ''
       }))
@@ -1130,30 +1132,6 @@ export default function CoursesPage() {
                         </div>
                       </div>
                     </div>
-                    {/* Horarios (Admin View) */}
-                    <div className="mb-6">
-                      <h3 className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest pl-1">Horarios Definidos</h3>
-                      {selectedCourse.schedules && selectedCourse.schedules.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {selectedCourse.schedules.map((sch, i) => (
-                            <div key={i} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-                              <Clock className="h-4 w-4 text-blue-500" />
-                              <div className="flex-1">
-                                <p className="text-xs font-bold text-slate-800 uppercase">{dayMapping[sch.dayOfWeek] || sch.dayOfWeek}</p>
-                                <p className="text-[10px] text-slate-500">
-                                  {new Date(sch.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(sch.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                  {sch.classroom && <span className="ml-2 bg-slate-100 px-1 rounded">Aula: {sch.classroom}</span>}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-400 text-xs italic">
-                          <Info className="h-4 w-4" /> Sin horarios definidos actualmente.
-                        </div>
-                      )}
-                    </div>
 
                     {/* Temario Compacto */}
                     {selectedCourse.modules && selectedCourse.modules.length > 0 && (
@@ -1215,45 +1193,8 @@ export default function CoursesPage() {
                                     </Badge>
                                   </TableCell>
                                   <TableCell className="py-2">
-                                    <span
-                                      onClick={async () => {
-                                        if (!confirm('¿Deseas cambiar el estado de la matrícula?')) return;
-
-                                        // Optimistic update
-                                        const newStatus = enr.status === 'ENROLLED' ? 'PENDING' : 'ENROLLED';
-
-                                        try {
-                                          // Assuming we have an API to update enrollment status
-                                          // Since we don't have a direct route in this file context, we might need to add one or use an existing one.
-                                          // For now, let's simulate the toggle if we had the endpoint, OR better yet, let's assume the user wants to EDIT this.
-
-                                          // Let's implement a real call to update enrollment. We need an endpoint for this.
-                                          // Since I cannot create the endpoint in this tool call, I will add the UI logic and the fetch call assuming the endpoint exists (or I will create it in next step).
-                                          // Plan: Create /api/enrollments/[id] PUT/PATCH route.
-
-                                          const response = await fetch(`/api/enrollments/${enr.id}`, {
-                                            method: 'PATCH',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ status: newStatus })
-                                          })
-
-                                          if (response.ok) {
-                                            toast.success(`Estado actualizado a ${newStatus === 'ENROLLED' ? 'PAGADO/INSCRITO' : 'PENDIENTE'}`)
-                                            // Refresh course data
-                                            const res = await fetch(`/api/courses/${selectedCourse.id}`)
-                                            const updatedCourse = await res.json()
-                                            setSelectedCourse(updatedCourse)
-                                          } else {
-                                            toast.error("Error al actualizar estado")
-                                          }
-                                        } catch (e) {
-                                          toast.error("Error de conexión")
-                                        }
-                                      }}
-                                      className={`text-[9px] font-bold cursor-pointer hover:underline select-none ${enr.status === 'PENDING' ? 'text-amber-600' : 'text-blue-600'}`}
-                                      title="Clic para cambiar estado (Pagado/Pendiente)"
-                                    >
-                                      {enr.status === 'PENDING' ? 'PAG. PEND.' : 'PAGADO / INSCRITO'}
+                                    <span className={`text-[9px] font-bold ${enr.status === 'PENDING' ? 'text-amber-600' : 'text-blue-600'}`}>
+                                      {enr.status === 'PENDING' ? 'PAG. PEND.' : 'INSCRITO'}
                                     </span>
                                   </TableCell>
                                 </TableRow>
@@ -1578,17 +1519,15 @@ export default function CoursesPage() {
           </DialogContent>
         </Dialog>
 
-        {
-          selectedCourse && (
-            <GroupEmailDialog
-              courseId={selectedCourse.id}
-              courseTitle={selectedCourse.title}
-              isOpen={isEmailDialogOpen}
-              onOpenChange={setIsEmailDialogOpen}
-            />
-          )
-        }
-      </div >
+        {selectedCourse && (
+          <GroupEmailDialog
+            courseId={selectedCourse.id}
+            courseTitle={selectedCourse.title}
+            isOpen={isEmailDialogOpen}
+            onOpenChange={setIsEmailDialogOpen}
+          />
+        )}
+      </div>
     </MainLayout >
   )
 }
