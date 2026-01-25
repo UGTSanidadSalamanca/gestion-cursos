@@ -678,8 +678,8 @@ export default function CoursesPage() {
                       <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
                         <Euro className="h-4 w-4" /> Costes y Docencia
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div className="space-y-2 md:col-span-2">
                           <Label htmlFor="price" className="text-xs font-bold text-slate-500 uppercase">Precio Base (€)</Label>
                           <div className="flex gap-2">
                             <Input id="price" type="number" step="0.01" value={courseFormData.price} onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })} className="bg-white border-slate-200 h-11 font-bold flex-1" />
@@ -1336,8 +1336,8 @@ export default function CoursesPage() {
                   <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
                     <Euro className="h-4 w-4" /> Costes y Responsable
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="edit-price" className="text-xs font-bold text-slate-500 uppercase">Precio General (€)</Label>
                       <div className="flex gap-2">
                         <Input id="edit-price" type="number" step="0.01" value={courseFormData.price} onChange={(e) => setCourseFormData({ ...courseFormData, price: e.target.value })} className="bg-white border-slate-200 h-11 font-bold flex-1" />
