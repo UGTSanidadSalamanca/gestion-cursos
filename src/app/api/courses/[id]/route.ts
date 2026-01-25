@@ -25,6 +25,11 @@ export async function GET(
                     orderBy: {
                         createdAt: 'desc'
                     }
+                },
+                schedules: {
+                    orderBy: {
+                        dayOfWeek: 'asc'
+                    }
                 }
             }
         })

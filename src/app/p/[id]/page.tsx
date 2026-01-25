@@ -36,7 +36,28 @@ interface PublicCourse {
         title: string
         description?: string
         teacher?: { name: string }
+        teacher?: { name: string }
     }[]
+    schedules?: {
+        dayOfWeek: string
+        startTime: string
+        endTime: string
+        classroom?: string
+    }[]
+}
+
+const dayMapping: Record<string, string> = {
+    MONDAY: "Lunes",
+    TUESDAY: "Martes",
+    WEDNESDAY: "Miércoles",
+    THURSDAY: "Jueves",
+    FRIDAY: "Viernes",
+    SATURDAY: "Sábado",
+    SUNDAY: "Domingo"
+}
+
+const formatTime = (dateStr: string) => {
+    return new Date(dateStr).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
 }
 
 export default function PublicCoursePage() {
@@ -344,309 +365,344 @@ export default function PublicCoursePage() {
                                             ))}
                                         </div>
                                     </div>
+                                    </div>
                                 )}
 
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-12 pt-8 border-t border-slate-100 print:mt-4 print:pt-4 print:gap-2">
-                                    <div className="flex items-start space-x-4 print:space-x-2">
-                                        <div className="p-3 bg-blue-50 rounded-2xl print:p-2"><Clock className="h-6 w-6 text-blue-600 print:h-4 print:w-4" /></div>
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-400 uppercase print:text-[10px]">Horas Totales</p>
-                                            <p className="text-xl font-bold text-slate-800 print:text-sm">{course.duration}h</p>
-                                        </div>
-                                    </div>
-                                    {course.durationPeriod && (
-                                        <div className="flex items-start space-x-4 print:space-x-2">
-                                            <div className="p-3 bg-purple-50 rounded-2xl print:p-2"><Calendar className="h-6 w-6 text-purple-600 print:h-4 print:w-4" /></div>
-                                            <div>
-                                                <p className="text-sm font-bold text-slate-400 uppercase print:text-[10px]">Período</p>
-                                                <p className="text-xl font-bold text-slate-800 print:text-sm">{course.durationPeriod}</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                    <div className="flex items-start space-x-4 print:space-x-2">
-                                        <div className="p-3 bg-indigo-50 rounded-2xl print:p-2"><Calendar className="h-6 w-6 text-indigo-600 print:h-4 print:w-4" /></div>
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-400 uppercase print:text-[10px]">Próximo Inicio</p>
-                                            <p className="text-xl font-bold text-slate-800 print:text-sm">
-                                                {course.startDate ? new Date(course.startDate).toLocaleDateString() : 'Próximamente'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Sidebar CTA */}
-                    <div className="space-y-6 print:space-y-2">
-                        <Card className="border-none shadow-2xl bg-white sticky top-6 overflow-hidden print:static print:shadow-none print:border print:border-slate-200 print-no-break">
-                            <div className="bg-blue-600 h-2 w-full print:bg-blue-700" />
-                            <CardContent className="p-8 print:p-4">
-                                <div className="text-center mb-6 print:mb-2">
-                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 print:mb-1 print:text-blue-800">Inversión del curso</p>
-
-                                    <div className="flex flex-col gap-3 print:gap-2">
-                                        {/* Bloque Precio Afiliados */}
-                                        <div className={`p-5 rounded-2xl border-2 relative overflow-hidden print:p-2 print:border print:rounded-xl ${course.affiliatePrice ? 'bg-green-50 border-green-200 print:bg-green-50/50' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
-                                            <p className={`text-[10px] font-black uppercase mb-1 tracking-tighter ${course.affiliatePrice ? 'text-green-600' : 'text-slate-400'}`}>Precio Afiliados UGT</p>
-                                            <div className="flex items-baseline justify-center gap-1">
-                                                {course.affiliatePrice && course.affiliatePrice > 0 ? (
-                                                    <>
-                                                        <span className="text-5xl font-black tracking-tight print:text-2xl text-green-700">
-                                                            €{(course.affiliatePrice).toFixed(2)}
-                                                        </span>
-                                                        <span className="text-sm font-bold uppercase print:text-[8px] text-green-600">
-                                                            {formatPriceUnit(course.priceUnit, course.paymentFrequency)}
-                                                        </span>
-                                                    </>
-                                                ) : (
-                                                    <span className="text-xl font-bold text-slate-400 uppercase tracking-widest py-2 italic print:text-base print:py-1">Consultar</span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Bloque Precio General */}
-                                        <div className={`p-4 rounded-2xl border relative overflow-hidden print:p-2 print:rounded-xl ${course.price ? 'bg-blue-50/30 border-blue-100 print:bg-blue-50/10' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
-                                            <p className={`text-[10px] font-black uppercase mb-1 tracking-tighter ${course.price ? 'text-blue-600' : 'text-slate-400'}`}>Precio General</p>
-                                            <div className="flex items-baseline justify-center gap-1">
-                                                {course.price && course.price > 0 ? (
-                                                    <>
-                                                        <span className="text-3xl font-black tracking-tight print:text-xl text-slate-900">
-                                                            €{(course.price).toFixed(2)}
-                                                        </span>
-                                                        <span className="text-xs font-bold uppercase print:text-[8px] text-blue-600">
-                                                            {formatPriceUnit(course.priceUnit, course.paymentFrequency)}
-                                                        </span>
-                                                    </>
-                                                ) : (
-                                                    <span className="text-lg font-bold text-slate-400 uppercase tracking-tight py-1 italic print:text-sm">Consultar</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4 pt-6 border-t border-slate-100 print:pt-2 print:space-y-1">
-                                    {course.features ? (
-                                        course.features.split(/,|\n/).map((feature, i) => (
-                                            <div key={i} className="flex items-center gap-3 text-slate-600 text-sm italic font-medium">
-                                                <CheckCircle className="h-4 w-4 text-green-500" />
-                                                <span>{feature.trim()}</span>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <>
-                                            {(course.hasCertificate ?? true) && (
-                                                <div className="flex items-center gap-3 text-slate-600 text-sm">
-                                                    <CheckCircle className="h-4 w-4 text-green-500" />
-                                                    <span>Certificado oficial</span>
+                            <div className="mt-12 md:mt-12 bg-indigo-50/50 p-8 rounded-3xl border border-indigo-100 print:mt-4 print:p-4 print:bg-white print:border-slate-200">
+                                <h3 className="text-slate-900 font-extrabold text-2xl mb-8 flex items-center gap-3 print:text-lg print:mb-4">
+                                    <div className="h-10 w-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-lg print:h-8 print:w-8 print:shadow-none"><Clock className="h-5 w-5" /></div>
+                                    Horarios
+                                </h3>
+                                {course.schedules && course.schedules.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {course.schedules.map((schedule, i) => (
+                                            <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-indigo-100 flex items-center gap-4">
+                                                <div className="h-10 w-10 bg-indigo-100/50 rounded-lg flex items-center justify-center shrink-0 text-indigo-700 font-bold text-xs uppercase">
+                                                    {dayMapping[schedule.dayOfWeek]?.substring(0, 3)}
                                                 </div>
-                                            )}
-                                            {(course.hasMaterials ?? true) && (
-                                                <div className="flex items-center gap-3 text-slate-600 text-sm">
-                                                    <CheckCircle className="h-4 w-4 text-green-500" />
-                                                    <span>Materiales incluidos</span>
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-
-                                </div>
-
-                                <div className="no-print space-y-4">
-                                    <Button className="w-full h-16 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98] group flex flex-col items-center justify-center leading-tight py-2" onClick={handleInterest}>
-                                        <div className="flex items-center gap-2">
-                                            <MessageSquare className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                                            Contacta y reserva por WhatsApp
-                                        </div>
-                                        <span className="text-[10px] font-medium opacity-80 uppercase tracking-widest mt-1">Dudas e información inicial</span>
-                                    </Button>
-
-                                    <div className="relative py-2 flex items-center">
-                                        <div className="flex-grow border-t border-slate-200"></div>
-                                        <span className="flex-shrink mx-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">O BIEN</span>
-                                        <div className="flex-grow border-t border-slate-200"></div>
-                                    </div>
-
-                                    <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                                        setIsDialogOpen(open)
-                                        if (!open) {
-                                            setShowSuccess(false)
-                                            setFormData({ name: '', email: '', phone: '', dni: '', isAffiliated: false })
-                                        }
-                                    }}>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" className="w-full h-14 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center">
-                                                <CheckCircle className="h-5 w-5 mr-2" />
-                                                Tengo la decisión tomada: Inscribirme
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="sm:max-w-[500px] border-none shadow-2xl p-0 overflow-hidden bg-white">
-                                            {!showSuccess ? (
-                                                <form onSubmit={handleEnroll}>
-                                                    <DialogHeader className="p-8 bg-slate-50 border-b">
-                                                        <div className="bg-blue-100 text-blue-700 text-[9px] font-black px-2 py-0.5 rounded-full w-fit mb-3 tracking-widest uppercase">Paso 1 de 2: Mis datos</div>
-                                                        <DialogTitle className="text-2xl font-black text-slate-900 leading-tight">Formulario de Inscripción</DialogTitle>
-                                                        <DialogDescription className="text-slate-500 font-medium leading-relaxed mt-1">
-                                                            Completa tus datos para reservar tu plaza. <br />
-                                                            <span className="text-blue-600 font-bold">Tras este paso verás los datos de pago y concepto.</span>
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-                                                    <div className="p-8 space-y-5">
-                                                        <div className="grid grid-cols-1 gap-5">
-                                                            <div className="space-y-2">
-                                                                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Nombre y Apellidos *</Label>
-                                                                <div className="relative">
-                                                                    <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                                                                    <Input required className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white" placeholder="Juan Pérez..." value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-                                                                </div>
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">DNI / NIE *</Label>
-                                                                <div className="relative">
-                                                                    <Fingerprint className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                                                                    <Input required className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white" placeholder="12345678X" value={formData.dni} onChange={e => setFormData({ ...formData, dni: e.target.value })} />
-                                                                </div>
-                                                            </div>
-                                                            <div className="grid grid-cols-2 gap-4">
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Teléfono</Label>
-                                                                    <div className="relative">
-                                                                        <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                                                                        <Input className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white" placeholder="600000000" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
-                                                                    </div>
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Email</Label>
-                                                                    <div className="relative">
-                                                                        <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                                                                        <Input className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white" type="email" placeholder="email@ejemplo.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 flex items-center space-x-3 select-none">
-                                                                <Checkbox
-                                                                    id="is-affiliated"
-                                                                    checked={formData.isAffiliated}
-                                                                    onCheckedChange={(checked) => setFormData({ ...formData, isAffiliated: !!checked })}
-                                                                />
-                                                                <div className="flex-1 cursor-pointer">
-                                                                    <Label htmlFor="is-affiliated" className="text-xs font-bold text-blue-900 cursor-pointer block">
-                                                                        Soy afiliado/a a UGT
-                                                                    </Label>
-                                                                    <p className="text-[9px] text-blue-600/70 font-medium">Activa esta casilla para aplicar el precio reducido.</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <DialogFooter className="p-8 bg-slate-50 border-t flex flex-col gap-3">
-                                                        <Button type="submit" disabled={isSubmitting} className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-blue-100">
-                                                            {isSubmitting ? "Procesando..." : "Confirmar Pre-inscripción"}
-                                                        </Button>
-                                                        <p className="text-[9px] text-slate-400 text-center leading-relaxed">Al inscribirte, tus datos quedarán registrados para la gestión del curso. Deberás completar el pago para confirmar tu plaza.</p>
-                                                    </DialogFooter>
-                                                </form>
-                                            ) : (
-                                                <div className="p-10 text-center animate-in zoom-in-95 duration-300">
-                                                    <div className="h-20 w-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                                                        <CheckCircle className="h-10 w-10" />
-                                                    </div>
-                                                    <div className="bg-green-100 text-green-700 text-[9px] font-black px-2 py-0.5 rounded-full w-fit mb-3 tracking-widest uppercase mx-auto">Paso 2 de 2: Pago</div>
-                                                    <h2 className="text-3xl font-black text-slate-900 mb-2">¡Pre-inscripción recibida!</h2>
-                                                    <p className="text-slate-500 font-medium mb-8">Tu plaza ha quedado reservada en estado "pendiente de pago".</p>
-
-                                                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 mb-8 text-left space-y-4">
-                                                        <div className="space-y-1">
-                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                                                <Euro className="h-3 w-3" /> Importe a pagar
-                                                            </p>
-                                                            <div className="bg-blue-50/50 rounded-lg border border-blue-100 p-3 text-center">
-                                                                <p className="text-2xl font-black text-blue-700 select-all">
-                                                                    {formData.isAffiliated
-                                                                        ? (course.affiliatePrice ? `${course.affiliatePrice.toFixed(2)}€` : 'Por consultar')
-                                                                        : (course.price ? `${course.price.toFixed(2)}€` : 'Por consultar')}
-                                                                    {(formData.isAffiliated ? course.affiliatePrice : course.price) && (
-                                                                        <span className="text-sm ml-1 font-bold text-blue-500">{formatPriceUnit(course.priceUnit, course.paymentFrequency)}</span>
-                                                                    )}
-                                                                </p>
-                                                                <p className="text-[10px] font-medium text-blue-600/70 mt-1 italic">
-                                                                    Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                                                <CreditCard className="h-3 w-3" /> Datos para el pago (IBAN)
-                                                            </p>
-                                                            <p className="text-sm font-bold text-slate-700 select-all block p-2 bg-white rounded-lg border border-slate-100 text-center">ES59 2103 2347 4000 3377 9482</p>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                                                <Info className="h-3 w-3" /> Concepto de transferencia
-                                                            </p>
-                                                            <p className="text-sm font-black text-blue-700 select-all block p-2 bg-blue-50/50 rounded-lg border border-blue-100 text-center tracking-widest">{paymentConcept}</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="space-y-4">
-                                                        <p className="text-xs text-slate-500 leading-relaxed font-medium italic">
-                                                            "Por favor, envía el justificante de la transferencia por <b>Email</b> o <b>WhatsApp</b> para que la inscripción definitiva sea efectiva."
+                                                <div>
+                                                    <p className="font-bold text-slate-900 text-sm uppercase">{dayMapping[schedule.dayOfWeek]}</p>
+                                                    <p className="text-slate-600 text-sm">
+                                                        {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
+                                                    </p>
+                                                    {schedule.classroom && (
+                                                        <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                                                            <Clock className="h-3 w-3" /> {schedule.classroom}
                                                         </p>
-                                                        <Button onClick={() => setIsDialogOpen(false)} className="w-full h-12 bg-slate-900 border hover:bg-black text-white font-bold rounded-xl mt-4">
-                                                            Cerrar y volver
-                                                        </Button>
-                                                    </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </DialogContent>
-                                    </Dialog>
-                                </div>
-
-                                {course.callUrl && (
-                                    <Button
-                                        variant="outline"
-                                        className="w-full h-12 mt-3 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold rounded-2xl transition-all print:border-2 print:h-10 print:mt-1 print:text-xs"
-                                        onClick={() => window.open(course.callUrl, '_blank')}
-                                    >
-                                        <ExternalLink className="mr-2 h-4 w-4" /> Ver Convocatoria
-                                    </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-dashed border-indigo-200 text-indigo-800/70">
+                                        <Info className="h-5 w-5" />
+                                        <span className="font-medium">Horario por definir o consultar con el centro.</span>
+                                    </div>
                                 )}
+                            </div>
 
-                                <div className="sidebar-cta-extra print:mt-2">
-                                    <div className="mt-8 pt-6 border-t border-slate-100 space-y-3 print:mt-2 print:pt-2 print:space-y-1">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 print:mb-1">Contacto de Formación</p>
-                                        <div className="flex flex-col gap-2 print:gap-1">
-                                            <a href="mailto:formacion.salamanca@ugt-sp.ugt.org" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[9px]">
-                                                formacion.salamanca@ugt-sp.ugt.org
-                                            </a>
-                                            <a href="mailto:fespugtsalamanca@gmail.com" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[9px]">
-                                                fespugtsalamanca@gmail.com
-                                            </a>
-                                            <p className="text-xs text-slate-700 font-bold flex items-center gap-1 print:text-[9px]">
-                                                Tel: <span className="text-slate-900">+34 600 43 71 34</span>
-                                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-12 pt-8 border-t border-slate-100 print:mt-4 print:pt-4 print:gap-2">
+                                <div className="flex items-start space-x-4 print:space-x-2">
+                                    <div className="p-3 bg-blue-50 rounded-2xl print:p-2"><Clock className="h-6 w-6 text-blue-600 print:h-4 print:w-4" /></div>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-400 uppercase print:text-[10px]">Horas Totales</p>
+                                        <p className="text-xl font-bold text-slate-800 print:text-sm">{course.duration}h</p>
+                                    </div>
+                                </div>
+                                {course.durationPeriod && (
+                                    <div className="flex items-start space-x-4 print:space-x-2">
+                                        <div className="p-3 bg-purple-50 rounded-2xl print:p-2"><Calendar className="h-6 w-6 text-purple-600 print:h-4 print:w-4" /></div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-400 uppercase print:text-[10px]">Período</p>
+                                            <p className="text-xl font-bold text-slate-800 print:text-sm">{course.durationPeriod}</p>
                                         </div>
                                     </div>
-
-                                    <div className="md:hidden print:flex flex-col items-center gap-2 mt-4 pt-4 border-t border-slate-100 border-dashed">
-                                        <div className="bg-white p-2 border rounded-xl shadow-sm">
-                                            <QRCodeSVG value={currentUrl} size={64} level="M" />
-                                        </div>
-                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center">Escanea para ir a la web e inscribirte</p>
-                                    </div>
-
-                                    <div className="mt-8 flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100 cursor-default print:mt-4 print:opacity-100 print:grayscale-0">
-                                        <img src="/logo-ugt.png" alt="Logo UGT" className="h-6 w-6 object-contain" />
-                                        <p className="text-center text-[8px] uppercase font-black text-slate-500 tracking-[0.2em]">
-                                            Formación UGT Salamanca
+                                )}
+                                <div className="flex items-start space-x-4 print:space-x-2">
+                                    <div className="p-3 bg-indigo-50 rounded-2xl print:p-2"><Calendar className="h-6 w-6 text-indigo-600 print:h-4 print:w-4" /></div>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-400 uppercase print:text-[10px]">Próximo Inicio</p>
+                                        <p className="text-xl font-bold text-slate-800 print:text-sm">
+                                            {course.startDate ? new Date(course.startDate).toLocaleDateString() : 'Próximamente'}
                                         </p>
                                     </div>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Sidebar CTA */}
+                <div className="space-y-6 print:space-y-2">
+                    <Card className="border-none shadow-2xl bg-white sticky top-6 overflow-hidden print:static print:shadow-none print:border print:border-slate-200 print-no-break">
+                        <div className="bg-blue-600 h-2 w-full print:bg-blue-700" />
+                        <CardContent className="p-8 print:p-4">
+                            <div className="text-center mb-6 print:mb-2">
+                                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 print:mb-1 print:text-blue-800">Inversión del curso</p>
+
+                                <div className="flex flex-col gap-3 print:gap-2">
+                                    {/* Bloque Precio Afiliados */}
+                                    <div className={`p-5 rounded-2xl border-2 relative overflow-hidden print:p-2 print:border print:rounded-xl ${course.affiliatePrice ? 'bg-green-50 border-green-200 print:bg-green-50/50' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
+                                        <p className={`text-[10px] font-black uppercase mb-1 tracking-tighter ${course.affiliatePrice ? 'text-green-600' : 'text-slate-400'}`}>Precio Afiliados UGT</p>
+                                        <div className="flex items-baseline justify-center gap-1">
+                                            {course.affiliatePrice && course.affiliatePrice > 0 ? (
+                                                <>
+                                                    <span className="text-5xl font-black tracking-tight print:text-2xl text-green-700">
+                                                        €{(course.affiliatePrice).toFixed(2)}
+                                                    </span>
+                                                    <span className="text-sm font-bold uppercase print:text-[8px] text-green-600">
+                                                        {formatPriceUnit(course.priceUnit, course.paymentFrequency)}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <span className="text-xl font-bold text-slate-400 uppercase tracking-widest py-2 italic print:text-base print:py-1">Consultar</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Bloque Precio General */}
+                                    <div className={`p-4 rounded-2xl border relative overflow-hidden print:p-2 print:rounded-xl ${course.price ? 'bg-blue-50/30 border-blue-100 print:bg-blue-50/10' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
+                                        <p className={`text-[10px] font-black uppercase mb-1 tracking-tighter ${course.price ? 'text-blue-600' : 'text-slate-400'}`}>Precio General</p>
+                                        <div className="flex items-baseline justify-center gap-1">
+                                            {course.price && course.price > 0 ? (
+                                                <>
+                                                    <span className="text-3xl font-black tracking-tight print:text-xl text-slate-900">
+                                                        €{(course.price).toFixed(2)}
+                                                    </span>
+                                                    <span className="text-xs font-bold uppercase print:text-[8px] text-blue-600">
+                                                        {formatPriceUnit(course.priceUnit, course.paymentFrequency)}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <span className="text-lg font-bold text-slate-400 uppercase tracking-tight py-1 italic print:text-sm">Consultar</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 pt-6 border-t border-slate-100 print:pt-2 print:space-y-1">
+                                {course.features ? (
+                                    course.features.split(/,|\n/).map((feature, i) => (
+                                        <div key={i} className="flex items-center gap-3 text-slate-600 text-sm italic font-medium">
+                                            <CheckCircle className="h-4 w-4 text-green-500" />
+                                            <span>{feature.trim()}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <>
+                                        {(course.hasCertificate ?? true) && (
+                                            <div className="flex items-center gap-3 text-slate-600 text-sm">
+                                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                                <span>Certificado oficial</span>
+                                            </div>
+                                        )}
+                                        {(course.hasMaterials ?? true) && (
+                                            <div className="flex items-center gap-3 text-slate-600 text-sm">
+                                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                                <span>Materiales incluidos</span>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                            </div>
+
+                            <div className="no-print space-y-4">
+                                <Button className="w-full h-16 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98] group flex flex-col items-center justify-center leading-tight py-2" onClick={handleInterest}>
+                                    <div className="flex items-center gap-2">
+                                        <MessageSquare className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                                        Contacta y reserva por WhatsApp
+                                    </div>
+                                    <span className="text-[10px] font-medium opacity-80 uppercase tracking-widest mt-1">Dudas e información inicial</span>
+                                </Button>
+
+                                <div className="relative py-2 flex items-center">
+                                    <div className="flex-grow border-t border-slate-200"></div>
+                                    <span className="flex-shrink mx-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">O BIEN</span>
+                                    <div className="flex-grow border-t border-slate-200"></div>
+                                </div>
+
+                                <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                                    setIsDialogOpen(open)
+                                    if (!open) {
+                                        setShowSuccess(false)
+                                        setFormData({ name: '', email: '', phone: '', dni: '', isAffiliated: false })
+                                    }
+                                }}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" className="w-full h-14 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center">
+                                            <CheckCircle className="h-5 w-5 mr-2" />
+                                            Tengo la decisión tomada: Inscribirme
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[500px] border-none shadow-2xl p-0 overflow-hidden bg-white">
+                                        {!showSuccess ? (
+                                            <form onSubmit={handleEnroll}>
+                                                <DialogHeader className="p-8 bg-slate-50 border-b">
+                                                    <div className="bg-blue-100 text-blue-700 text-[9px] font-black px-2 py-0.5 rounded-full w-fit mb-3 tracking-widest uppercase">Paso 1 de 2: Mis datos</div>
+                                                    <DialogTitle className="text-2xl font-black text-slate-900 leading-tight">Formulario de Inscripción</DialogTitle>
+                                                    <DialogDescription className="text-slate-500 font-medium leading-relaxed mt-1">
+                                                        Completa tus datos para reservar tu plaza. <br />
+                                                        <span className="text-blue-600 font-bold">Tras este paso verás los datos de pago y concepto.</span>
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="p-8 space-y-5">
+                                                    <div className="grid grid-cols-1 gap-5">
+                                                        <div className="space-y-2">
+                                                            <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Nombre y Apellidos *</Label>
+                                                            <div className="relative">
+                                                                <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                                                <Input required className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white" placeholder="Juan Pérez..." value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">DNI / NIE *</Label>
+                                                            <div className="relative">
+                                                                <Fingerprint className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                                                <Input required className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white" placeholder="12345678X" value={formData.dni} onChange={e => setFormData({ ...formData, dni: e.target.value })} />
+                                                            </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Teléfono</Label>
+                                                                <div className="relative">
+                                                                    <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                                                    <Input className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white" placeholder="600000000" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                                                                </div>
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Email</Label>
+                                                                <div className="relative">
+                                                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                                                    <Input className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white" type="email" placeholder="email@ejemplo.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 flex items-center space-x-3 select-none">
+                                                            <Checkbox
+                                                                id="is-affiliated"
+                                                                checked={formData.isAffiliated}
+                                                                onCheckedChange={(checked) => setFormData({ ...formData, isAffiliated: !!checked })}
+                                                            />
+                                                            <div className="flex-1 cursor-pointer">
+                                                                <Label htmlFor="is-affiliated" className="text-xs font-bold text-blue-900 cursor-pointer block">
+                                                                    Soy afiliado/a a UGT
+                                                                </Label>
+                                                                <p className="text-[9px] text-blue-600/70 font-medium">Activa esta casilla para aplicar el precio reducido.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <DialogFooter className="p-8 bg-slate-50 border-t flex flex-col gap-3">
+                                                    <Button type="submit" disabled={isSubmitting} className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-blue-100">
+                                                        {isSubmitting ? "Procesando..." : "Confirmar Pre-inscripción"}
+                                                    </Button>
+                                                    <p className="text-[9px] text-slate-400 text-center leading-relaxed">Al inscribirte, tus datos quedarán registrados para la gestión del curso. Deberás completar el pago para confirmar tu plaza.</p>
+                                                </DialogFooter>
+                                            </form>
+                                        ) : (
+                                            <div className="p-10 text-center animate-in zoom-in-95 duration-300">
+                                                <div className="h-20 w-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                                    <CheckCircle className="h-10 w-10" />
+                                                </div>
+                                                <div className="bg-green-100 text-green-700 text-[9px] font-black px-2 py-0.5 rounded-full w-fit mb-3 tracking-widest uppercase mx-auto">Paso 2 de 2: Pago</div>
+                                                <h2 className="text-3xl font-black text-slate-900 mb-2">¡Pre-inscripción recibida!</h2>
+                                                <p className="text-slate-500 font-medium mb-8">Tu plaza ha quedado reservada en estado "pendiente de pago".</p>
+
+                                                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 mb-8 text-left space-y-4">
+                                                    <div className="space-y-1">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                            <Euro className="h-3 w-3" /> Importe a pagar
+                                                        </p>
+                                                        <div className="bg-blue-50/50 rounded-lg border border-blue-100 p-3 text-center">
+                                                            <p className="text-2xl font-black text-blue-700 select-all">
+                                                                {formData.isAffiliated
+                                                                    ? (course.affiliatePrice ? `${course.affiliatePrice.toFixed(2)}€` : 'Por consultar')
+                                                                    : (course.price ? `${course.price.toFixed(2)}€` : 'Por consultar')}
+                                                                {(formData.isAffiliated ? course.affiliatePrice : course.price) && (
+                                                                    <span className="text-sm ml-1 font-bold text-blue-500">{formatPriceUnit(course.priceUnit, course.paymentFrequency)}</span>
+                                                                )}
+                                                            </p>
+                                                            <p className="text-[10px] font-medium text-blue-600/70 mt-1 italic">
+                                                                Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                            <CreditCard className="h-3 w-3" /> Datos para el pago (IBAN)
+                                                        </p>
+                                                        <p className="text-sm font-bold text-slate-700 select-all block p-2 bg-white rounded-lg border border-slate-100 text-center">ES59 2103 2347 4000 3377 9482</p>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                            <Info className="h-3 w-3" /> Concepto de transferencia
+                                                        </p>
+                                                        <p className="text-sm font-black text-blue-700 select-all block p-2 bg-blue-50/50 rounded-lg border border-blue-100 text-center tracking-widest">{paymentConcept}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <p className="text-xs text-slate-500 leading-relaxed font-medium italic">
+                                                        "Por favor, envía el justificante de la transferencia por <b>Email</b> o <b>WhatsApp</b> para que la inscripción definitiva sea efectiva."
+                                                    </p>
+                                                    <Button onClick={() => setIsDialogOpen(false)} className="w-full h-12 bg-slate-900 border hover:bg-black text-white font-bold rounded-xl mt-4">
+                                                        Cerrar y volver
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+
+                            {course.callUrl && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full h-12 mt-3 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold rounded-2xl transition-all print:border-2 print:h-10 print:mt-1 print:text-xs"
+                                    onClick={() => window.open(course.callUrl, '_blank')}
+                                >
+                                    <ExternalLink className="mr-2 h-4 w-4" /> Ver Convocatoria
+                                </Button>
+                            )}
+
+                            <div className="sidebar-cta-extra print:mt-2">
+                                <div className="mt-8 pt-6 border-t border-slate-100 space-y-3 print:mt-2 print:pt-2 print:space-y-1">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 print:mb-1">Contacto de Formación</p>
+                                    <div className="flex flex-col gap-2 print:gap-1">
+                                        <a href="mailto:formacion.salamanca@ugt-sp.ugt.org" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[9px]">
+                                            formacion.salamanca@ugt-sp.ugt.org
+                                        </a>
+                                        <a href="mailto:fespugtsalamanca@gmail.com" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[9px]">
+                                            fespugtsalamanca@gmail.com
+                                        </a>
+                                        <p className="text-xs text-slate-700 font-bold flex items-center gap-1 print:text-[9px]">
+                                            Tel: <span className="text-slate-900">+34 600 43 71 34</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="md:hidden print:flex flex-col items-center gap-2 mt-4 pt-4 border-t border-slate-100 border-dashed">
+                                    <div className="bg-white p-2 border rounded-xl shadow-sm">
+                                        <QRCodeSVG value={currentUrl} size={64} level="M" />
+                                    </div>
+                                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center">Escanea para ir a la web e inscribirte</p>
+                                </div>
+
+                                <div className="mt-8 flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100 cursor-default print:mt-4 print:opacity-100 print:grayscale-0">
+                                    <img src="/logo-ugt.png" alt="Logo UGT" className="h-6 w-6 object-contain" />
+                                    <p className="text-center text-[8px] uppercase font-black text-slate-500 tracking-[0.2em]">
+                                        Formación UGT Salamanca
+                                    </p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
+        </div>
         </div >
     )
 }

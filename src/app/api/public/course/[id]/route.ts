@@ -44,6 +44,17 @@ export async function GET(
                             }
                         }
                     }
+                },
+                schedules: {
+                    select: {
+                        dayOfWeek: true,
+                        startTime: true,
+                        endTime: true,
+                        classroom: true
+                    },
+                    orderBy: {
+                        dayOfWeek: 'asc'
+                    }
                 }
             }
         })
