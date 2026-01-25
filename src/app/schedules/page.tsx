@@ -4,32 +4,61 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MainLayout } from "@/components/layout/main-layout"
-import { 
-  Calendar, 
-  Clock, 
-  Users, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Calendar,
+  Clock,
+  Users,
   BookOpen,
   MapPin,
   User,
   Plus,
-  Edit,
   Trash2,
-  Filter
+  Filter,
+  Loader2
 } from "lucide-react"
+import { toast } from "sonner"
+
+interface Course {
+  id: string
+  title: string
+  code: string
+}
 
 interface Schedule {
   id: string
-  courseName: string
-  teacherName: string
+  courseId: string
   dayOfWeek: string
   startTime: string
   endTime: string
   classroom: string
-  capacity: number
-  enrolled: number
-  isActive: boolean
+  isRecurring: boolean
+  notes?: string
+  course: {
+    title: string
+    code: string
+    maxStudents: number
+    teacher?: {
+      name: string
+    }
+    _count?: {
+      enrollments: number
+    }
+  }
 }
 
 interface ScheduleGroup {
@@ -37,135 +66,152 @@ interface ScheduleGroup {
   schedules: Schedule[]
 }
 
+const dayMapping: Record<string, string> = {
+  MONDAY: "Lunes",
+  TUESDAY: "Martes",
+  WEDNESDAY: "Miércoles",
+  THURSDAY: "Jueves",
+  FRIDAY: "Viernes",
+  SATURDAY: "Sábado",
+  SUNDAY: "Domingo"
+}
+
+const dayOrder = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
+
 export default function SchedulesPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([])
+  const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedDay, setSelectedDay] = useState<string>('all')
+  const [ischkDialogOpen, setIsDialogOpen] = useState(false)
+  const [newSchedule, setNewSchedule] = useState({
+    courseId: "",
+    dayOfWeek: "MONDAY",
+    startTime: "",
+    endTime: "",
+    classroom: "",
+    notes: ""
+  })
 
   useEffect(() => {
-    // Simular carga de datos
-    const mockSchedules: Schedule[] = [
-      {
-        id: "1",
-        courseName: "JavaScript Avanzado",
-        teacherName: "Juan Pérez",
-        dayOfWeek: "Lunes",
-        startTime: "09:00",
-        endTime: "12:00",
-        classroom: "Aula 101",
-        capacity: 25,
-        enrolled: 22,
-        isActive: true
-      },
-      {
-        id: "2",
-        courseName: "UI/UX Design",
-        teacherName: "María García",
-        dayOfWeek: "Lunes",
-        startTime: "14:00",
-        endTime: "17:00",
-        classroom: "Lab Design",
-        capacity: 20,
-        enrolled: 18,
-        isActive: true
-      },
-      {
-        id: "3",
-        courseName: "Marketing Digital",
-        teacherName: "Carlos López",
-        dayOfWeek: "Martes",
-        startTime: "10:00",
-        endTime: "13:00",
-        classroom: "Aula 205",
-        capacity: 30,
-        enrolled: 25,
-        isActive: true
-      },
-      {
-        id: "4",
-        courseName: "Inglés Empresarial",
-        teacherName: "Ana Martínez",
-        dayOfWeek: "Martes",
-        startTime: "16:00",
-        endTime: "18:00",
-        classroom: "Aula 301",
-        capacity: 15,
-        enrolled: 12,
-        isActive: true
-      },
-      {
-        id: "5",
-        courseName: "React Framework",
-        teacherName: "Juan Pérez",
-        dayOfWeek: "Miércoles",
-        startTime: "09:00",
-        endTime: "12:00",
-        classroom: "Aula 101",
-        capacity: 25,
-        enrolled: 20,
-        isActive: true
-      },
-      {
-        id: "6",
-        courseName: "Base de Datos",
-        teacherName: "Pedro Sánchez",
-        dayOfWeek: "Jueves",
-        startTime: "14:00",
-        endTime: "17:00",
-        classroom: "Lab Informática",
-        capacity: 22,
-        enrolled: 19,
-        isActive: true
-      },
-      {
-        id: "7",
-        courseName: "Photoshop Avanzado",
-        teacherName: "Laura Rodríguez",
-        dayOfWeek: "Viernes",
-        startTime: "10:00",
-        endTime: "13:00",
-        classroom: "Lab Design",
-        capacity: 18,
-        enrolled: 16,
-        isActive: true
-      },
-      {
-        id: "8",
-        courseName: "Excel Empresarial",
-        teacherName: "Miguel Ángel",
-        dayOfWeek: "Viernes",
-        startTime: "16:00",
-        endTime: "19:00",
-        classroom: "Aula 402",
-        capacity: 20,
-        enrolled: 15,
-        isActive: true
-      }
-    ]
-    
-    setTimeout(() => {
-      setSchedules(mockSchedules)
-      setLoading(false)
-    }, 1000)
+    fetchSchedules()
+    fetchCourses()
   }, [])
 
+  const fetchSchedules = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/schedules')
+      if (response.ok) {
+        const data = await response.json()
+        setSchedules(data)
+      }
+    } catch (error) {
+      console.error("Error fetching schedules:", error)
+      toast.error("Error al cargar horarios")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchCourses = async () => {
+    try {
+      const response = await fetch('/api/courses')
+      if (response.ok) {
+        const data = await response.json()
+        // Only active courses? Maybe. For now all.
+        setCourses(data)
+      }
+    } catch (error) {
+      console.error("Error fetching courses:", error)
+    }
+  }
+
+  const handleCreateSchedule = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Convert HH:mm to ISO Date (using current date as base, backend only cares about time)
+    const today = new Date().toISOString().split('T')[0]
+    const startDateTime = new Date(`${today}T${newSchedule.startTime}:00`).toISOString()
+    const endDateTime = new Date(`${today}T${newSchedule.endTime}:00`).toISOString()
+
+    try {
+      const response = await fetch('/api/schedules', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...newSchedule,
+          startTime: startDateTime,
+          endTime: endDateTime
+        }),
+      })
+
+      if (response.ok) {
+        toast.success("Horario creado con éxito")
+        fetchSchedules()
+        setIsDialogOpen(false)
+        setNewSchedule({
+          courseId: "",
+          dayOfWeek: "MONDAY",
+          startTime: "",
+          endTime: "",
+          classroom: "",
+          notes: ""
+        })
+      } else {
+        const error = await response.json()
+        toast.error(error.error || "Error al crear horario")
+      }
+    } catch (error) {
+      toast.error("Error al crear horario")
+    }
+  }
+
+  const handleDeleteSchedule = async (id: string) => {
+    if (!confirm("¿Estás seguro de eliminar este horario?")) return
+
+    try {
+      const response = await fetch(`/api/schedules/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        toast.success("Horario eliminado")
+        fetchSchedules()
+      } else {
+        toast.error("Error al eliminar")
+      }
+    } catch (error) {
+      toast.error("Error al eliminar")
+    }
+  }
+
+  const getDayName = (dayCode: string) => dayMapping[dayCode] || dayCode
+
+  const formatTime = (isoString: string) => {
+    if (!isoString) return ""
+    const date = new Date(isoString)
+    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false })
+  }
+
   const groupSchedulesByDay = (): ScheduleGroup[] => {
-    const daysOrder = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
-    
     if (selectedDay === 'all') {
-      return daysOrder.map(day => ({
-        day,
+      return dayOrder.map(day => ({
+        day: getDayName(day),
         schedules: schedules.filter(s => s.dayOfWeek === day)
       })).filter(group => group.schedules.length > 0)
     } else {
       return [{
-        day: selectedDay,
+        day: getDayName(selectedDay),
         schedules: schedules.filter(s => s.dayOfWeek === selectedDay)
       }]
     }
   }
 
   const getCapacityBadge = (enrolled: number, capacity: number) => {
+    if (!capacity) return <Badge className="bg-slate-500">Sin cupo</Badge>
     const percentage = (enrolled / capacity) * 100
     if (percentage >= 100) {
       return <Badge className="bg-red-500">Completo</Badge>
@@ -180,9 +226,13 @@ export default function SchedulesPage() {
 
   const stats = {
     total: schedules.length,
-    active: schedules.filter(s => s.isActive).length,
-    totalStudents: schedules.reduce((sum, s) => sum + s.enrolled, 0),
-    avgCapacity: schedules.length > 0 ? Math.round(schedules.reduce((sum, s) => sum + (s.enrolled / s.capacity), 0) / schedules.length * 100) : 0
+    active: schedules.length, // All fetched are presumably active if existing
+    totalStudents: schedules.reduce((sum, s) => sum + (s.course._count?.enrollments || 0), 0),
+    avgCapacity: schedules.length > 0 ? Math.round(schedules.reduce((sum, s) => {
+      const caps = s.course.maxStudents || 0
+      if (caps === 0) return sum
+      return sum + ((s.course._count?.enrollments || 0) / caps)
+    }, 0) / schedules.length * 100) : 0
   }
 
   return (
@@ -197,10 +247,106 @@ export default function SchedulesPage() {
             </p>
           </div>
           <div className="mt-4 md:mt-0">
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo Horario
-            </Button>
+            <Dialog open={ischkDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo Horario
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Añadir Nuevo Horario</DialogTitle>
+                  <DialogDescription>
+                    Configura una nueva sesión de clase en el calendario.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleCreateSchedule} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="course">Curso</Label>
+                    <Select
+                      required
+                      value={newSchedule.courseId}
+                      onValueChange={(val) => setNewSchedule({ ...newSchedule, courseId: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar curso" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {courses.map(course => (
+                          <SelectItem key={course.id} value={course.id}>
+                            {course.title} ({course.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Día de la semana</Label>
+                      <Select
+                        value={newSchedule.dayOfWeek}
+                        onValueChange={(val) => setNewSchedule({ ...newSchedule, dayOfWeek: val })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {dayOrder.map(day => (
+                            <SelectItem key={day} value={day}>{dayMapping[day]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Aula / Espacio</Label>
+                      <Input
+                        placeholder="Ej: Aula 101"
+                        required
+                        value={newSchedule.classroom}
+                        onChange={(e) => setNewSchedule({ ...newSchedule, classroom: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Hora Inicio</Label>
+                      <Input
+                        type="time"
+                        required
+                        value={newSchedule.startTime}
+                        onChange={(e) => setNewSchedule({ ...newSchedule, startTime: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Hora Fin</Label>
+                      <Input
+                        type="time"
+                        required
+                        value={newSchedule.endTime}
+                        onChange={(e) => setNewSchedule({ ...newSchedule, endTime: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Notas (Opcional)</Label>
+                    <Textarea
+                      placeholder="Comentarios adicionales..."
+                      value={newSchedule.notes}
+                      onChange={(e) => setNewSchedule({ ...newSchedule, notes: e.target.value })}
+                    />
+                  </div>
+
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                    <Button type="submit">Guardar Horario</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -208,13 +354,13 @@ export default function SchedulesPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Horarios</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Sesiones</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
               <p className="text-xs text-muted-foreground">
-                Horarios programados
+                Clases semanales
               </p>
             </CardContent>
           </Card>
@@ -238,7 +384,7 @@ export default function SchedulesPage() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalStudents}</div>
               <p className="text-xs text-muted-foreground">
-                Alumnos inscritos
+                Impacto en alumnos
               </p>
             </CardContent>
           </Card>
@@ -271,13 +417,9 @@ export default function SchedulesPage() {
             <Tabs value={selectedDay} onValueChange={setSelectedDay} className="w-full">
               <TabsList className="grid w-full grid-cols-8">
                 <TabsTrigger value="all">Todos</TabsTrigger>
-                <TabsTrigger value="Lunes">Lunes</TabsTrigger>
-                <TabsTrigger value="Martes">Martes</TabsTrigger>
-                <TabsTrigger value="Miércoles">Miérc</TabsTrigger>
-                <TabsTrigger value="Jueves">Jueves</TabsTrigger>
-                <TabsTrigger value="Viernes">Viernes</TabsTrigger>
-                <TabsTrigger value="Sábado">Sáb</TabsTrigger>
-                <TabsTrigger value="Domingo">Dom</TabsTrigger>
+                {dayOrder.map(day => (
+                  <TabsTrigger key={day} value={day}>{dayMapping[day].substring(0, 3)}</TabsTrigger>
+                ))}
               </TabsList>
             </Tabs>
           </CardContent>
@@ -286,12 +428,16 @@ export default function SchedulesPage() {
         {/* Lista de Horarios */}
         {loading ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <Loader2 className="animate-spin h-8 w-8 text-primary mx-auto" />
             <p className="mt-2 text-sm text-muted-foreground">Cargando horarios...</p>
           </div>
         ) : (
           <div className="space-y-6">
-            {groupSchedulesByDay().map((group) => (
+            {groupSchedulesByDay().length === 0 ? (
+              <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed text-slate-400">
+                No hay horarios programados para este criterio.
+              </div>
+            ) : groupSchedulesByDay().map((group) => (
               <Card key={group.day}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -304,67 +450,67 @@ export default function SchedulesPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {group.schedules.map((schedule) => (
-                      <div key={schedule.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center space-x-4">
-                          <div className="flex-shrink-0">
-                            <div className="p-2 bg-primary/10 rounded-full">
-                              <BookOpen className="h-5 w-5 text-primary" />
+                    {group.schedules.map((schedule) => {
+                      const enrolled = schedule.course._count?.enrollments || 0
+                      const capacity = schedule.course.maxStudents || 0
+
+                      return (
+                        <div key={schedule.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-4">
+                          <div className="flex items-center space-x-4">
+                            <div className="flex-shrink-0">
+                              <div className="p-2 bg-primary/10 rounded-full">
+                                <BookOpen className="h-5 w-5 text-primary" />
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2">
-                              <h3 className="font-medium">{schedule.courseName}</h3>
-                              {schedule.isActive ? (
-                                <Badge className="bg-green-500">Activo</Badge>
-                              ) : (
-                                <Badge variant="secondary">Inactivo</Badge>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2">
+                                <h3 className="font-medium">{schedule.course.title}</h3>
+                                <Badge variant="outline" className="text-xs">{schedule.course.code}</Badge>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mt-1">
+                                <div className="flex items-center space-x-1">
+                                  <User className="h-4 w-4" />
+                                  <span>{schedule.course.teacher?.name || 'Sin asignar'}</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <Clock className="h-4 w-4" />
+                                  <span>{formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <MapPin className="h-4 w-4" />
+                                  <span>{schedule.classroom || 'Sin aula'}</span>
+                                </div>
+                              </div>
+                              {schedule.notes && (
+                                <p className="text-xs text-muted-foreground italic mt-1 bg-slate-50 p-1 rounded inline-block">Nota: {schedule.notes}</p>
                               )}
                             </div>
-                            <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
-                              <div className="flex items-center space-x-1">
-                                <User className="h-4 w-4" />
-                                <span>{schedule.teacherName}</span>
+                          </div>
+                          <div className="flex items-center justify-between md:justify-end space-x-4 w-full md:w-auto">
+                            <div className="text-right mr-4">
+                              <div className="text-sm font-medium">
+                                {enrolled} / {capacity}
                               </div>
-                              <div className="flex items-center space-x-1">
-                                <Clock className="h-4 w-4" />
-                                <span>{schedule.startTime} - {schedule.endTime}</span>
+                              <div className="w-20 bg-slate-200 rounded-full h-2 mt-1 hidden md:block">
+                                <div
+                                  className={`h-2 rounded-full ${(enrolled / capacity) >= 1 ? 'bg-red-500' :
+                                      (enrolled / capacity) >= 0.8 ? 'bg-orange-500' :
+                                        (enrolled / capacity) >= 0.5 ? 'bg-yellow-500' : 'bg-green-500'
+                                    }`}
+                                  style={{ width: `${capacity > 0 ? Math.min((enrolled / capacity) * 100, 100) : 0}%` }}
+                                ></div>
                               </div>
-                              <div className="flex items-center space-x-1">
-                                <MapPin className="h-4 w-4" />
-                                <span>{schedule.classroom}</span>
-                              </div>
+                              {getCapacityBadge(enrolled, capacity)}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button variant="ghost" size="icon" className="hover:text-red-500" onClick={() => handleDeleteSchedule(schedule.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="text-right">
-                            <div className="text-sm font-medium">
-                              {schedule.enrolled}/{schedule.capacity}
-                            </div>
-                            <div className="w-20 bg-slate-200 rounded-full h-2 mt-1">
-                              <div 
-                                className={`h-2 rounded-full ${
-                                  (schedule.enrolled / schedule.capacity) >= 1 ? 'bg-red-500' :
-                                  (schedule.enrolled / schedule.capacity) >= 0.8 ? 'bg-orange-500' :
-                                  (schedule.enrolled / schedule.capacity) >= 0.5 ? 'bg-yellow-500' : 'bg-green-500'
-                                }`} 
-                                style={{ width: `${Math.min((schedule.enrolled / schedule.capacity) * 100, 100)}%` }}
-                              ></div>
-                            </div>
-                            {getCapacityBadge(schedule.enrolled, schedule.capacity)}
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Button variant="outline" size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </CardContent>
               </Card>

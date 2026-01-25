@@ -4,7 +4,16 @@ import { db } from '@/lib/db'
 export async function GET(request: NextRequest) {
     try {
         const schedules = await db.schedule.findMany({
-            include: { course: true },
+            include: {
+                course: {
+                    include: {
+                        teacher: true,
+                        _count: {
+                            select: { enrollments: true }
+                        }
+                    }
+                }
+            },
             orderBy: { startTime: 'asc' }
         })
         return NextResponse.json(schedules)
