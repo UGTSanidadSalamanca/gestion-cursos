@@ -35,25 +35,24 @@ export async function GET(
                         title: true,
                         description: true,
                     }
-                }
-            },
-            schedules: {
-                select: {
-                    dayOfWeek: true,
-                    startTime: true,
-                    endTime: true,
-                    classroom: true
+                },
+                schedules: {
+                    select: {
+                        dayOfWeek: true,
+                        startTime: true,
+                        endTime: true,
+                        classroom: true
+                    }
                 }
             }
-        }
         })
 
-    if (!course) {
-        return NextResponse.json({ error: 'Course not found' }, { status: 404 })
-    }
+        if (!course) {
+            return NextResponse.json({ error: 'Course not found' }, { status: 404 })
+        }
 
-    return NextResponse.json(course)
-} catch (error) {
-    return NextResponse.json({ error: 'Error fetching course' }, { status: 500 })
-}
+        return NextResponse.json(course)
+    } catch (error) {
+        return NextResponse.json({ error: 'Error fetching course' }, { status: 500 })
+    }
 }

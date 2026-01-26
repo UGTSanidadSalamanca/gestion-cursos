@@ -283,15 +283,14 @@ export default function SchedulesPage() {
                           </Button>
                         </div>
                       </div>
-                      </div>
                     ))}
-                </div>
-              </CardContent>
+                  </div>
+                </CardContent>
               </Card>
-        ))}
-      </div>
+            ))}
+          </div>
         )}
-    </div>
+      </div>
     </MainLayout >
   )
 }
