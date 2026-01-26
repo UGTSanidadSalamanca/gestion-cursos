@@ -1281,9 +1281,10 @@ export default function CoursesPage() {
                       Cerrar
                     </Button>
                   </div>
-                </>
+                </div>
+              </>
             )}
-              </DialogContent>
+          </DialogContent>
         </Dialog>
 
         {/* Edit Dialog */}
