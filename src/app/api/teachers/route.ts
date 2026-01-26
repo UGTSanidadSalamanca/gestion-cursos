@@ -30,7 +30,6 @@ export async function GET(request: NextRequest) {
     const teachers = await db.teacher.findMany({
       where: whereClause,
       include: {
-        courses: true,
         contacts: true
       },
       orderBy: {
@@ -89,7 +88,6 @@ export async function POST(request: NextRequest) {
           ...cleanData
         },
         include: {
-          courses: true,
           contacts: true
         }
       })
@@ -108,7 +106,6 @@ export async function POST(request: NextRequest) {
         ...cleanData
       },
       include: {
-        courses: true,
         contacts: true
       }
     })

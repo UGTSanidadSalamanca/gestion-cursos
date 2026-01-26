@@ -9,7 +9,6 @@ export async function GET(
     const teacher = await db.teacher.findUnique({
       where: { id: params.id },
       include: {
-        courses: true,
         contacts: true
       }
     })
@@ -95,7 +94,6 @@ export async function PUT(
         ...cleanData
       },
       include: {
-        courses: true,
         contacts: true
       }
     })
@@ -115,28 +113,31 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    // First, check if teacher has active courses
-    const activeCourses = await db.course.findMany({
+    // First, check if teacher has active assignments in modules
+    const activeModules = await db.courseModule.findMany({
       where: {
         teacherId: params.id,
-        isActive: true
+        course: {
+          isActive: true
+        }
       }
     })
 
-    if (activeCourses.length > 0) {
+    if (activeModules.length > 0) {
       return NextResponse.json(
-        { error: 'Cannot delete teacher with active courses' },
+        { error: 'Cannot delete teacher with assignments in active courses' },
         { status: 400 }
       )
     }
 
-    // Delete related records
-    await db.teacherContact.deleteMany({
+    // Delete related records (teacherContact if it exists, or contact)
+    // Looking at schema.prisma, Teacher has contacts Contact[]
+    await db.contact.deleteMany({
       where: { teacherId: params.id }
     })
 
-    // Update courses to remove teacher reference
-    await db.course.updateMany({
+    // Update modules to remove teacher reference
+    await db.courseModule.updateMany({
       where: { teacherId: params.id },
       data: { teacherId: null }
     })
