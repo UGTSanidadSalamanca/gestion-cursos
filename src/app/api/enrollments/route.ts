@@ -26,11 +26,7 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       include: {
         student: true,
-        course: {
-          include: {
-            teacher: true
-          }
-        }
+        course: true
       },
       orderBy: {
         enrollmentDate: 'desc'
@@ -64,13 +60,13 @@ export async function POST(request: NextRequest) {
         where: { id: body.id },
         update: enrollmentData,
         create: { id: body.id, ...enrollmentData },
-        include: { student: true, course: { include: { teacher: true } } }
+        include: { student: true, course: true }
       })
       : await db.enrollment.upsert({
         where: { studentId_courseId: { studentId, courseId } },
         update: enrollmentData,
         create: enrollmentData,
-        include: { student: true, course: { include: { teacher: true } } }
+        include: { student: true, course: true }
       })
 
     return NextResponse.json(enrollment, { status: 201 })
