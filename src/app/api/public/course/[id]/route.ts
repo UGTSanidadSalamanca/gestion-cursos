@@ -34,22 +34,26 @@ export async function GET(
                     select: {
                         title: true,
                         description: true,
-                        teacher: {
-                            select: {
-                                name: true
-                            }
-                        }
                     }
                 }
+            },
+            schedules: {
+                select: {
+                    dayOfWeek: true,
+                    startTime: true,
+                    endTime: true,
+                    classroom: true
+                }
             }
+        }
         })
 
-        if (!course) {
-            return NextResponse.json({ error: 'Course not found' }, { status: 404 })
-        }
-
-        return NextResponse.json(course)
-    } catch (error) {
-        return NextResponse.json({ error: 'Error fetching course' }, { status: 500 })
+    if (!course) {
+        return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
+
+    return NextResponse.json(course)
+} catch (error) {
+    return NextResponse.json({ error: 'Error fetching course' }, { status: 500 })
+}
 }

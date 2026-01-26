@@ -21,15 +21,25 @@ import {
 
 interface Schedule {
   id: string
-  courseName: string
-  teacherName: string
+  courseId: string
+  teacherId?: string
   dayOfWeek: string
   startTime: string
   endTime: string
-  classroom: string
-  capacity: number
-  enrolled: number
-  isActive: boolean
+  classroom?: string
+  isRecurring: boolean
+  notes?: string
+  course: {
+    title: string
+    maxStudents: number
+    isActive: boolean
+    _count?: {
+      enrollments: number
+    }
+  }
+  teacher?: {
+    name: string
+  }
 }
 
 interface ScheduleGroup {
@@ -43,111 +53,23 @@ export default function SchedulesPage() {
   const [selectedDay, setSelectedDay] = useState<string>('all')
 
   useEffect(() => {
-    // Simular carga de datos
-    const mockSchedules: Schedule[] = [
-      {
-        id: "1",
-        courseName: "JavaScript Avanzado",
-        teacherName: "Juan Pérez",
-        dayOfWeek: "Lunes",
-        startTime: "09:00",
-        endTime: "12:00",
-        classroom: "Aula 101",
-        capacity: 25,
-        enrolled: 22,
-        isActive: true
-      },
-      {
-        id: "2",
-        courseName: "UI/UX Design",
-        teacherName: "María García",
-        dayOfWeek: "Lunes",
-        startTime: "14:00",
-        endTime: "17:00",
-        classroom: "Lab Design",
-        capacity: 20,
-        enrolled: 18,
-        isActive: true
-      },
-      {
-        id: "3",
-        courseName: "Marketing Digital",
-        teacherName: "Carlos López",
-        dayOfWeek: "Martes",
-        startTime: "10:00",
-        endTime: "13:00",
-        classroom: "Aula 205",
-        capacity: 30,
-        enrolled: 25,
-        isActive: true
-      },
-      {
-        id: "4",
-        courseName: "Inglés Empresarial",
-        teacherName: "Ana Martínez",
-        dayOfWeek: "Martes",
-        startTime: "16:00",
-        endTime: "18:00",
-        classroom: "Aula 301",
-        capacity: 15,
-        enrolled: 12,
-        isActive: true
-      },
-      {
-        id: "5",
-        courseName: "React Framework",
-        teacherName: "Juan Pérez",
-        dayOfWeek: "Miércoles",
-        startTime: "09:00",
-        endTime: "12:00",
-        classroom: "Aula 101",
-        capacity: 25,
-        enrolled: 20,
-        isActive: true
-      },
-      {
-        id: "6",
-        courseName: "Base de Datos",
-        teacherName: "Pedro Sánchez",
-        dayOfWeek: "Jueves",
-        startTime: "14:00",
-        endTime: "17:00",
-        classroom: "Lab Informática",
-        capacity: 22,
-        enrolled: 19,
-        isActive: true
-      },
-      {
-        id: "7",
-        courseName: "Photoshop Avanzado",
-        teacherName: "Laura Rodríguez",
-        dayOfWeek: "Viernes",
-        startTime: "10:00",
-        endTime: "13:00",
-        classroom: "Lab Design",
-        capacity: 18,
-        enrolled: 16,
-        isActive: true
-      },
-      {
-        id: "8",
-        courseName: "Excel Empresarial",
-        teacherName: "Miguel Ángel",
-        dayOfWeek: "Viernes",
-        startTime: "16:00",
-        endTime: "19:00",
-        classroom: "Aula 402",
-        capacity: 20,
-        enrolled: 15,
-        isActive: true
-      }
-    ]
-
-    setTimeout(() => {
-      setSchedules(mockSchedules)
-      setLoading(false)
-    }, 1000)
+    fetchSchedules()
   }, [])
+
+  const fetchSchedules = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/schedules')
+      if (response.ok) {
+        const data = await response.json()
+        setSchedules(data)
+      }
+    } catch (error) {
+      console.error('Error fetching schedules:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const groupSchedulesByDay = (): ScheduleGroup[] => {
     const daysOrder = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
@@ -180,9 +102,9 @@ export default function SchedulesPage() {
 
   const stats = {
     total: schedules.length,
-    active: schedules.filter(s => s.isActive).length,
-    totalStudents: schedules.reduce((sum, s) => sum + s.enrolled, 0),
-    avgCapacity: schedules.length > 0 ? Math.round(schedules.reduce((sum, s) => sum + (s.enrolled / s.capacity), 0) / schedules.length * 100) : 0
+    active: schedules.filter(s => s.course.isActive).length,
+    totalStudents: schedules.reduce((sum, s) => sum + (s.course._count?.enrollments || 0), 0),
+    avgCapacity: schedules.length > 0 ? Math.round(schedules.reduce((sum, s) => sum + ((s.course._count?.enrollments || 0) / s.course.maxStudents), 0) / schedules.length * 100) : 0
   }
 
   return (
@@ -314,9 +236,9 @@ export default function SchedulesPage() {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center space-x-2">
-                              <h3 className="font-medium">{schedule.courseName}</h3>
-                              {schedule.isActive ? (
-                                <Badge className="bg-green-500">Activo</Badge>
+                              <h3 className="font-medium">{schedule.course.title}</h3>
+                              {schedule.course.isActive ? (
+                                <Badge className="bg-green-500 hover:bg-green-600">Activo</Badge>
                               ) : (
                                 <Badge variant="secondary">Inactivo</Badge>
                               )}
@@ -324,11 +246,11 @@ export default function SchedulesPage() {
                             <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
                               <div className="flex items-center space-x-1">
                                 <User className="h-4 w-4" />
-                                <span>{schedule.teacherName}</span>
+                                <span>{schedule.teacher?.name || 'Por asignar'}</span>
                               </div>
                               <div className="flex items-center space-x-1">
                                 <Clock className="h-4 w-4" />
-                                <span>{schedule.startTime} - {schedule.endTime}</span>
+                                <span>{new Date(schedule.startTime).toISOString().substring(11, 16)} - {new Date(schedule.endTime).toISOString().substring(11, 16)}</span>
                               </div>
                               <div className="flex items-center space-x-1">
                                 <MapPin className="h-4 w-4" />
@@ -337,40 +259,39 @@ export default function SchedulesPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="text-right">
-                            <div className="text-sm font-medium">
-                              {schedule.enrolled}/{schedule.capacity}
-                            </div>
-                            <div className="w-20 bg-slate-200 rounded-full h-2 mt-1">
-                              <div
-                                className={`h-2 rounded-full ${(schedule.enrolled / schedule.capacity) >= 1 ? 'bg-red-500' :
-                                    (schedule.enrolled / schedule.capacity) >= 0.8 ? 'bg-orange-500' :
-                                      (schedule.enrolled / schedule.capacity) >= 0.5 ? 'bg-yellow-500' : 'bg-green-500'
-                                  }`}
-                                style={{ width: `${Math.min((schedule.enrolled / schedule.capacity) * 100, 100)}%` }}
-                              ></div>
-                            </div>
-                            {getCapacityBadge(schedule.enrolled, schedule.capacity)}
+                        <div className="text-right">
+                          <div className="text-sm font-medium">
+                            {schedule.course._count?.enrollments || 0}/{schedule.course.maxStudents}
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <Button variant="outline" size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                          <div className="w-20 bg-slate-200 rounded-full h-2 mt-1">
+                            <div
+                              className={`h-2 rounded-full ${((schedule.course._count?.enrollments || 0) / (schedule.course.maxStudents || 1)) >= 1 ? 'bg-red-500' :
+                                ((schedule.course._count?.enrollments || 0) / (schedule.course.maxStudents || 1)) >= 0.8 ? 'bg-orange-500' :
+                                  ((schedule.course._count?.enrollments || 0) / (schedule.course.maxStudents || 1)) >= 0.5 ? 'bg-yellow-500' : 'bg-green-500'
+                                }`}
+                              style={{ width: `${Math.min(((schedule.course._count?.enrollments || 0) / (schedule.course.maxStudents || 1)) * 100, 100)}%` }}
+                            ></div>
                           </div>
+                          {getCapacityBadge(schedule.course._count?.enrollments || 0, schedule.course.maxStudents)}
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button variant="outline" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
+                      </div>
                     ))}
-                  </div>
-                </CardContent>
+                </div>
+              </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+        ))}
       </div>
-    </MainLayout>
+        )}
+    </div>
+    </MainLayout >
   )
 }

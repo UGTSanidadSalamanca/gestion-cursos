@@ -24,6 +24,11 @@ export async function GET(
                     orderBy: {
                         createdAt: 'desc'
                     }
+                },
+                schedules: {
+                    include: {
+                        teacher: true
+                    }
                 }
             }
         })
@@ -67,9 +72,9 @@ export async function PUT(
             benefits,
             features,
             callUrl,
-            hasCertificate,
             hasMaterials,
-            modules = []
+            modules = [],
+            schedules = []
         } = body
 
         const course = await db.course.update({
@@ -106,10 +111,27 @@ export async function PUT(
                         description: m.description,
                         teacherId: m.teacherId || null
                     }))
+                },
+                schedules: {
+                    deleteMany: {},
+                    create: schedules.map((s: any) => ({
+                        dayOfWeek: s.dayOfWeek,
+                        startTime: new Date(s.startTime),
+                        endTime: new Date(s.endTime),
+                        classroom: s.classroom,
+                        teacherId: s.teacherId || null,
+                        notes: s.notes,
+                        isRecurring: s.isRecurring !== undefined ? s.isRecurring : true
+                    }))
                 }
             },
             include: {
                 modules: {
+                    include: {
+                        teacher: true
+                    }
+                },
+                schedules: {
                     include: {
                         teacher: true
                     }

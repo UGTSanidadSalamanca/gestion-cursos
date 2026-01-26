@@ -4,7 +4,10 @@ import { db } from '@/lib/db'
 export async function GET(request: NextRequest) {
     try {
         const schedules = await db.schedule.findMany({
-            include: { course: true },
+            include: {
+                course: true,
+                teacher: true
+            },
             orderBy: { startTime: 'asc' }
         })
         return NextResponse.json(schedules)
@@ -16,7 +19,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { courseId, dayOfWeek, startTime, endTime, classroom, isRecurring, notes, id } = body
+        const { courseId, teacherId, dayOfWeek, startTime, endTime, classroom, isRecurring, notes, id } = body
 
         if (!courseId || !dayOfWeek || !startTime || !endTime) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -26,6 +29,7 @@ export async function POST(request: NextRequest) {
             data: {
                 id: id || undefined,
                 courseId,
+                teacherId: teacherId || null,
                 dayOfWeek,
                 startTime: new Date(startTime),
                 endTime: new Date(endTime),

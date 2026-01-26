@@ -99,6 +99,18 @@ interface Course {
   _count?: {
     enrollments: number
   }
+  schedules?: {
+    id: string
+    dayOfWeek: string
+    startTime: string
+    endTime: string
+    classroom?: string
+    teacherId?: string
+    notes?: string
+    teacher?: {
+      name: string
+    }
+  }[]
 }
 
 interface CourseModule {
@@ -149,7 +161,8 @@ export default function CoursesPage() {
     hasCertificate: true,
     hasMaterials: true,
     maxStudents: '30',
-    modules: [] as { title: string; description: string; teacherId: string }[]
+    modules: [] as { title: string; description: string; teacherId: string }[],
+    schedules: [] as { dayOfWeek: string; startTime: string; endTime: string; classroom: string; teacherId: string }[]
   })
 
   useEffect(() => {
@@ -204,6 +217,11 @@ export default function CoursesPage() {
           paymentFrequency: courseFormData.paymentFrequency,
           affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
           maxStudents: courseFormData.maxStudents ? parseInt(courseFormData.maxStudents) : 0,
+          schedules: courseFormData.schedules.map(s => ({
+            ...s,
+            startTime: `1970-01-01T${s.startTime}:00Z`,
+            endTime: `1970-01-01T${s.endTime}:00Z`
+          }))
         }),
       })
 
@@ -242,6 +260,11 @@ export default function CoursesPage() {
           paymentFrequency: courseFormData.paymentFrequency,
           affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
           maxStudents: courseFormData.maxStudents ? parseInt(courseFormData.maxStudents) : 0,
+          schedules: courseFormData.schedules.map(s => ({
+            ...s,
+            startTime: `1970-01-01T${s.startTime}:00Z`,
+            endTime: `1970-01-01T${s.endTime}:00Z`
+          }))
         }),
       })
 
@@ -267,16 +290,35 @@ export default function CoursesPage() {
     })
   }
 
+  const addSchedule = () => {
+    setCourseFormData({
+      ...courseFormData,
+      schedules: [...courseFormData.schedules, { dayOfWeek: 'Lunes', startTime: '09:00', endTime: '12:00', classroom: '', teacherId: '' }]
+    })
+  }
+
   const removeModule = (index: number) => {
     const nextModules = [...courseFormData.modules]
     nextModules.splice(index, 1)
     setCourseFormData({ ...courseFormData, modules: nextModules })
   }
 
+  const removeSchedule = (index: number) => {
+    const nextSchedules = [...courseFormData.schedules]
+    nextSchedules.splice(index, 1)
+    setCourseFormData({ ...courseFormData, schedules: nextSchedules })
+  }
+
   const updateModule = (index: number, field: string, value: string) => {
     const nextModules = [...courseFormData.modules]
     nextModules[index] = { ...nextModules[index], [field]: value } as any
     setCourseFormData({ ...courseFormData, modules: nextModules })
+  }
+
+  const updateSchedule = (index: number, field: string, value: string) => {
+    const nextSchedules = [...courseFormData.schedules]
+    nextSchedules[index] = { ...nextSchedules[index], [field]: value } as any
+    setCourseFormData({ ...courseFormData, schedules: nextSchedules })
   }
 
   const resetForm = () => {
@@ -305,7 +347,8 @@ export default function CoursesPage() {
       hasCertificate: true,
       hasMaterials: true,
       maxStudents: '30',
-      modules: []
+      modules: [],
+      schedules: []
     })
   }
 
@@ -359,6 +402,13 @@ export default function CoursesPage() {
         title: m.title || '',
         description: m.description || '',
         teacherId: m.teacherId || ''
+      })),
+      schedules: (course.schedules || []).map(s => ({
+        dayOfWeek: s.dayOfWeek || 'Lunes',
+        startTime: s.startTime ? (typeof s.startTime === 'string' ? s.startTime.substring(11, 16) : s.startTime.toISOString().substring(11, 16)) : '',
+        endTime: s.endTime ? (typeof s.endTime === 'string' ? s.endTime.substring(11, 16) : s.endTime.toISOString().substring(11, 16)) : '',
+        classroom: s.classroom || '',
+        teacherId: s.teacherId || ''
       }))
     })
     setIsEditDialogOpen(true)
@@ -768,7 +818,139 @@ export default function CoursesPage() {
                         ))}
                       </div>
                     </div>
+                    {/* Sección 5: Horarios */}
+                    <div className="space-y-4 pt-6 border-t text-left">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
+                          <Calendar className="h-4 w-4" /> Configuración de Horarios
+                        </h3>
+                        <Button type="button" variant="outline" size="sm" onClick={addSchedule} className="h-8 bg-blue-50 text-blue-700 border-blue-200">
+                          <Plus className="h-3 w-3 mr-1" /> Añadir Horario
+                        </Button>
+                      </div>
+                      <div className="grid gap-4">
+                        {courseFormData.schedules.length === 0 && (
+                          <div className="text-center py-6 border-2 border-dashed rounded-2xl border-slate-100 text-slate-400 text-xs font-bold italic">
+                            No hay horarios definidos. Pulsa "Añadir Horario" para empezar.
+                          </div>
+                        )}
+                        {courseFormData.schedules.map((schedule, index) => (
+                          <div key={index} className="bg-white p-6 rounded-2xl border border-slate-200 relative group transition-all hover:bg-slate-50 shadow-sm text-left">
+                            <Button type="button" variant="ghost" size="icon" className="absolute -right-2 -top-2 h-7 w-7 rounded-full bg-white border shadow-md overflow-hidden text-red-500 hover:bg-red-50 z-10" onClick={() => removeSchedule(index)}>
+                              <Plus className="h-4 w-4 rotate-45" />
+                            </Button>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase text-slate-500">Día</Label>
+                                <Select value={schedule.dayOfWeek} onValueChange={(val) => updateSchedule(index, 'dayOfWeek', val)}>
+                                  <SelectTrigger className="h-10 text-xs bg-white"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(d => (
+                                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase text-slate-500">Entrada</Label>
+                                <Input type="time" className="h-10 text-xs" value={schedule.startTime} onChange={(e) => updateSchedule(index, 'startTime', e.target.value)} />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase text-slate-500">Salida</Label>
+                                <Input type="time" className="h-10 text-xs" value={schedule.endTime} onChange={(e) => updateSchedule(index, 'endTime', e.target.value)} />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase text-slate-500">Aula</Label>
+                                <Input placeholder="Ej: Aula 1" className="h-10 text-xs" value={schedule.classroom} onChange={(e) => updateSchedule(index, 'classroom', e.target.value)} />
+                              </div>
+                              <div className="space-y-2 col-span-2 md:col-span-1">
+                                <Label className="text-xs font-bold uppercase text-slate-500">Docente</Label>
+                                <Select value={schedule.teacherId} onValueChange={(val) => updateSchedule(index, 'teacherId', val)}>
+                                  <SelectTrigger className="h-10 text-xs bg-white"><SelectValue placeholder="Elegir" /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="unassigned">Por asignar</SelectItem>
+                                    {/* Mostrar solo docentes asignados a los módulos del curso */}
+                                    {(() => {
+                                      const courseTeachers = teachers.filter(t => courseFormData.modules.some(m => m.teacherId === t.id))
+                                      return (courseTeachers.length > 0 ? courseTeachers : teachers).map((t) => (
+                                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                                      ))
+                                    })()}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
 
+                    {/* Sección 5: Horarios */}
+                    <div className="space-y-4 pt-6 border-t text-left">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
+                          <Calendar className="h-4 w-4" /> Configuración de Horarios
+                        </h3>
+                        <Button type="button" variant="outline" size="sm" onClick={addSchedule} className="h-8 bg-blue-50 text-blue-700 border-blue-200">
+                          <Plus className="h-3 w-3 mr-1" /> Añadir Horario
+                        </Button>
+                      </div>
+                      <div className="grid gap-4">
+                        {courseFormData.schedules.length === 0 && (
+                          <div className="text-center py-6 border-2 border-dashed rounded-2xl border-slate-100 text-slate-400 text-xs font-bold italic">
+                            No hay horarios definidos. Pulsa "Añadir Horario" para empezar.
+                          </div>
+                        )}
+                        {courseFormData.schedules.map((schedule, index) => (
+                          <div key={index} className="bg-white p-6 rounded-2xl border border-slate-200 relative group transition-all hover:bg-slate-50 shadow-sm text-left">
+                            <Button type="button" variant="ghost" size="icon" className="absolute -right-2 -top-2 h-7 w-7 rounded-full bg-white border shadow-md overflow-hidden text-red-500 hover:bg-red-50 z-10" onClick={() => removeSchedule(index)}>
+                              <Plus className="h-4 w-4 rotate-45" />
+                            </Button>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase text-slate-500">Día</Label>
+                                <Select value={schedule.dayOfWeek} onValueChange={(val) => updateSchedule(index, 'dayOfWeek', val)}>
+                                  <SelectTrigger className="h-10 text-xs bg-white"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(d => (
+                                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase text-slate-500">Entrada</Label>
+                                <Input type="time" className="h-10 text-xs" value={schedule.startTime} onChange={(e) => updateSchedule(index, 'startTime', e.target.value)} />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase text-slate-500">Salida</Label>
+                                <Input type="time" className="h-10 text-xs" value={schedule.endTime} onChange={(e) => updateSchedule(index, 'endTime', e.target.value)} />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase text-slate-500">Aula</Label>
+                                <Input placeholder="Ej: Aula 1" className="h-10 text-xs" value={schedule.classroom} onChange={(e) => updateSchedule(index, 'classroom', e.target.value)} />
+                              </div>
+                              <div className="space-y-2 col-span-2 md:col-span-1">
+                                <Label className="text-xs font-bold uppercase text-slate-500">Docente</Label>
+                                <Select value={schedule.teacherId} onValueChange={(val) => updateSchedule(index, 'teacherId', val)}>
+                                  <SelectTrigger className="h-10 text-xs bg-white"><SelectValue placeholder="Elegir" /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="unassigned">Por asignar</SelectItem>
+                                    {/* Mostrar solo docentes asignados a los módulos del curso */}
+                                    {(() => {
+                                      const courseTeachers = teachers.filter(t => courseFormData.modules.some(m => m.teacherId === t.id))
+                                      return (courseTeachers.length > 0 ? courseTeachers : teachers).map((t) => (
+                                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                                      ))
+                                    })()}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                     {/* Sección 5: Presencia Web */}
                     <div className="space-y-4 pt-6 border-t text-left">
                       <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">

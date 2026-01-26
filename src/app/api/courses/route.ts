@@ -72,7 +72,8 @@ export async function POST(request: NextRequest) {
       callUrl,
       hasCertificate,
       hasMaterials,
-      modules = []
+      modules = [],
+      schedules = []
     } = body
 
     const course = await db.course.upsert({
@@ -110,6 +111,18 @@ export async function POST(request: NextRequest) {
             description: m.description,
             teacherId: m.teacherId || null
           }))
+        },
+        schedules: {
+          deleteMany: {},
+          create: schedules.map((s: any) => ({
+            dayOfWeek: s.dayOfWeek,
+            startTime: new Date(s.startTime),
+            endTime: new Date(s.endTime),
+            classroom: s.classroom,
+            teacherId: s.teacherId || null,
+            notes: s.notes,
+            isRecurring: s.isRecurring !== undefined ? s.isRecurring : true
+          }))
         }
       },
       create: {
@@ -144,6 +157,17 @@ export async function POST(request: NextRequest) {
             description: m.description,
             teacherId: m.teacherId || null
           }))
+        },
+        schedules: {
+          create: schedules.map((s: any) => ({
+            dayOfWeek: s.dayOfWeek,
+            startTime: new Date(s.startTime),
+            endTime: new Date(s.endTime),
+            classroom: s.classroom,
+            teacherId: s.teacherId || null,
+            notes: s.notes,
+            isRecurring: s.isRecurring !== undefined ? s.isRecurring : true
+          }))
         }
       },
       include: {
@@ -154,6 +178,11 @@ export async function POST(request: NextRequest) {
         },
         _count: {
           select: { enrollments: true }
+        },
+        schedules: {
+          include: {
+            teacher: true
+          }
         }
       }
     })

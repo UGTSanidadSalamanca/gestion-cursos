@@ -64,6 +64,7 @@ model Teacher {
   updatedAt    DateTime       @updatedAt
   contacts     Contact[]
   modules      CourseModule[]
+  schedules    Schedule[]
   userId       String?        @unique
   user         User?          @relation(fields: [userId], references: [id])
 
@@ -222,9 +223,11 @@ model Schedule {
   classroom   String?
   isRecurring Boolean   @default(true)
   notes       String?
+  teacherId   String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  teacher     Teacher?  @relation(fields: [teacherId], references: [id])
 
   @@map("schedules")
 }
