@@ -1114,7 +1114,6 @@ export default function CoursesPage() {
                           })()}
                         </p>
                       </div>
-
                       <div className="space-y-3">
                         {selectedCourse.syllabusUrl && (
                           <a href={selectedCourse.syllabusUrl} target="_blank" className="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-200 group transition-all no-print">
@@ -1246,7 +1245,11 @@ export default function CoursesPage() {
 
                       <div className="flex flex-col md:flex-row items-center justify-between gap-6 opacity-80 pt-4 border-t border-dashed">
                         <div className="flex items-center gap-4">
-                          <QRCodeSVG value={`${window.location.origin}/p/${selectedCourse.id}`} size={64} className="bg-white p-1 rounded-lg border shadow-sm" />
+                          <QRCodeSVG
+                            value={typeof window !== 'undefined' ? `${window.location.origin}/p/${selectedCourse.id}` : ''}
+                            size={64}
+                            className="bg-white p-1 rounded-lg border shadow-sm"
+                          />
                           <div className="text-left">
                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Enlace Público</p>
                             <a
