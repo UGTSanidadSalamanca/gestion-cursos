@@ -329,6 +329,8 @@ export default function PublicCoursePage() {
                                             ))}
                                         </div>
                                     </div>
+                                )}
+
                                 {course.modules && course.modules.length > 0 && (
                                     <div className="mt-12 bg-slate-50 p-8 rounded-3xl border border-slate-100 print:mt-6 print:p-4 print:bg-white print:border-slate-200">
                                         <h3 className="text-slate-900 font-extrabold text-2xl mb-8 flex items-center gap-3 print:text-lg print:mb-4">
