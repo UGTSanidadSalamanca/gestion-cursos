@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
     const courses = await db.course.findMany({
       where: whereClause,
       include: {
-        teacher: true,
         modules: {
           include: {
             teacher: true
@@ -73,7 +72,6 @@ export async function POST(request: NextRequest) {
       callUrl,
       hasCertificate,
       hasMaterials,
-      teacherId,
       modules = []
     } = body
 
@@ -105,7 +103,6 @@ export async function POST(request: NextRequest) {
         callUrl,
         hasCertificate: hasCertificate !== undefined ? hasCertificate : true,
         hasMaterials: hasMaterials !== undefined ? hasMaterials : true,
-        teacherId: teacherId || null,
         modules: {
           deleteMany: {},
           create: modules.map((m: any) => ({
@@ -141,7 +138,6 @@ export async function POST(request: NextRequest) {
         callUrl,
         hasCertificate: hasCertificate !== undefined ? hasCertificate : true,
         hasMaterials: hasMaterials !== undefined ? hasMaterials : true,
-        teacherId: teacherId || null,
         modules: {
           create: modules.map((m: any) => ({
             title: m.title,
@@ -151,7 +147,6 @@ export async function POST(request: NextRequest) {
         }
       },
       include: {
-        teacher: true,
         modules: {
           include: {
             teacher: true

@@ -31,33 +31,11 @@ interface PublicCourse {
     callUrl?: string
     hasCertificate?: boolean
     hasMaterials?: boolean
-    teacher?: { name: string }
     modules?: {
         title: string
         description?: string
         teacher?: { name: string }
-        teacher?: { name: string }
     }[]
-    schedules?: {
-        dayOfWeek: string
-        startTime: string
-        endTime: string
-        classroom?: string
-    }[]
-}
-
-const dayMapping: Record<string, string> = {
-    MONDAY: "Lunes",
-    TUESDAY: "Martes",
-    WEDNESDAY: "Miércoles",
-    THURSDAY: "Jueves",
-    FRIDAY: "Viernes",
-    SATURDAY: "Sábado",
-    SUNDAY: "Domingo"
-}
-
-const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
 }
 
 export default function PublicCoursePage() {
@@ -366,40 +344,6 @@ export default function PublicCoursePage() {
                                         </div>
                                     </div>
                                 )}
-
-                                <div className="mt-12 md:mt-12 bg-indigo-50/50 p-8 rounded-3xl border border-indigo-100 print:mt-4 print:p-4 print:bg-white print:border-slate-200">
-                                    <h3 className="text-slate-900 font-extrabold text-2xl mb-8 flex items-center gap-3 print:text-lg print:mb-4">
-                                        <div className="h-10 w-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-lg print:h-8 print:w-8 print:shadow-none"><Clock className="h-5 w-5" /></div>
-                                        Horarios
-                                    </h3>
-                                    {course.schedules && course.schedules.length > 0 ? (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {course.schedules.map((schedule, i) => (
-                                                <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-indigo-100 flex items-center gap-4">
-                                                    <div className="h-10 w-10 bg-indigo-100/50 rounded-lg flex items-center justify-center shrink-0 text-indigo-700 font-bold text-xs uppercase">
-                                                        {dayMapping[schedule.dayOfWeek]?.substring(0, 3)}
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-slate-900 text-sm uppercase">{dayMapping[schedule.dayOfWeek]}</p>
-                                                        <p className="text-slate-600 text-sm">
-                                                            {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
-                                                        </p>
-                                                        {schedule.classroom && (
-                                                            <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                                                                <Clock className="h-3 w-3" /> {schedule.classroom}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-dashed border-indigo-200 text-indigo-800/70">
-                                            <Info className="h-5 w-5" />
-                                            <span className="font-medium">Horario por definir o consultar con el centro.</span>
-                                        </div>
-                                    )}
-                                </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-12 pt-8 border-t border-slate-100 print:mt-4 print:pt-4 print:gap-2">
                                     <div className="flex items-start space-x-4 print:space-x-2">

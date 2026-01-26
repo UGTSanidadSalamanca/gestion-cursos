@@ -91,7 +91,6 @@ export async function GET(request: NextRequest) {
                     isActive: true,
                     startDate: true,
                     endDate: true,
-                    teacherId: true,
                     createdAt: true,
                 }
             }),

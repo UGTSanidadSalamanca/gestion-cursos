@@ -80,10 +80,6 @@ interface Course {
   callUrl?: string
   hasCertificate: boolean
   hasMaterials: boolean
-  teacher?: {
-    id: string
-    name: string
-  }
   modules?: CourseModule[]
   enrollments?: {
     id: string
@@ -144,7 +140,6 @@ export default function CoursesPage() {
     affiliatePrice: '',
     startDate: '',
     endDate: '',
-    teacherId: '',
     description: '',
     publicDescription: '',
     benefits: '',
@@ -301,7 +296,6 @@ export default function CoursesPage() {
       affiliatePrice: '',
       startDate: '',
       endDate: '',
-      teacherId: '',
       description: '',
       publicDescription: '',
       benefits: '',
@@ -350,9 +344,8 @@ export default function CoursesPage() {
       priceUnit: course.priceUnit || '',
       paymentFrequency: course.paymentFrequency || '',
       affiliatePrice: course.affiliatePrice != null ? course.affiliatePrice.toString() : '',
-      startDate: formatDate(course.startDate),
-      endDate: formatDate(course.endDate),
-      teacherId: (course as any).teacherId || (course.teacher?.id) || '',
+      startDate: course.startDate ? (typeof course.startDate === 'string' ? course.startDate.split('T')[0] : (course.startDate as any).toISOString().split('T')[0]) : '',
+      endDate: course.endDate ? (typeof course.endDate === 'string' ? course.endDate.split('T')[0] : (course.endDate as any).toISOString().split('T')[0]) : '',
       description: course.description || '',
       publicDescription: course.publicDescription || '',
       benefits: course.benefits || '',
@@ -730,14 +723,8 @@ export default function CoursesPage() {
                           <Label htmlFor="affiliatePrice" className="text-xs font-bold text-green-600 uppercase">Precio Afiliado (€)</Label>
                           <Input id="affiliatePrice" type="number" step="0.01" value={courseFormData.affiliatePrice} onChange={(e) => setCourseFormData({ ...courseFormData, affiliatePrice: e.target.value })} className="bg-green-50/30 border-green-100 h-11 font-bold text-green-700" />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="teacher" className="text-xs font-bold text-slate-500 uppercase">Docente Principal</Label>
-                          <Select value={courseFormData.teacherId} onValueChange={(value) => setCourseFormData({ ...courseFormData, teacherId: value })}>
-                            <SelectTrigger className="bg-white border-slate-200 h-11"><SelectValue placeholder="Elegir" /></SelectTrigger>
-                            <SelectContent>
-                              {teachers.map((t) => (<SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>))}
-                            </SelectContent>
-                          </Select>
+                        <div className="space-y-2 col-span-1 md:col-span-1">
+                          {/* Campo teacherId eliminado para favorecer docentes por módulo */}
                         </div>
                       </div>
                     </div>
@@ -928,7 +915,14 @@ export default function CoursesPage() {
                           </div>
                         </TableCell>
                         <TableCell>{getLevelBadge(course.level)}</TableCell>
-                        <TableCell className="text-slate-600">{course.teacher?.name || '---'}</TableCell>
+                        <TableCell className="text-slate-600">
+                          {(() => {
+                            const uniqueTeachers = Array.from(new Set((course.modules || []).map(m => m.teacher?.name).filter(Boolean)))
+                            if (uniqueTeachers.length === 0) return '---'
+                            if (uniqueTeachers.length === 1) return uniqueTeachers[0]
+                            return `${uniqueTeachers[0]} (+${uniqueTeachers.length - 1})`
+                          })()}
+                        </TableCell>
                         <TableCell>
                           <span className="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs font-medium">
                             <Clock className="w-3 h-3 mr-1" />
@@ -1110,145 +1104,183 @@ export default function CoursesPage() {
                     </div>
 
                     <div className="space-y-3">
-                      {selectedCourse.syllabusUrl && (
-                        <a href={selectedCourse.syllabusUrl} target="_blank" className="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-200 group transition-all no-print">
-                          <div className="flex items-center gap-3">
-                            <ExternalLink className="h-4 w-4 text-amber-600" />
-                            <span className="text-xs font-bold text-amber-800 uppercase tracking-tighter">Material Didáctico</span>
-                          </div>
-                          <div className="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-black italic">DRIVE</div>
-                        </a>
-                      )}
-                      <div className="p-3 bg-slate-100/50 rounded-xl border border-slate-200">
-                        <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Inscripción actual</p>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-bold text-slate-700">{selectedCourse._count?.enrollments || 0} / {selectedCourse.maxStudents}</span>
-                          <div className="h-1.5 w-24 bg-slate-200 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-blue-600"
-                              style={{ width: `${Math.min(((selectedCourse._count?.enrollments || 0) / selectedCourse.maxStudents) * 100, 100)}%` }}
-                            />
-                          </div>
-                        </div>
+                      <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100 flex flex-col gap-1">
+                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest pl-1">Equipo Docente</p>
+                        <p className="text-sm font-bold text-blue-900">
+                          {(() => {
+                            const uniqueTeachers = Array.from(new Set((selectedCourse.modules || []).map(m => m.teacher?.name).filter(Boolean)))
+                            if (uniqueTeachers.length === 0) return 'Por asignar'
+                            return uniqueTeachers.join(', ')
+                          })()}
+                        </p>
                       </div>
-                    </div>
 
-                    {/* Temario Compacto */}
-                    {selectedCourse.modules && selectedCourse.modules.length > 0 && (
-                      <div className="mb-6">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest pl-1">Bloques de contenido</h3>
-                        <div className="space-y-2">
-                          {selectedCourse.modules.map((module, idx) => (
-                            <div key={idx} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-                              <span className="text-xs font-black text-blue-600 bg-blue-50 w-6 h-6 flex items-center justify-center rounded-lg border border-blue-100">{idx + 1}</span>
-                              <div className="flex-1">
-                                <p className="text-xs font-bold text-slate-800 uppercase">{module.title}</p>
-                              </div>
+                      <div className="space-y-3">
+                        {selectedCourse.syllabusUrl && (
+                          <a href={selectedCourse.syllabusUrl} target="_blank" className="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-200 group transition-all no-print">
+                            <div className="flex items-center gap-3">
+                              <ExternalLink className="h-4 w-4 text-amber-600" />
+                              <span className="text-xs font-bold text-amber-800 uppercase tracking-tighter">Material Didáctico</span>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Alumnos Inscritos */}
-                    {selectedCourse.enrollments && selectedCourse.enrollments.length > 0 && (
-                      <div className="mb-6">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest pl-1 flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <Users className="h-3 w-3" /> Listado de Alumnos ({selectedCourse.enrollments.length})
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 text-[9px] font-bold uppercase text-green-600 hover:text-green-700 hover:bg-green-50 px-2"
-                            onClick={() => handleExportStudents(selectedCourse)}
-                          >
-                            <FileSpreadsheet className="h-3 w-3 mr-1" />
-                            Exportar Excel
-                          </Button>
-                        </h3>
-                        <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                          <Table>
-                            <TableHeader className="bg-slate-50">
-                              <TableRow className="h-8">
-                                <TableHead className="text-[9px] font-black uppercase text-slate-500 py-0">Alumno</TableHead>
-                                <TableHead className="text-[9px] font-black uppercase text-slate-500 py-0">DNI</TableHead>
-                                <TableHead className="text-[9px] font-black uppercase text-slate-500 py-0">Tipo</TableHead>
-                                <TableHead className="text-[9px] font-black uppercase text-slate-500 py-0">Estado</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {selectedCourse.enrollments.map((enr) => (
-                                <TableRow key={enr.id} className="h-10 hover:bg-slate-50/50">
-                                  <TableCell className="py-2">
-                                    <div className="flex flex-col">
-                                      <span className="text-[11px] font-bold text-slate-700">{enr.student.name}</span>
-                                      <span className="text-[9px] text-slate-400">{enr.student.phone || '--'}</span>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="py-2 text-[10px] font-mono text-slate-600">{enr.student.dni || '--'}</TableCell>
-                                  <TableCell className="py-2">
-                                    <Badge variant="outline" className={`text-[8px] font-black h-4 px-1 ${enr.student.isAffiliated ? 'border-green-200 text-green-700 bg-green-50' : 'border-slate-200 text-slate-500 bg-slate-50'}`}>
-                                      {enr.student.isAffiliated ? 'AFILIADO' : 'GENERAL'}
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell className="py-2">
-                                    <span className={`text-[9px] font-bold ${enr.status === 'PENDING' ? 'text-amber-600' : 'text-blue-600'}`}>
-                                      {enr.status === 'PENDING' ? 'PAG. PEND.' : 'INSCRITO'}
-                                    </span>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 mb-6">
-                      <p className="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest text-center">Resumen del programa</p>
-                      <p className="text-xs text-slate-600 leading-relaxed italic text-center">
-                        "{selectedCourse.description || 'Consulta los detalles específicos con el departamento de formación.'}"
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 opacity-80 pt-4 border-t border-dashed">
-                      <div className="flex items-center gap-4">
-                        <QRCodeSVG value={`${window.location.origin}/p/${selectedCourse.id}`} size={64} className="bg-white p-1 rounded-lg border shadow-sm" />
-                        <div className="text-left">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Enlace Público</p>
-                          <a
-                            href={`${typeof window !== 'undefined' ? window.location.origin : ''}/p/${selectedCourse.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] font-bold text-blue-600 hover:underline block mb-1"
-                          >
-                            {`${typeof window !== 'undefined' ? window.location.origin : ''}/p/${selectedCourse.id}`}
+                            <div className="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-black italic">DRIVE</div>
                           </a>
-                          <p className="text-[9px] text-slate-500 italic">Disponible para inscripción online</p>
+                        )}
+                        <div className="p-3 bg-slate-100/50 rounded-xl border border-slate-200">
+                          <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Inscripción actual</p>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-bold text-slate-700">{selectedCourse._count?.enrollments || 0} / {selectedCourse.maxStudents}</span>
+                            <div className="h-1.5 w-24 bg-slate-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-blue-600"
+                                style={{ width: `${Math.min(((selectedCourse._count?.enrollments || 0) / selectedCourse.maxStudents) * 100, 100)}%` }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right hidden md:block">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Información Oficial</p>
-                        <p className="text-[10px] font-bold text-slate-800">UGT Servicios Públicos Salamanca</p>
+
+                      {/* Temario Compacto */}
+                      {selectedCourse.modules && selectedCourse.modules.length > 0 && (
+                        <div className="mb-6">
+                          <h3 className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest pl-1">Bloques de contenido</h3>
+                          <div className="space-y-2">
+                            {selectedCourse.modules.map((module, idx) => (
+                              <div key={idx} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                <span className="text-xs font-black text-blue-600 bg-blue-50 w-6 h-6 flex items-center justify-center rounded-lg border border-blue-100">{idx + 1}</span>
+                                <div className="flex-1">
+                                  <p className="text-xs font-bold text-slate-800 uppercase">{module.title}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Alumnos Inscritos */}
+                      {selectedCourse.enrollments && selectedCourse.enrollments.length > 0 && (
+                        <div className="mb-6">
+                          <h3 className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest pl-1 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <Users className="h-3 w-3" /> Listado de Alumnos ({selectedCourse.enrollments.length})
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 text-[9px] font-bold uppercase text-green-600 hover:text-green-700 hover:bg-green-50 px-2"
+                              onClick={() => handleExportStudents(selectedCourse)}
+                            >
+                              <FileSpreadsheet className="h-3 w-3 mr-1" />
+                              Exportar Excel
+                            </Button>
+                          </h3>
+                          <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                            <Table>
+                              <TableHeader className="bg-slate-50">
+                                <TableRow className="h-8">
+                                  <TableHead className="text-[9px] font-black uppercase text-slate-500 py-0">Alumno</TableHead>
+                                  <TableHead className="text-[9px] font-black uppercase text-slate-500 py-0">DNI</TableHead>
+                                  <TableHead className="text-[9px] font-black uppercase text-slate-500 py-0">Tipo</TableHead>
+                                  <TableHead className="text-[9px] font-black uppercase text-slate-500 py-0">Estado</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {selectedCourse.enrollments.map((enr) => (
+                                  <TableRow key={enr.id} className="h-10 hover:bg-slate-50/50">
+                                    <TableCell className="py-2">
+                                      <div className="flex flex-col">
+                                        <span className="text-[11px] font-bold text-slate-700">{enr.student.name}</span>
+                                        <span className="text-[9px] text-slate-400">{enr.student.phone || '--'}</span>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="py-2 text-[10px] font-mono text-slate-600">{enr.student.dni || '--'}</TableCell>
+                                    <TableCell className="py-2">
+                                      <Badge variant="outline" className={`text-[8px] font-black h-4 px-1 ${enr.student.isAffiliated ? 'border-green-200 text-green-700 bg-green-50' : 'border-slate-200 text-slate-500 bg-slate-50'}`}>
+                                        {enr.student.isAffiliated ? 'AFILIADO' : 'GENERAL'}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className="py-2">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`text-[9px] font-bold ${enr.status === 'PENDING' ? 'text-amber-600' : 'text-blue-600'}`}>
+                                          {enr.status === 'PENDING' ? 'PAG. PEND.' : 'INSCRITO'}
+                                        </span>
+                                        {enr.status === 'ENROLLED' && (
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6 text-slate-400 hover:text-amber-600"
+                                            title="Revertir a Pendiente"
+                                            onClick={async (e) => {
+                                              e.stopPropagation();
+                                              if (confirm('¿Revertir estado a Pago Pendiente?')) {
+                                                const res = await fetch(`/api/enrollments/${enr.id}`, {
+                                                  method: 'PATCH',
+                                                  headers: { 'Content-Type': 'application/json' },
+                                                  body: JSON.stringify({ status: 'PENDING' })
+                                                })
+                                                if (res.ok) {
+                                                  toast.success("Estado revertido")
+                                                  handleViewClick(selectedCourse) // Refresh full data
+                                                }
+                                              }
+                                            }}
+                                          >
+                                            <Clock className="h-3 w-3" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 mb-6">
+                        <p className="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest text-center">Resumen del programa</p>
+                        <p className="text-xs text-slate-600 leading-relaxed italic text-center">
+                          "{selectedCourse.description || 'Consulta los detalles específicos con el departamento de formación.'}"
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col md:flex-row items-center justify-between gap-6 opacity-80 pt-4 border-t border-dashed">
+                        <div className="flex items-center gap-4">
+                          <QRCodeSVG value={`${window.location.origin}/p/${selectedCourse.id}`} size={64} className="bg-white p-1 rounded-lg border shadow-sm" />
+                          <div className="text-left">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Enlace Público</p>
+                            <a
+                              href={`${typeof window !== 'undefined' ? window.location.origin : ''}/p/${selectedCourse.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] font-bold text-blue-600 hover:underline block mb-1"
+                            >
+                              {`${typeof window !== 'undefined' ? window.location.origin : ''}/p/${selectedCourse.id}`}
+                            </a>
+                            <p className="text-[9px] text-slate-500 italic">Disponible para inscripción online</p>
+                          </div>
+                        </div>
+                        <div className="text-right hidden md:block">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Información Oficial</p>
+                          <p className="text-[10px] font-bold text-slate-800">UGT Servicios Públicos Salamanca</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="bg-slate-50 px-8 py-5 flex items-center justify-end gap-3 no-print border-t shrink-0">
-                  <Button variant="outline" className="h-11 rounded-xl font-bold uppercase text-[10px] tracking-widest border-slate-300" onClick={handlePrint}>
-                    <Printer className="mr-2 h-4 w-4" /> Imprimir / PDF
-                  </Button>
-                  <Button variant="outline" className="h-11 rounded-xl font-bold uppercase text-[10px] tracking-widest border-slate-300" onClick={() => handleExportPDF(selectedCourse)}>
-                    <Download className="mr-2 h-4 w-4" /> Descargar Imagen PDF
-                  </Button>
-                  <Button className="h-11 bg-slate-900 hover:bg-black rounded-xl font-bold uppercase text-[10px] tracking-widest px-8" onClick={() => setIsViewDialogOpen(false)}>
-                    Cerrar
-                  </Button>
-                </div>
-              </>
+                  <div className="bg-slate-50 px-8 py-5 flex items-center justify-end gap-3 no-print border-t shrink-0">
+                    <Button variant="outline" className="h-11 rounded-xl font-bold uppercase text-[10px] tracking-widest border-slate-300" onClick={handlePrint}>
+                      <Printer className="mr-2 h-4 w-4" /> Imprimir / PDF
+                    </Button>
+                    <Button variant="outline" className="h-11 rounded-xl font-bold uppercase text-[10px] tracking-widest border-slate-300" onClick={() => handleExportPDF(selectedCourse)}>
+                      <Download className="mr-2 h-4 w-4" /> Descargar Imagen PDF
+                    </Button>
+                    <Button className="h-11 bg-slate-900 hover:bg-black rounded-xl font-bold uppercase text-[10px] tracking-widest px-8" onClick={() => setIsViewDialogOpen(false)}>
+                      Cerrar
+                    </Button>
+                  </div>
+                </>
             )}
-          </DialogContent>
+              </DialogContent>
         </Dialog>
 
         {/* Edit Dialog */}
@@ -1393,17 +1425,6 @@ export default function CoursesPage() {
                       <Input id="edit-maxStudents" type="number" value={courseFormData.maxStudents} onChange={(e) => setCourseFormData({ ...courseFormData, maxStudents: e.target.value })} className="bg-white border-slate-200 h-11" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-teacher" className="text-xs font-bold text-slate-500 uppercase">Docente Principal</Label>
-                      <Select value={courseFormData.teacherId} onValueChange={(value) => setCourseFormData({ ...courseFormData, teacherId: value })}>
-                        <SelectTrigger className="bg-white border-slate-200 h-11">
-                          <SelectValue placeholder="Seleccionar" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {teachers.map((t) => (
-                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                     </div>
                   </div>
                 </div>

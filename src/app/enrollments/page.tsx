@@ -318,6 +318,28 @@ export default function EnrollmentsPage() {
                     {selectedEnrollment.status !== 'CANCELLED' && (
                       <Button
                         size="sm"
+                        variant="ghost"
+                        className="text-amber-600 border-amber-200 hover:bg-amber-50"
+                        onClick={async () => {
+                          if (confirm('¿Revertir esta matrícula a Pago Pendiente?')) {
+                            const res = await fetch(`/api/enrollments/${selectedEnrollment.id}`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ status: 'PENDING' })
+                            })
+                            if (res.ok) {
+                              toast.success("Matrícula revertida a pago pendiente")
+                              setSelectedEnrollment({ ...selectedEnrollment, status: 'PENDING' })
+                              fetchEnrollments()
+                            }
+                          }
+                        }}
+                      >
+                        <Clock className="h-4 w-4 mr-2" />
+                        Revertir a Pendiente
+                      </Button>
+                      <Button
+                        size="sm"
                         variant="outline"
                         className="text-red-600 border-red-200 hover:bg-red-50"
                         onClick={async () => {

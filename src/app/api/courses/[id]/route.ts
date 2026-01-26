@@ -9,7 +9,6 @@ export async function GET(
         const course = await db.course.findUnique({
             where: { id: params.id },
             include: {
-                teacher: true,
                 modules: {
                     include: {
                         teacher: true
@@ -24,11 +23,6 @@ export async function GET(
                     },
                     orderBy: {
                         createdAt: 'desc'
-                    }
-                },
-                schedules: {
-                    orderBy: {
-                        dayOfWeek: 'asc'
                     }
                 }
             }
@@ -75,7 +69,6 @@ export async function PUT(
             callUrl,
             hasCertificate,
             hasMaterials,
-            teacherId,
             modules = []
         } = body
 
@@ -106,7 +99,6 @@ export async function PUT(
                 callUrl,
                 hasCertificate,
                 hasMaterials,
-                teacherId: teacherId || null,
                 modules: {
                     deleteMany: {},
                     create: modules.map((m: any) => ({
@@ -117,7 +109,6 @@ export async function PUT(
                 }
             },
             include: {
-                teacher: true,
                 modules: {
                     include: {
                         teacher: true

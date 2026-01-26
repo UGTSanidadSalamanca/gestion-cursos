@@ -29,11 +29,7 @@ export async function GET(
                 callUrl: true,
                 hasCertificate: true,
                 hasMaterials: true,
-                teacher: {
-                    select: {
-                        name: true
-                    }
-                },
+                hasMaterials: true,
                 modules: {
                     select: {
                         title: true,
@@ -43,17 +39,6 @@ export async function GET(
                                 name: true
                             }
                         }
-                    }
-                },
-                schedules: {
-                    select: {
-                        dayOfWeek: true,
-                        startTime: true,
-                        endTime: true,
-                        classroom: true
-                    },
-                    orderBy: {
-                        dayOfWeek: 'asc'
                     }
                 }
             }

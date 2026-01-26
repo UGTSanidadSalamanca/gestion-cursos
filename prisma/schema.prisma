@@ -64,7 +64,6 @@ model Teacher {
   updatedAt    DateTime       @updatedAt
   contacts     Contact[]
   modules      CourseModule[]
-  courses      Course[]
   userId       String?        @unique
   user         User?          @relation(fields: [userId], references: [id])
 
@@ -102,7 +101,6 @@ model Course {
   isActive          Boolean          @default(true)
   startDate         DateTime?
   endDate           DateTime?
-  teacherId         String?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   benefits          String?
@@ -121,7 +119,6 @@ model Course {
   paymentFrequency  String?
   materials         CourseMaterial[]
   modules           CourseModule[]
-  teacher           Teacher?         @relation(fields: [teacherId], references: [id])
   enrollments       Enrollment[]
   payments          Payment[]
   schedules         Schedule[]

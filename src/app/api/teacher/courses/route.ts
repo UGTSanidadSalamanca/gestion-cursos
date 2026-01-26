@@ -35,19 +35,14 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Teacher profile not found' }, { status: 404 })
         }
 
-        // Find courses with this teacherId OR where the teacher is assigned to a module
+        // Find courses where the teacher is assigned to a module
         const courses = await db.course.findMany({
             where: {
-                OR: [
-                    { teacherId: teacher.id },
-                    {
-                        modules: {
-                            some: {
-                                teacherId: teacher.id
-                            }
-                        }
+                modules: {
+                    some: {
+                        teacherId: teacher.id
                     }
-                ]
+                }
             },
             include: {
                 _count: {

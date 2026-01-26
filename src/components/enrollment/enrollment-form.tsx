@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -16,9 +16,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { 
-  Users, 
-  BookOpen, 
+import {
+  Users,
+  BookOpen,
   Calendar,
   Euro,
   UserPlus
@@ -40,9 +40,7 @@ interface Course {
   price: number
   maxStudents: number
   isActive: boolean
-  teacher?: {
-    name: string
-  }
+  isActive: boolean
   _count?: {
     enrollments: number
   }
@@ -242,13 +240,19 @@ export function EnrollmentForm({ courseId, studentId, onSuccess, onCancel }: Enr
               {(() => {
                 const course = courses.find(c => c.id === selectedCourse)
                 if (!course) return null
-                
+
                 return (
                   <>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Profesor</Label>
-                        <p>{course.teacher?.name || 'No asignado'}</p>
+                        <Label className="text-sm font-medium text-muted-foreground">Equipo Docente</Label>
+                        <p>
+                          {(() => {
+                            const uniqueTeachers = Array.from(new Set((course.modules || []).map(m => (m as any).teacher?.name).filter(Boolean)))
+                            if (uniqueTeachers.length === 0) return 'Por asignar'
+                            return uniqueTeachers.join(', ')
+                          })()}
+                        </p>
                       </div>
                       <div>
                         <Label className="text-sm font-medium text-muted-foreground">Duración</Label>
@@ -300,7 +304,7 @@ export function EnrollmentForm({ courseId, studentId, onSuccess, onCancel }: Enr
             Selecciona un alumno y un curso para realizar la inscripción
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           {/* Student Selection */}
           <div className="space-y-2">
@@ -392,13 +396,19 @@ export function EnrollmentForm({ courseId, studentId, onSuccess, onCancel }: Enr
                 {(() => {
                   const course = courses.find(c => c.id === selectedCourse)
                   if (!course) return null
-                  
+
                   return (
                     <>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label className="text-sm font-medium text-muted-foreground">Profesor</Label>
-                          <p>{course.teacher?.name || 'No asignado'}</p>
+                          <Label className="text-sm font-medium text-muted-foreground">Equipo Docente</Label>
+                          <p>
+                            {(() => {
+                              const uniqueTeachers = Array.from(new Set((course.modules || []).map(m => (m as any).teacher?.name).filter(Boolean)))
+                              if (uniqueTeachers.length === 0) return 'Por asignar'
+                              return uniqueTeachers.join(', ')
+                            })()}
+                          </p>
                         </div>
                         <div>
                           <Label className="text-sm font-medium text-muted-foreground">Duración</Label>
