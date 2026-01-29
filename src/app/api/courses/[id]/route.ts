@@ -43,6 +43,27 @@ export async function GET(
     }
 }
 
+const dayMapping: Record<string, 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'> = {
+    'Lunes': 'MONDAY', 'Martes': 'TUESDAY', 'Miércoles': 'WEDNESDAY', 'Jueves': 'THURSDAY', 'Viernes': 'FRIDAY', 'Sábado': 'SATURDAY', 'Domingo': 'SUNDAY',
+    'MONDAY': 'MONDAY', 'TUESDAY': 'TUESDAY', 'WEDNESDAY': 'WEDNESDAY', 'THURSDAY': 'THURSDAY', 'FRIDAY': 'FRIDAY', 'SATURDAY': 'SATURDAY', 'SUNDAY': 'SUNDAY',
+    'LUNES': 'MONDAY', 'MARTES': 'TUESDAY', 'MIERCOLES': 'WEDNESDAY', 'JUEVES': 'THURSDAY', 'VIERNES': 'FRIDAY', 'SABADO': 'SATURDAY', 'DOMINGO': 'SUNDAY',
+}
+
+function parseTime(timeStr: string | Date): Date {
+    if (timeStr instanceof Date) return timeStr;
+    if (!timeStr) return new Date();
+
+    // Si viene en formato ISO completo
+    if (timeStr.includes('T')) return new Date(timeStr);
+
+    // Si viene solo hora HH:mm
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const date = new Date();
+    date.setUTCHours(hours || 0, minutes || 0, 0, 0);
+    date.setFullYear(1970, 0, 1);
+    return date;
+}
+
 export async function PUT(
     request: NextRequest,
     { params }: { params: { id: string } }
@@ -72,10 +93,13 @@ export async function PUT(
             benefits,
             features,
             callUrl,
+            hasCertificate,
             hasMaterials,
             modules = [],
             schedules = []
         } = body
+
+        console.log('Updating course:', params.id);
 
         const course = await db.course.update({
             where: { id: params.id },
@@ -114,15 +138,26 @@ export async function PUT(
                 },
                 schedules: {
                     deleteMany: {},
-                    create: schedules.map((s: any) => ({
-                        dayOfWeek: s.dayOfWeek,
-                        startTime: new Date(s.startTime),
-                        endTime: new Date(s.endTime),
-                        classroom: s.classroom,
-                        teacherId: s.teacherId || null,
-                        notes: s.notes,
-                        isRecurring: s.isRecurring !== undefined ? s.isRecurring : true
-                    }))
+                    create: schedules.map((s: any) => {
+                        const dayKey = s.dayOfWeek || s.day || 'Lunes';
+                        const normalizedDay = dayKey.charAt(0).toUpperCase() + dayKey.slice(1).toLowerCase();
+                        let mappedDay = dayMapping[dayKey] || dayMapping[normalizedDay];
+
+                        if (!mappedDay) {
+                            if (dayKey.toUpperCase() === 'MIERCOLES') mappedDay = 'WEDNESDAY';
+                            if (dayKey.toUpperCase() === 'SABADO') mappedDay = 'SATURDAY';
+                        }
+
+                        return {
+                            dayOfWeek: mappedDay || 'MONDAY',
+                            startTime: parseTime(s.startTime),
+                            endTime: parseTime(s.endTime),
+                            classroom: s.classroom,
+                            teacherId: s.teacherId || null,
+                            notes: s.notes,
+                            isRecurring: s.isRecurring !== undefined ? s.isRecurring : true
+                        }
+                    })
                 }
             },
             include: {
