@@ -16,8 +16,26 @@ import {
   Plus,
   Edit,
   Trash2,
-  Filter
+  Filter,
+  FileDown,
+  FileUp,
+  AlertCircle,
+  CheckCircle2
 } from "lucide-react"
+import * as XLSX from 'xlsx'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { toast } from "sonner"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Schedule {
   id: string
@@ -51,10 +69,28 @@ export default function SchedulesPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedDay, setSelectedDay] = useState<string>('all')
+  const [courses, setCourses] = useState<any[]>([])
+  const [teachers, setTeachers] = useState<any[]>([])
+  const [isImportOpen, setIsImportOpen] = useState(false)
+  const [importLoading, setImportLoading] = useState(false)
 
   useEffect(() => {
     fetchSchedules()
+    fetchMetadata()
   }, [])
+
+  const fetchMetadata = async () => {
+    try {
+      const [coursesRes, teachersRes] = await Promise.all([
+        fetch('/api/courses'),
+        fetch('/api/teachers')
+      ])
+      if (coursesRes.ok) setCourses(await coursesRes.json())
+      if (teachersRes.ok) setTeachers(await teachersRes.json())
+    } catch (error) {
+      console.error('Error fetching metadata:', error)
+    }
+  }
 
   const fetchSchedules = async () => {
     setLoading(true)
@@ -107,6 +143,97 @@ export default function SchedulesPage() {
     avgCapacity: schedules.length > 0 ? Math.round(schedules.reduce((sum, s) => sum + ((s.course._count?.enrollments || 0) / s.course.maxStudents), 0) / schedules.length * 100) : 0
   }
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImportLoading(true)
+    const reader = new FileReader()
+
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result
+        const wb = XLSX.read(bstr, { type: 'binary' })
+        const wsname = wb.SheetNames[0]
+        const ws = wb.Sheets[wsname]
+        const data = XLSX.utils.sheet_to_json(ws) as any[]
+
+        // Simple mapping attempt
+        const processedSchedules = data.map(item => {
+          const course = courses.find(c =>
+            c.title.toLowerCase() === (item.Curso || '').toLowerCase() ||
+            c.code.toLowerCase() === (item.Código || '').toLowerCase()
+          )
+          const teacher = teachers.find(t =>
+            t.name?.toLowerCase() === (item.Profesor || '').toLowerCase()
+          )
+
+          if (!course) return null
+
+          // Handle time (expecting string like "09:00" or Excel time)
+          const parseTime = (timeVal: any) => {
+            if (!timeVal) return null
+            const d = new Date()
+            if (typeof timeVal === 'number') {
+              // Excel serial time
+              const hours = Math.floor(timeVal * 24)
+              const minutes = Math.round((timeVal * 24 - hours) * 60)
+              d.setHours(hours, minutes, 0, 0)
+            } else {
+              const [h, m] = timeVal.split(':')
+              d.setHours(parseInt(h), parseInt(m), 0, 0)
+            }
+            return d.toISOString()
+          }
+
+          const dayMap: Record<string, string> = {
+            'Lunes': 'MONDAY', 'Martes': 'TUESDAY', 'Miércoles': 'WEDNESDAY',
+            'Jueves': 'THURSDAY', 'Viernes': 'FRIDAY', 'Sábado': 'SATURDAY', 'Domingo': 'SUNDAY',
+            'Monday': 'MONDAY', 'Tuesday': 'TUESDAY', 'Wednesday': 'WEDNESDAY',
+            'Thursday': 'THURSDAY', 'Friday': 'FRIDAY', 'Saturday': 'SATURDAY', 'Sunday': 'SUNDAY'
+          }
+
+          return {
+            courseId: course.id,
+            teacherId: teacher?.id,
+            dayOfWeek: dayMap[item.Dia] || dayMap[item.Día] || 'MONDAY',
+            startTime: parseTime(item.Inicio),
+            endTime: parseTime(item.Fin),
+            classroom: item.Aula || '',
+            notes: item.Notas || '',
+          }
+        }).filter(s => s !== null && s.startTime && s.endTime)
+
+        if (processedSchedules.length === 0) {
+          toast.error("No se encontraron datos válidos en el Excel. Asegúrate de que los nombres de los cursos coincidan.")
+          setImportLoading(false)
+          return
+        }
+
+        const response = await fetch('/api/schedules/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ schedules: processedSchedules })
+        })
+
+        if (response.ok) {
+          toast.success(`${processedSchedules.length} horarios importados correctamente`)
+          fetchSchedules()
+          setIsImportOpen(false)
+        } else {
+          toast.error("Error al guardar los horarios en la base de datos")
+        }
+      } catch (error) {
+        console.error("Error processing Excel:", error)
+        toast.error("Error al procesar el archivo Excel")
+      } finally {
+        setImportLoading(false)
+      }
+    }
+
+    reader.readAsBinaryString(file)
+  }
+
   return (
     <MainLayout>
       <div className="container mx-auto p-6 space-y-6">
@@ -118,7 +245,46 @@ export default function SchedulesPage() {
               Administración de horarios de clases y asignación de aulas
             </p>
           </div>
-          <div className="mt-4 md:mt-0">
+          <div className="mt-4 md:mt-0 flex gap-2">
+            <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <FileUp className="h-4 w-4 mr-2" />
+                  Importar Excel
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Importar Horarios</DialogTitle>
+                  <DialogDescription>
+                    Sube un archivo Excel (.xlsx) con las columnas: <br />
+                    <span className="font-mono text-xs">Curso, Profesor, Día, Inicio, Fin, Aula, Notas</span>
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="excel-file">Archivo Excel</Label>
+                    <Input
+                      id="excel-file"
+                      type="file"
+                      accept=".xlsx, .xls"
+                      onChange={handleFileUpload}
+                      disabled={importLoading}
+                    />
+                  </div>
+                  {importLoading && (
+                    <div className="flex items-center gap-2 text-sm text-blue-600 animate-pulse">
+                      <div className="h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      Procesando e importando datos...
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setIsImportOpen(false)}>Cancelar</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               Nuevo Horario

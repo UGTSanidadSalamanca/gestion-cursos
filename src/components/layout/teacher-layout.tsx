@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react"
 import Link from 'next/link'
-import { GraduationCap, LogOut, LayoutDashboard, User } from 'lucide-react'
+import { GraduationCap, LogOut, LayoutDashboard, User, Calendar } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 
 export function TeacherLayout({ children }: { children: React.ReactNode }) {
@@ -15,7 +15,7 @@ export function TeacherLayout({ children }: { children: React.ReactNode }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-16">
                         <div className="flex">
-                            <div className="flex-shrink-0 flex items-center gap-2">
+                            <div className="flex-shrink-0 flex items-center gap-2 mr-8">
                                 <div className="bg-blue-600 p-1.5 rounded-lg">
                                     <GraduationCap className="h-6 w-6 text-white" />
                                 </div>
@@ -27,6 +27,22 @@ export function TeacherLayout({ children }: { children: React.ReactNode }) {
                                         Portal Docente
                                     </span>
                                 </div>
+                            </div>
+                            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                                <Link
+                                    href="/teacher-portal"
+                                    className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:border-slate-300 hover:text-slate-700 transition-colors"
+                                >
+                                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                                    Mis Cursos
+                                </Link>
+                                <Link
+                                    href="/teacher-portal/schedule"
+                                    className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:border-slate-300 hover:text-slate-700 transition-colors"
+                                >
+                                    <Calendar className="h-4 w-4 mr-2" />
+                                    Mi Agenda
+                                </Link>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -51,8 +67,10 @@ export function TeacherLayout({ children }: { children: React.ReactNode }) {
             </nav>
 
             {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {children}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-64px)]">
+                <div className="animate-in fade-in duration-500">
+                    {children}
+                </div>
             </main>
         </div>
     )
