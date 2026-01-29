@@ -95,7 +95,7 @@ export default function EnrollmentsPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'PENDING':
-        return <Clock className="h-4 w-4 text-yellow-500" animate-pulse />
+        return <Clock className="h-4 w-4 text-yellow-500 animate-pulse" />
       case 'ENROLLED':
         return <FileText className="h-4 w-4 text-blue-500" />
       case 'IN_PROGRESS':
