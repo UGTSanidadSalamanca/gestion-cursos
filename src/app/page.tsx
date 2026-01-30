@@ -37,11 +37,16 @@ export default function Home() {
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight">Sistema de Gestión Integral</h1>
-            <p className="text-xl text-muted-foreground mt-2">
-              Plataforma completa para la administración de centros educativos
-            </p>
+          <div className="flex items-center gap-4">
+            <div className="bg-white p-2 rounded-xl shadow-md border border-slate-100 hidden md:block">
+              <img src="/ugt-logo.png" alt="Logo UGT" className="h-12 w-auto object-contain" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight">Sistema de Gestión Integral</h1>
+              <p className="text-xl text-muted-foreground mt-2">
+                Plataforma completa para la administración de centros educativos
+              </p>
+            </div>
           </div>
           <div className="mt-4 md:mt-0">
             <div className="flex items-center space-x-4">

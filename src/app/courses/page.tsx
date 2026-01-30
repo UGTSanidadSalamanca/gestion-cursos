@@ -525,15 +525,26 @@ export default function CoursesPage() {
       const contentHeight = (imgProps.height * contentWidth) / imgProps.width
 
       // Cabecera decorativa del PDF
-      pdf.setFillColor(37, 99, 235) // Azul UGT
-      pdf.rect(0, 0, pageWidth, 20, 'F')
+      pdf.setFillColor(220, 38, 38) // UGT Red (red-600)
+      pdf.rect(0, 0, pageWidth, 25, 'F')
+
+      // Intentar añadir el logo al PDF
+      try {
+        pdf.addImage('/ugt-logo.png', 'PNG', margin, 5, 15, 15)
+      } catch (e) {
+        console.warn("Could not add logo to PDF:", e)
+      }
+
       pdf.setTextColor(255, 255, 255)
       pdf.setFontSize(14)
       pdf.setFont('helvetica', 'bold')
-      pdf.text("UGT SERVICIOS PÚBLICOS SALAMANCA - FORMACIÓN", margin, 13)
+      pdf.text("UGT SERVICIOS PÚBLICOS SALAMANCA", margin + 18, 12)
+      pdf.setFontSize(10)
+      pdf.setFont('helvetica', 'normal')
+      pdf.text("DEPARTAMENTO DE FORMACIÓN", margin + 18, 18)
 
       // Añadir la imagen capturada
-      pdf.addImage(imgData, 'JPEG', margin, 25, contentWidth, contentHeight, undefined, 'FAST')
+      pdf.addImage(imgData, 'JPEG', margin, 30, contentWidth, contentHeight, undefined, 'FAST')
 
       // Pie de página
       pdf.setFontSize(8)
@@ -627,11 +638,16 @@ export default function CoursesPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Gestión de Cursos</h1>
-            <p className="text-muted-foreground">
-              Administra todos los cursos y asignaturas del centro educativo
-            </p>
+          <div className="flex items-center gap-4">
+            <div className="bg-white p-2 rounded-xl shadow-md border border-slate-100 hidden md:block">
+              <img src="/ugt-logo.png" alt="Logo UGT" className="h-10 w-auto object-contain" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Gestión de Cursos</h1>
+              <p className="text-muted-foreground">
+                Administra todos los cursos y asignaturas del centro educativo
+              </p>
+            </div>
           </div>
           <div className="mt-4 flex items-center space-x-2 md:mt-0">
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>

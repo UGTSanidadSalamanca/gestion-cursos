@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { QRCodeSVG } from "qrcode.react"
+import { jsPDF } from "jspdf"
+import html2canvas from "html2canvas"
 
 interface PublicCourse {
     title: string
@@ -176,6 +178,91 @@ export default function PublicCoursePage() {
         return result;
     }
 
+    const getSpanishSchedule = (schedule: any, startDate?: string) => {
+        const timeStr = `${new Date(schedule.startTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false })} - ${new Date(schedule.endTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+
+        if (!startDate) return `${schedule.dayOfWeek} de ${timeStr}`;
+
+        try {
+            const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const start = new Date(startDate);
+            const targetDay = days.indexOf(schedule.dayOfWeek);
+
+            if (targetDay === -1) return `${schedule.dayOfWeek} de ${timeStr}`;
+
+            // Encontrar la primera fecha después o en startDate que sea el día de la semana buscado
+            const resultDate = new Date(start);
+            const currentDay = resultDate.getDay();
+            let distance = targetDay - currentDay;
+            if (distance < 0) distance += 7;
+            resultDate.setDate(resultDate.getDate() + distance);
+
+            const datePart = resultDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+            return `${schedule.dayOfWeek}, ${datePart} a las ${timeStr}`;
+        } catch (e) {
+            return `${schedule.dayOfWeek} de ${timeStr}`;
+        }
+    }
+
+    const handleExportPDF = async () => {
+        const toastId = toast.loading("Preparando descarga PDF (A4)...")
+        try {
+            const element = document.getElementById('public-course-landing')
+            if (!element) {
+                toast.error("Error al localizar el contenido", { id: toastId })
+                return
+            }
+
+            // Ocultar elementos no deseados para el PDF
+            const noPrint = element.querySelectorAll('.no-print')
+            noPrint.forEach((el: any) => el.style.display = 'none')
+
+            const canvas = await html2canvas(element, {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: "#ffffff",
+                logging: false,
+                windowWidth: 1200
+            })
+
+            // Restaurar visibilidad
+            noPrint.forEach((el: any) => el.style.display = '')
+
+            const imgData = canvas.toDataURL('image/jpeg', 1.0)
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4',
+                compress: true
+            })
+
+            const pageWidth = pdf.internal.pageSize.getWidth()
+            const pageHeight = pdf.internal.pageSize.getHeight()
+            const imgProps = pdf.getImageProperties(imgData)
+            const imgHeight = (imgProps.height * pageWidth) / imgProps.width
+
+            // Añadir imagen al PDF (puede requerir múltiples páginas si es largo)
+            let heightLeft = imgHeight
+            let position = 0
+
+            pdf.addImage(imgData, 'JPEG', 0, position, pageWidth, imgHeight)
+            heightLeft -= pageHeight
+
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight
+                pdf.addPage()
+                pdf.addImage(imgData, 'JPEG', 0, position, pageWidth, imgHeight)
+                heightLeft -= pageHeight
+            }
+
+            pdf.save(`FICHA_${course?.code || 'CURSO'}.pdf`)
+            toast.success("PDF generado con éxito", { id: toastId })
+        } catch (error) {
+            console.error("PDF generation error:", error)
+            toast.error("Error al generar el PDF", { id: toastId })
+        }
+    }
+
     return (
         <div id="public-course-landing" className="min-h-screen bg-slate-50 pb-12 print:bg-white print:pb-0">
             <style jsx global>{`
@@ -242,6 +329,12 @@ export default function PublicCoursePage() {
             color: #991b1b !important; 
             border: 1px solid #fee2e2 !important;
           }
+          /* Forzar el logo en print si no aparece */
+          .print-logo {
+            display: block !important;
+            height: 40px !important;
+            width: auto !important;
+          }
         }
 
         .header-visual {
@@ -251,7 +344,18 @@ export default function PublicCoursePage() {
       `}</style>
 
             {/* Header Visual */}
-            <div className="header-visual bg-gradient-to-br from-red-600 to-red-900 text-white h-72 flex items-end relative overflow-hidden print:h-40 print:rounded-b-[2rem] print:mb-4">
+            <div className="header-visual bg-gradient-to-br from-red-600 to-red-900 text-white h-72 flex items-end relative overflow-hidden print:h-32 print:rounded-b-none print:mb-6">
+                <div className="absolute top-6 left-6 z-30 print:top-4 print:left-4">
+                    <div className="flex items-center">
+                        <div className="bg-white p-2 rounded-xl shadow-2xl mr-4 print:shadow-none print:border print:p-1.5">
+                            <img src="/ugt-logo.png" alt="Logo UGT" className="h-12 w-auto object-contain print:h-10" />
+                        </div>
+                        <div className="flex flex-col drop-shadow-lg">
+                            <h2 className="text-xl font-black text-white leading-tight uppercase tracking-tighter">Servicios Públicos</h2>
+                            <span className="text-xs text-red-100 font-bold tracking-[0.3em] uppercase opacity-90">UGT Salamanca</span>
+                        </div>
+                    </div>
+                </div>
                 <div className="absolute top-0 right-0 p-8 opacity-10 print:opacity-5 print:p-2">
                     <BookOpen className="h-80 w-80 print:h-40 print:w-40" />
                 </div>
@@ -268,7 +372,7 @@ export default function PublicCoursePage() {
                     <Button
                         size="sm"
                         className="bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg"
-                        onClick={() => window.print()}
+                        onClick={handleExportPDF}
                     >
                         <ExternalLink className="h-4 w-4 mr-2" /> Descargar PDF (A4)
                     </Button>
@@ -290,10 +394,10 @@ export default function PublicCoursePage() {
                         </Badge>
                         {course.startDate && (
                             <>
-                                <span className="text-blue-200/50 print:hidden">|</span>
-                                <div className="flex items-center gap-2 text-blue-100 text-sm font-medium print:text-blue-50 print:text-xs">
+                                <span className="text-white/20 print:hidden">|</span>
+                                <div className="flex items-center gap-2 text-white text-sm font-medium print:text-red-900 print:bg-red-50 print:px-2 print:py-0.5 print:rounded-full print:text-[9px]">
                                     <Calendar className="h-4 w-4" />
-                                    <span>Inicio: {new Date(course.startDate).toLocaleDateString()}</span>
+                                    <span>Inicio: {new Date(course.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                                 </div>
                             </>
                         )}
@@ -364,9 +468,9 @@ export default function PublicCoursePage() {
                                     {course.schedules.map((schedule, i) => (
                                         <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-red-200 transition-all">
                                             <div>
-                                                <p className="text-red-600 font-black uppercase text-xs tracking-widest mb-1">{schedule.dayOfWeek}</p>
+                                                <p className="text-red-600 font-black uppercase text-xs tracking-widest mb-1">Horario de clase</p>
                                                 <p className="text-slate-900 font-bold text-lg">
-                                                    {new Date(schedule.startTime).toISOString().substring(11, 16)} - {new Date(schedule.endTime).toISOString().substring(11, 16)}
+                                                    {getSpanishSchedule(schedule, course.startDate)}
                                                 </p>
                                                 {schedule.classroom && (
                                                     <p className="text-slate-400 text-xs mt-1 flex items-center gap-1">
@@ -402,11 +506,11 @@ export default function PublicCoursePage() {
                                 </div>
                             )}
                             <div className="flex items-start space-x-4 print:space-x-2">
-                                <div className="p-3 bg-indigo-50 rounded-2xl print:p-2"><Calendar className="h-6 w-6 text-indigo-600 print:h-4 print:w-4" /></div>
+                                <div className="p-3 bg-red-50 rounded-2xl print:p-2"><Calendar className="h-6 w-6 text-red-600 print:h-4 print:w-4" /></div>
                                 <div>
                                     <p className="text-sm font-bold text-slate-400 uppercase print:text-[10px]">Próximo Inicio</p>
                                     <p className="text-xl font-bold text-slate-800 print:text-sm">
-                                        {course.startDate ? new Date(course.startDate).toLocaleDateString() : 'Próximamente'}
+                                        {course.startDate ? new Date(course.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'Próximamente'}
                                     </p>
                                 </div>
                             </div>
@@ -641,7 +745,7 @@ export default function PublicCoursePage() {
                                 {course.callUrl && (
                                     <Button
                                         variant="outline"
-                                        className="w-full h-12 mt-3 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold rounded-2xl transition-all print:border-2 print:h-10 print:mt-1 print:text-xs"
+                                        className="w-full h-12 mt-3 border-red-600 text-red-600 hover:bg-red-50 font-bold rounded-2xl transition-all print:border-2 print:h-10 print:mt-1 print:text-xs"
                                         onClick={() => window.open(course.callUrl, '_blank')}
                                     >
                                         <ExternalLink className="mr-2 h-4 w-4" /> Ver Convocatoria
@@ -652,10 +756,10 @@ export default function PublicCoursePage() {
                                     <div className="mt-8 pt-6 border-t border-slate-100 space-y-3 print:mt-2 print:pt-2 print:space-y-1">
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 print:mb-1">Contacto de Formación</p>
                                         <div className="flex flex-col gap-2 print:gap-1">
-                                            <a href="mailto:formacion.salamanca@ugt-sp.ugt.org" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[9px]">
+                                            <a href="mailto:formacion.salamanca@ugt-sp.ugt.org" className="text-xs text-red-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[9px]">
                                                 formacion.salamanca@ugt-sp.ugt.org
                                             </a>
-                                            <a href="mailto:fespugtsalamanca@gmail.com" className="text-xs text-blue-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[9px]">
+                                            <a href="mailto:fespugtsalamanca@gmail.com" className="text-xs text-red-600 hover:underline font-medium break-all flex items-center gap-1 print:text-[9px]">
                                                 fespugtsalamanca@gmail.com
                                             </a>
                                             <p className="text-xs text-slate-700 font-bold flex items-center gap-1 print:text-[9px]">
@@ -672,7 +776,7 @@ export default function PublicCoursePage() {
                                     </div>
 
                                     <div className="mt-8 flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100 cursor-default print:mt-4 print:opacity-100 print:grayscale-0">
-                                        <img src="/ugt-logo.png" alt="Logo UGT Servicios Públicos" className="h-6 w-auto object-contain" />
+                                        <img src="/logo-servicios-publicos.png" alt="Logo UGT Servicios Públicos" className="h-6 w-auto object-contain" />
                                         <p className="text-center text-[8px] uppercase font-black text-slate-500 tracking-[0.2em]">
                                             Servicios Públicos UGT Salamanca
                                         </p>
