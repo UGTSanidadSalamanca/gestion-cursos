@@ -80,12 +80,14 @@ export default function PublicCoursePage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-white">
                 <div className="flex flex-col items-center gap-6">
-                    <div className="relative h-20 w-20">
-                        <img src="/logo-ugt.png" alt="Logo UGT" className="h-20 w-20 animate-pulse object-contain" />
-                    </div>
-                    <div className="flex flex-col items-center">
-                        <p className="text-xl font-black text-slate-800 tracking-tighter uppercase">Formación UGT</p>
-                        <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">Salamanca</span>
+                    <div className="flex flex-col items-center gap-6">
+                        <div className="relative h-20 w-auto">
+                            <img src="/logo-ugt-sp.png" alt="Logo UGT Servicios Públicos" className="h-20 w-auto animate-pulse object-contain" />
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <p className="text-xl font-black text-slate-800 tracking-tighter uppercase leading-none">Servicios Públicos</p>
+                            <span className="text-xs font-bold text-red-600 uppercase tracking-widest mt-1">UGT Salamanca</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -103,7 +105,7 @@ export default function PublicCoursePage() {
                     <CardDescription className="mt-2">
                         El enlace que has seguido puede estar roto o el curso ya no está disponible.
                     </CardDescription>
-                    <Button className="mt-6 w-full bg-blue-600" onClick={() => window.location.href = '/'}>
+                    <Button className="mt-6 w-full bg-red-600 hover:bg-red-700" onClick={() => window.location.href = '/'}>
                         Ir a la web principal
                     </Button>
                 </Card>
@@ -229,16 +231,16 @@ export default function PublicCoursePage() {
           .print-rounded { border-radius: 12px !important; }
           
           /* Colores vivos en print */
-          .bg-blue-600 { background-color: #2563eb !important; }
+          .bg-blue-600 { background-color: #dc2626 !important; }
           .bg-green-600 { background-color: #16a34a !important; }
-          .text-blue-600 { color: #2563eb !important; }
+          .text-blue-600 { color: #dc2626 !important; }
           .text-green-700 { color: #15803d !important; }
           
           /* Ajustes de badges en print */
           .badge-print { 
-            background-color: #f1f5f9 !important; 
-            color: #334155 !important; 
-            border: 1px solid #e2e8f0 !important;
+            background-color: #fef2f2 !important; 
+            color: #991b1b !important; 
+            border: 1px solid #fee2e2 !important;
           }
         }
 
@@ -249,7 +251,7 @@ export default function PublicCoursePage() {
       `}</style>
 
             {/* Header Visual */}
-            <div className="header-visual bg-gradient-to-br from-blue-700 to-indigo-800 text-white h-72 flex items-end relative overflow-hidden print:h-40 print:rounded-b-[2rem] print:mb-4">
+            <div className="header-visual bg-gradient-to-br from-red-600 to-red-900 text-white h-72 flex items-end relative overflow-hidden print:h-40 print:rounded-b-[2rem] print:mb-4">
                 <div className="absolute top-0 right-0 p-8 opacity-10 print:opacity-5 print:p-2">
                     <BookOpen className="h-80 w-80 print:h-40 print:w-40" />
                 </div>
@@ -265,24 +267,24 @@ export default function PublicCoursePage() {
                     </Button>
                     <Button
                         size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg"
+                        className="bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg"
                         onClick={() => window.print()}
                     >
                         <ExternalLink className="h-4 w-4 mr-2" /> Descargar PDF (A4)
                     </Button>
                 </div>
                 <div className="container mx-auto px-4 pb-12 relative z-10 print:pb-6">
-                    <Badge className="bg-blue-400/30 text-white border-blue-400/50 mb-3 px-3 py-1 text-xs print:bg-blue-600/20 print:text-blue-100">
-                        PROGRAMA FORMATIVO
+                    <Badge className="bg-white/20 text-white border-white/30 mb-3 px-3 py-1 text-xs print:bg-red-600/20 print:text-red-100 uppercase tracking-widest font-black">
+                        Servicios Públicos UGT
                     </Badge>
                     <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight max-w-4xl leading-tight print:text-3xl">
                         {course.title}
                     </h1>
                     <div className="flex flex-wrap items-center gap-3 mt-4 print:mt-1">
-                        <Badge variant="outline" className="border-blue-300/30 text-blue-100 font-bold px-3 py-1 print:text-blue-100 print:border-blue-300/30">
+                        <Badge variant="outline" className="border-white/30 text-white font-bold px-3 py-1 print:text-red-100 print:border-red-300/30">
                             CODE: {course.code}
                         </Badge>
-                        <span className="text-blue-200/50 print:hidden">|</span>
+                        <span className="text-white/20 print:hidden">|</span>
                         <Badge className="bg-white/10 hover:bg-white/20 text-white border-transparent backdrop-blur-sm print:bg-white/10 print:text-white">
                             NIVEL {course.level}
                         </Badge>
@@ -306,7 +308,7 @@ export default function PublicCoursePage() {
                         <Card className="border-none shadow-xl shadow-slate-200/60 overflow-hidden">
                             <CardHeader className="bg-white border-b border-slate-50">
                                 <div className="flex items-center gap-2 text-slate-400 text-sm font-bold uppercase tracking-wider">
-                                    <ShieldCheck className="h-4 w-4 text-blue-500" /> Descripción del programa
+                                    <ShieldCheck className="h-4 w-4 text-red-500" /> Descripción del programa
                                 </div>
                             </CardHeader>
                             <CardContent className="p-8">
@@ -317,13 +319,13 @@ export default function PublicCoursePage() {
                                 {benefitsList.length > 0 && (
                                     <div className="mt-12 print:mt-6">
                                         <h3 className="text-slate-900 font-bold text-xl mb-6 flex items-center gap-2 print:text-lg print:mb-3">
-                                            <div className="h-8 w-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">✓</div>
+                                            <div className="h-8 w-8 bg-red-600 text-white rounded-full flex items-center justify-center font-bold text-sm">✓</div>
                                             ¿Qué aprenderás con este curso?
                                         </h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {benefitsList.map((benefit, i) => (
                                                 <div key={i} className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                                    <CheckCircle className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                                                    <CheckCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                                                     <span className="text-slate-700 text-sm font-medium">{benefit}</span>
                                                 </div>
                                             ))}
@@ -339,9 +341,9 @@ export default function PublicCoursePage() {
                                         </h3>
                                         <div className="space-y-4">
                                             {course.modules.map((module, i) => (
-                                                <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center gap-4 group hover:border-blue-200 transition-all">
+                                                <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center gap-4 group hover:border-red-200 transition-all">
                                                     <div className="flex-1">
-                                                        <h4 className="font-bold text-slate-900 text-lg group-hover:text-blue-600 transition-colors">{module.title}</h4>
+                                                        <h4 className="font-bold text-slate-900 text-lg group-hover:text-red-600 transition-colors">{module.title}</h4>
                                                         {module.description && <p className="text-slate-500 text-sm mt-1 italic">{module.description}</p>}
                                                     </div>
                                                 </div>
@@ -360,9 +362,9 @@ export default function PublicCoursePage() {
                             {course.schedules && course.schedules.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {course.schedules.map((schedule, i) => (
-                                        <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-blue-200 transition-all">
+                                        <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-red-200 transition-all">
                                             <div>
-                                                <p className="text-blue-600 font-black uppercase text-xs tracking-widest mb-1">{schedule.dayOfWeek}</p>
+                                                <p className="text-red-600 font-black uppercase text-xs tracking-widest mb-1">{schedule.dayOfWeek}</p>
                                                 <p className="text-slate-900 font-bold text-lg">
                                                     {new Date(schedule.startTime).toISOString().substring(11, 16)} - {new Date(schedule.endTime).toISOString().substring(11, 16)}
                                                 </p>
@@ -414,7 +416,7 @@ export default function PublicCoursePage() {
                     {/* Sidebar CTA */}
                     <div className="space-y-6 print:space-y-2">
                         <Card className="border-none shadow-2xl bg-white sticky top-6 overflow-hidden print:static print:shadow-none print:border print:border-slate-200 print-no-break">
-                            <div className="bg-blue-600 h-2 w-full print:bg-blue-700" />
+                            <div className="bg-red-600 h-2 w-full print:bg-red-700" />
                             <CardContent className="p-8 print:p-4">
                                 <div className="text-center mb-6 print:mb-2">
                                     <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 print:mb-1 print:text-blue-800">Inversión del curso</p>
@@ -440,15 +442,15 @@ export default function PublicCoursePage() {
                                         </div>
 
                                         {/* Bloque Precio General */}
-                                        <div className={`p-4 rounded-2xl border relative overflow-hidden print:p-2 print:rounded-xl ${course.price ? 'bg-blue-50/30 border-blue-100 print:bg-blue-50/10' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
-                                            <p className={`text-[10px] font-black uppercase mb-1 tracking-tighter ${course.price ? 'text-blue-600' : 'text-slate-400'}`}>Precio General</p>
+                                        <div className={`p-4 rounded-2xl border relative overflow-hidden print:p-2 print:rounded-xl ${course.price ? 'bg-red-50/30 border-red-100 print:bg-red-50/10' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
+                                            <p className={`text-[10px] font-black uppercase mb-1 tracking-tighter ${course.price ? 'text-red-600' : 'text-slate-400'}`}>Precio General</p>
                                             <div className="flex items-baseline justify-center gap-1">
                                                 {course.price && course.price > 0 ? (
                                                     <>
                                                         <span className="text-3xl font-black tracking-tight print:text-xl text-slate-900">
                                                             €{(course.price).toFixed(2)}
                                                         </span>
-                                                        <span className="text-xs font-bold uppercase print:text-[8px] text-blue-600">
+                                                        <span className="text-xs font-bold uppercase print:text-[8px] text-red-600">
                                                             {formatPriceUnit(course.priceUnit, course.paymentFrequency)}
                                                         </span>
                                                     </>
@@ -523,7 +525,7 @@ export default function PublicCoursePage() {
                                                         <DialogTitle className="text-2xl font-black text-slate-900 leading-tight">Formulario de Inscripción</DialogTitle>
                                                         <DialogDescription className="text-slate-500 font-medium leading-relaxed mt-1">
                                                             Completa tus datos para reservar tu plaza. <br />
-                                                            <span className="text-blue-600 font-bold">Tras este paso verás los datos de pago y concepto.</span>
+                                                            <span className="text-red-600 font-bold">Tras este paso verás los datos de pago y concepto.</span>
                                                         </DialogDescription>
                                                     </DialogHeader>
                                                     <div className="p-8 space-y-5">
@@ -558,23 +560,23 @@ export default function PublicCoursePage() {
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 flex items-center space-x-3 select-none">
+                                                            <div className="p-4 bg-red-50/50 rounded-xl border border-red-100/50 flex items-center space-x-3 select-none">
                                                                 <Checkbox
                                                                     id="is-affiliated"
                                                                     checked={formData.isAffiliated}
                                                                     onCheckedChange={(checked) => setFormData({ ...formData, isAffiliated: !!checked })}
                                                                 />
                                                                 <div className="flex-1 cursor-pointer">
-                                                                    <Label htmlFor="is-affiliated" className="text-xs font-bold text-blue-900 cursor-pointer block">
+                                                                    <Label htmlFor="is-affiliated" className="text-xs font-bold text-red-900 cursor-pointer block">
                                                                         Soy afiliado/a a UGT
                                                                     </Label>
-                                                                    <p className="text-[9px] text-blue-600/70 font-medium">Activa esta casilla para aplicar el precio reducido.</p>
+                                                                    <p className="text-[9px] text-red-600/70 font-medium">Activa esta casilla para aplicar el precio reducido.</p>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <DialogFooter className="p-8 bg-slate-50 border-t flex flex-col gap-3">
-                                                        <Button type="submit" disabled={isSubmitting} className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-blue-100">
+                                                        <Button type="submit" disabled={isSubmitting} className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-red-100">
                                                             {isSubmitting ? "Procesando..." : "Confirmar Pre-inscripción"}
                                                         </Button>
                                                         <p className="text-[9px] text-slate-400 text-center leading-relaxed">Al inscribirte, tus datos quedarán registrados para la gestión del curso. Deberás completar el pago para confirmar tu plaza.</p>
@@ -594,16 +596,16 @@ export default function PublicCoursePage() {
                                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                                                 <Euro className="h-3 w-3" /> Importe a pagar
                                                             </p>
-                                                            <div className="bg-blue-50/50 rounded-lg border border-blue-100 p-3 text-center">
-                                                                <p className="text-2xl font-black text-blue-700 select-all">
+                                                            <div className="bg-red-50/50 rounded-lg border border-red-100 p-3 text-center">
+                                                                <p className="text-2xl font-black text-red-700 select-all">
                                                                     {formData.isAffiliated
                                                                         ? (course.affiliatePrice ? `${course.affiliatePrice.toFixed(2)}€` : 'Por consultar')
                                                                         : (course.price ? `${course.price.toFixed(2)}€` : 'Por consultar')}
                                                                     {(formData.isAffiliated ? course.affiliatePrice : course.price) && (
-                                                                        <span className="text-sm ml-1 font-bold text-blue-500">{formatPriceUnit(course.priceUnit, course.paymentFrequency)}</span>
+                                                                        <span className="text-sm ml-1 font-bold text-red-500">{formatPriceUnit(course.priceUnit, course.paymentFrequency)}</span>
                                                                     )}
                                                                 </p>
-                                                                <p className="text-[10px] font-medium text-blue-600/70 mt-1 italic">
+                                                                <p className="text-[10px] font-medium text-red-600/70 mt-1 italic">
                                                                     Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}
                                                                 </p>
                                                             </div>
@@ -618,7 +620,7 @@ export default function PublicCoursePage() {
                                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                                                 <Info className="h-3 w-3" /> Concepto de transferencia
                                                             </p>
-                                                            <p className="text-sm font-black text-blue-700 select-all block p-2 bg-blue-50/50 rounded-lg border border-blue-100 text-center tracking-widest">{paymentConcept}</p>
+                                                            <p className="text-sm font-black text-red-700 select-all block p-2 bg-red-50/50 rounded-lg border border-red-100 text-center tracking-widest">{paymentConcept}</p>
                                                         </div>
                                                     </div>
 
@@ -670,9 +672,9 @@ export default function PublicCoursePage() {
                                     </div>
 
                                     <div className="mt-8 flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100 cursor-default print:mt-4 print:opacity-100 print:grayscale-0">
-                                        <img src="/logo-ugt.png" alt="Logo UGT" className="h-6 w-6 object-contain" />
+                                        <img src="/logo-ugt-sp.png" alt="Logo UGT Servicios Públicos" className="h-6 w-auto object-contain" />
                                         <p className="text-center text-[8px] uppercase font-black text-slate-500 tracking-[0.2em]">
-                                            Formación UGT Salamanca
+                                            Servicios Públicos UGT Salamanca
                                         </p>
                                     </div>
                                 </div>

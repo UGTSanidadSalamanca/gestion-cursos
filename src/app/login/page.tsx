@@ -55,22 +55,23 @@ export default function LoginPage() {
         <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
             {/* Background decoration */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-[25%] -left-[10%] w-[50%] h-[50%] bg-blue-600/20 rounded-full blur-[120px]" />
-                <div className="absolute -bottom-[25%] -right-[10%] w-[50%] h-[50%] bg-teal-500/10 rounded-full blur-[120px]" />
+                <div className="absolute -top-[25%] -left-[10%] w-[50%] h-[50%] bg-red-600/20 rounded-full blur-[120px]" />
+                <div className="absolute -bottom-[25%] -right-[10%] w-[50%] h-[50%] bg-orange-500/10 rounded-full blur-[120px]" />
             </div>
 
             <Card className="w-full max-w-md border-slate-800 bg-slate-900/50 backdrop-blur-xl shadow-2xl relative z-10">
                 <CardHeader className="space-y-4 text-center">
                     <div className="flex justify-center -mt-12">
-                        <div className="p-3 bg-white rounded-full shadow-2xl shadow-blue-500/50 border-4 border-slate-900 group transition-transform hover:scale-110 duration-300">
-                            <img src="/logo-ugt.png" alt="Logo UGT" className="h-24 w-24 object-contain" />
+                        <div className="p-3 bg-white rounded-full shadow-2xl shadow-red-500/50 border-4 border-slate-900 group transition-transform hover:scale-110 duration-300">
+                            <img src="/logo-ugt-sp.png" alt="Logo UGT Servicios Públicos" className="h-24 w-auto object-contain" />
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <CardTitle className="text-3xl font-black tracking-tighter text-white uppercase pt-4">
-                            Formación UGT <span className="text-blue-500">Salamanca</span>
+                        <CardTitle className="text-3xl font-black tracking-tighter text-white uppercase pt-4 flex flex-col items-center">
+                            <span className="text-red-600">UGT</span>
+                            <span>Servicios Públicos</span>
                         </CardTitle>
-                        <p className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.2em]">Sistema de Gestión Integral</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Salamanca</p>
                     </div>
                     <CardDescription className="text-slate-400">
                         Ingresa tus credenciales para acceder al sistema
@@ -85,7 +86,7 @@ export default function LoginPage() {
                                 <Input
                                     id="username"
                                     placeholder="admin"
-                                    className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-600 focus:ring-blue-500"
+                                    className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-600 focus:ring-red-500"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     required
@@ -99,7 +100,7 @@ export default function LoginPage() {
                                 <Input
                                     id="password"
                                     type="password"
-                                    className="pl-10 bg-slate-800/50 border-slate-700 text-white focus:ring-blue-500"
+                                    className="pl-10 bg-slate-800/50 border-slate-700 text-white focus:ring-red-500"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
@@ -108,7 +109,7 @@ export default function LoginPage() {
                         </div>
                         <Button
                             type="submit"
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-11 shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]"
+                            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold h-11 shadow-lg shadow-red-500/20 transition-all active:scale-[0.98]"
                             disabled={loading}
                         >
                             {loading ? (

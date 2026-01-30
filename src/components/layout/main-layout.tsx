@@ -61,12 +61,13 @@ function Sidebar({ className }: SidebarProps) {
       <div className="space-y-4 py-4 flex-1">
         <div className="px-3 py-2">
           <div className="flex items-center mb-6 px-2">
-            <div className="bg-white p-1 rounded-lg mr-3 shadow-md">
-              <img src="/logo-ugt.png" alt="Logo UGT" className="h-10 w-10 object-contain" />
+            <div className="bg-white p-1 rounded-lg mr-3 shadow-md flex items-center justify-center">
+              <img src="/logo-ugt-sp.png" alt="Logo UGT Servicios Públicos" className="h-10 w-auto object-contain" />
             </div>
             <div className="flex flex-col">
-              <h2 className="text-sm font-bold text-white leading-tight">Formación UGT</h2>
-              <span className="text-[10px] text-blue-400 font-bold tracking-tighter uppercase">Salamanca</span>
+              <h2 className="text-sm font-black text-white leading-tight uppercase tracking-tighter">Servicios</h2>
+              <h2 className="text-sm font-black text-white leading-tight uppercase tracking-tighter">Públicos</h2>
+              <span className="text-[10px] text-red-500 font-bold tracking-widest uppercase mt-0.5">UGT Salamanca</span>
             </div>
           </div>
           <div className="space-y-1">
@@ -98,8 +99,8 @@ function Sidebar({ className }: SidebarProps) {
                   className={cn(
                     'flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                     isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                      ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                   )}
                 >
                   <div className="flex items-center">
@@ -154,11 +155,11 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center">
               <div className="bg-white p-1 rounded-lg mr-2 shadow-sm">
-                <img src="/logo-ugt.png" alt="Logo UGT" className="h-8 w-8 object-contain" />
+                <img src="/logo-ugt-sp.png" alt="Logo UGT" className="h-8 w-auto object-contain" />
               </div>
               <div className="flex flex-col">
-                <h2 className="text-xs font-bold text-white leading-none">Formación UGT</h2>
-                <span className="text-[8px] text-blue-400 font-bold uppercase">Salamanca</span>
+                <h2 className="text-[10px] font-black text-white leading-none uppercase">Servicios Públicos</h2>
+                <span className="text-[8px] text-red-500 font-bold uppercase">UGT Salamanca</span>
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)}>
@@ -183,7 +184,10 @@ export function MainLayout({ children }: MainLayoutProps) {
           </Button>
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1 items-center">
-              <h1 className="text-sm font-bold uppercase tracking-tight text-slate-700">Formación UGT <span className="text-blue-600">Salamanca</span></h1>
+              <img src="/logo-ugt-sp.png" alt="Logo UGT" className="h-8 w-auto object-contain mr-3" />
+              <h1 className="text-sm font-black uppercase tracking-tighter text-slate-800">
+                Servicios Públicos <span className="text-red-600">UGT</span>
+              </h1>
             </div>
           </div>
         </div>
