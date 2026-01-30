@@ -62,7 +62,7 @@ function Sidebar({ className }: SidebarProps) {
         <div className="px-3 py-2">
           <div className="flex items-center mb-6 px-2">
             <div className="bg-white p-1 rounded-lg mr-3 shadow-md flex items-center justify-center">
-              <img src="/logo-ugt-sp.png" alt="Logo UGT Servicios Públicos" className="h-10 w-auto object-contain" />
+              <img src="/ugt-logo.png" alt="Logo UGT Servicios Públicos" className="h-10 w-auto object-contain" />
             </div>
             <div className="flex flex-col">
               <h2 className="text-sm font-black text-white leading-tight uppercase tracking-tighter">Servicios</h2>
@@ -155,7 +155,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center">
               <div className="bg-white p-1 rounded-lg mr-2 shadow-sm">
-                <img src="/logo-ugt-sp.png" alt="Logo UGT" className="h-8 w-auto object-contain" />
+                <img src="/ugt-logo.png" alt="Logo UGT" className="h-8 w-auto object-contain" />
               </div>
               <div className="flex flex-col">
                 <h2 className="text-[10px] font-black text-white leading-none uppercase">Servicios Públicos</h2>
@@ -184,7 +184,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </Button>
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1 items-center">
-              <img src="/logo-ugt-sp.png" alt="Logo UGT" className="h-8 w-auto object-contain mr-3" />
+              <img src="/ugt-logo.png" alt="Logo UGT" className="h-8 w-auto object-contain mr-3" />
               <h1 className="text-sm font-black uppercase tracking-tighter text-slate-800">
                 Servicios Públicos <span className="text-red-600">UGT</span>
               </h1>

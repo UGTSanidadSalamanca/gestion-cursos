@@ -82,7 +82,7 @@ export default function PublicCoursePage() {
                 <div className="flex flex-col items-center gap-6">
                     <div className="flex flex-col items-center gap-6">
                         <div className="relative h-20 w-auto">
-                            <img src="/logo-ugt-sp.png" alt="Logo UGT Servicios Públicos" className="h-20 w-auto animate-pulse object-contain" />
+                            <img src="/ugt-logo.png" alt="Logo UGT Servicios Públicos" className="h-20 w-auto animate-pulse object-contain" />
                         </div>
                         <div className="flex flex-col items-center">
                             <p className="text-xl font-black text-slate-800 tracking-tighter uppercase leading-none">Servicios Públicos</p>
@@ -672,7 +672,7 @@ export default function PublicCoursePage() {
                                     </div>
 
                                     <div className="mt-8 flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100 cursor-default print:mt-4 print:opacity-100 print:grayscale-0">
-                                        <img src="/logo-ugt-sp.png" alt="Logo UGT Servicios Públicos" className="h-6 w-auto object-contain" />
+                                        <img src="/ugt-logo.png" alt="Logo UGT Servicios Públicos" className="h-6 w-auto object-contain" />
                                         <p className="text-center text-[8px] uppercase font-black text-slate-500 tracking-[0.2em]">
                                             Servicios Públicos UGT Salamanca
                                         </p>

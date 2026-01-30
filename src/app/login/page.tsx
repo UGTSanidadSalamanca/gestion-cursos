@@ -63,7 +63,7 @@ export default function LoginPage() {
                 <CardHeader className="space-y-4 text-center">
                     <div className="flex justify-center -mt-12">
                         <div className="p-3 bg-white rounded-full shadow-2xl shadow-red-500/50 border-4 border-slate-900 group transition-transform hover:scale-110 duration-300">
-                            <img src="/logo-ugt-sp.png" alt="Logo UGT Servicios Públicos" className="h-24 w-auto object-contain" />
+                            <img src="/ugt-logo.png" alt="Logo UGT Servicios Públicos" className="h-24 w-auto object-contain" />
                         </div>
                     </div>
                     <div className="space-y-1">
