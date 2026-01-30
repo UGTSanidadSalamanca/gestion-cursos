@@ -155,6 +155,17 @@ export default function PublicCoursePage() {
 
     const benefitsList = course.benefits ? course.benefits.split(/,|\n/).map(b => b.trim()).filter(b => b !== "") : []
 
+    const getSpanishLevel = (level: string) => {
+        const levels: Record<string, string> = {
+            'BEGINNER': 'Principiante',
+            'INTERMEDIATE': 'Intermedio',
+            'ADVANCED': 'Avanzado',
+            'EXPERT': 'Experto',
+            'PREPARACION_OPOSICIONES': 'Prep. Oposiciones'
+        };
+        return levels[level] || level;
+    }
+
     const formatPriceUnit = (unit?: string, frequency?: string) => {
         if (!unit && !frequency) return '';
         let result = '';
@@ -179,18 +190,47 @@ export default function PublicCoursePage() {
     }
 
     const getSpanishSchedule = (schedule: any, startDate?: string) => {
-        const timeStr = `${new Date(schedule.startTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false })} - ${new Date(schedule.endTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+        const dayMap: Record<string, string> = {
+            'MONDAY': 'Lunes',
+            'TUESDAY': 'Martes',
+            'WEDNESDAY': 'Miércoles',
+            'THURSDAY': 'Jueves',
+            'FRIDAY': 'Viernes',
+            'SATURDAY': 'Sábado',
+            'SUNDAY': 'Domingo'
+        };
 
-        if (!startDate) return `${schedule.dayOfWeek} de ${timeStr}`;
+        const dayToIndex: Record<string, number> = {
+            'SUNDAY': 0,
+            'MONDAY': 1,
+            'TUESDAY': 2,
+            'WEDNESDAY': 3,
+            'THURSDAY': 4,
+            'FRIDAY': 5,
+            'SATURDAY': 6
+        };
+
+        const daySpan = dayMap[schedule.dayOfWeek] || schedule.dayOfWeek;
+        const timeStr = `${new Date(schedule.startTime).toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'UTC'
+        })} - ${new Date(schedule.endTime).toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'UTC'
+        })}`;
+
+        if (!startDate) return `${daySpan} de ${timeStr}`;
 
         try {
-            const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
             const start = new Date(startDate);
-            const targetDay = days.indexOf(schedule.dayOfWeek);
+            const targetDay = dayToIndex[schedule.dayOfWeek];
 
-            if (targetDay === -1) return `${schedule.dayOfWeek} de ${timeStr}`;
+            if (targetDay === undefined) return `${daySpan} de ${timeStr}`;
 
-            // Encontrar la primera fecha después o en startDate que sea el día de la semana buscado
             const resultDate = new Date(start);
             const currentDay = resultDate.getDay();
             let distance = targetDay - currentDay;
@@ -198,9 +238,9 @@ export default function PublicCoursePage() {
             resultDate.setDate(resultDate.getDate() + distance);
 
             const datePart = resultDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
-            return `${schedule.dayOfWeek}, ${datePart} a las ${timeStr}`;
+            return `${daySpan}, ${datePart} a las ${timeStr}`;
         } catch (e) {
-            return `${schedule.dayOfWeek} de ${timeStr}`;
+            return `${daySpan} de ${timeStr}`;
         }
     }
 
@@ -390,7 +430,7 @@ export default function PublicCoursePage() {
                         </Badge>
                         <span className="text-white/20 print:hidden">|</span>
                         <Badge className="bg-white/10 hover:bg-white/20 text-white border-transparent backdrop-blur-sm print:bg-white/10 print:text-white">
-                            NIVEL {course.level}
+                            NIVEL {getSpanishLevel(course.level)}
                         </Badge>
                         {course.startDate && (
                             <>
