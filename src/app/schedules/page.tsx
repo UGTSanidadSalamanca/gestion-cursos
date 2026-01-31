@@ -149,7 +149,29 @@ export default function SchedulesPage() {
       classroom: formData.get('classroom'),
       subject: formData.get('subject'),
       notes: formData.get('notes'),
-      isRecurring: true
+      isRecurring: formData.get('isRecurring') === 'true'
+    }
+
+    if (!data.isRecurring) {
+      const specificDate = formData.get('specificDate') as string
+      if (specificDate) {
+        const [y, m, d] = specificDate.split('-').map(Number)
+
+        const startStr = formData.get('startTime') as string
+        const endStr = formData.get('endTime') as string
+
+        if (startStr) {
+          const [h, min] = startStr.split(':').map(Number)
+          const dStart = new Date(Date.UTC(y, m - 1, d, h, min, 0, 0))
+          data.startTime = dStart.toISOString()
+        }
+
+        if (endStr) {
+          const [h, min] = endStr.split(':').map(Number)
+          const dEnd = new Date(Date.UTC(y, m - 1, d, h, min, 0, 0))
+          data.endTime = dEnd.toISOString()
+        }
+      }
     }
 
     const tid = toast.loading(editingSchedule ? "Actualizando..." : "Guardando...")
@@ -608,7 +630,7 @@ export default function SchedulesPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {group.schedules.map((schedule) => (
+                    {group.schedules.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()).map((schedule) => (
                       <div key={schedule.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                         <div className="flex items-center space-x-4">
                           <div className="flex-shrink-0">
@@ -627,6 +649,11 @@ export default function SchedulesPage() {
                               {schedule.subject && (
                                 <Badge variant="outline" className="text-slate-500 border-slate-200">
                                   {schedule.subject}
+                                </Badge>
+                              )}
+                              {!schedule.isRecurring && (
+                                <Badge variant="destructive" className="bg-red-50 text-red-600 border-red-100 uppercase text-[10px]">
+                                  {new Date(schedule.startTime).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', timeZone: 'UTC' })}
                                 </Badge>
                               )}
                             </div>
@@ -723,8 +750,27 @@ export default function SchedulesPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label>Tipo de Horario</Label>
+                <Select name="isRecurring" defaultValue={editingSchedule ? String(editingSchedule.isRecurring) : "true"}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Recurrente semanal</SelectItem>
+                    <SelectItem value="false">Sesión única (Fecha fija)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid gap-2">
-                <Label>Día</Label>
+                <Label>Aula</Label>
+                <Input name="classroom" defaultValue={editingSchedule?.classroom} placeholder="Ej: Online, A1" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Día de la Semana</Label>
                 <Select name="dayOfWeek" defaultValue={editingSchedule?.dayOfWeek} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Día" />
@@ -741,8 +787,12 @@ export default function SchedulesPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label>Aula</Label>
-                <Input name="classroom" defaultValue={editingSchedule?.classroom} placeholder="Ej: Online, A1" />
+                <Label>Fecha Específica (si no es recurrente)</Label>
+                <Input
+                  name="specificDate"
+                  type="date"
+                  defaultValue={editingSchedule && !editingSchedule.isRecurring ? new Date(editingSchedule.startTime).toISOString().split('T')[0] : ""}
+                />
               </div>
             </div>
 

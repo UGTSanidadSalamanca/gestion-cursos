@@ -17,7 +17,18 @@ import {
 import { Button } from "@/components/ui/button"
 import { cn, formatTimeUTC } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarDays } from "lucide-react"
+import { CalendarDays, Save } from "lucide-react"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
 
 interface Schedule {
     id: string
@@ -50,6 +61,9 @@ export default function TeacherSchedulePage() {
     const { data: session } = useSession()
     const [schedules, setSchedules] = useState<Schedule[]>([])
     const [loading, setLoading] = useState(true)
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+    const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null)
+    const [isSaving, setIsSaving] = useState(false)
 
     useEffect(() => {
         if (session?.user?.id) {
@@ -76,6 +90,81 @@ export default function TeacherSchedulePage() {
     }
 
     const formatTime = (dateStr: string) => formatTimeUTC(dateStr)
+
+    const handleEditClick = (s: Schedule) => {
+        setEditingSchedule(s)
+        setIsEditDialogOpen(true)
+    }
+
+    const handleSaveEdit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        if (!editingSchedule || !session?.user?.id) return
+
+        setIsSaving(true)
+        const formData = new FormData(e.currentTarget)
+
+        const startTimeInput = formData.get('startTime') as string
+        const endTimeInput = formData.get('endTime') as string
+
+        // Merge time into existing date if isRecurring is false
+        let finalStartTime = editingSchedule.startTime
+        let finalEndTime = editingSchedule.endTime
+
+        if (!editingSchedule.isRecurring) {
+            const startDate = new Date(editingSchedule.startTime)
+            const [h1, m1] = startTimeInput.split(':').map(Number)
+            startDate.setUTCHours(h1, m1, 0, 0)
+            finalStartTime = startDate.toISOString()
+
+            const endDate = new Date(editingSchedule.endTime)
+            const [h2, m2] = endTimeInput.split(':').map(Number)
+            endDate.setUTCHours(h2, m2, 0, 0)
+            finalEndTime = endDate.toISOString()
+        } else {
+            // For recurring, we just send the time part in a 1970 date or similar, 
+            // but the API expects a full Date. The utils helper might be useful.
+            const d1 = new Date(0)
+            const [h1, m1] = startTimeInput.split(':').map(Number)
+            d1.setUTCHours(h1, m1, 0, 0)
+            finalStartTime = d1.toISOString()
+
+            const d2 = new Date(0)
+            const [h2, m2] = endTimeInput.split(':').map(Number)
+            d2.setUTCHours(h2, m2, 0, 0)
+            finalEndTime = d2.toISOString()
+        }
+
+        const data = {
+            id: editingSchedule.id,
+            startTime: finalStartTime,
+            endTime: finalEndTime,
+            classroom: formData.get('classroom'),
+            subject: formData.get('subject'),
+            notes: formData.get('notes'),
+            userId: session.user.id
+        }
+
+        try {
+            const res = await fetch('/api/teacher/schedule', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+
+            if (res.ok) {
+                toast.success("Horario actualizado correctamente")
+                setIsEditDialogOpen(false)
+                fetchSchedule(session.user.id)
+            } else {
+                const err = await res.json()
+                toast.error(err.error || "Error al actualizar el horario")
+            }
+        } catch (error) {
+            toast.error("Error de conexión")
+        } finally {
+            setIsSaving(false)
+        }
+    }
 
     if (loading) {
         return (
@@ -170,6 +259,17 @@ export default function TeacherSchedulePage() {
                                                                             <p className="text-[10px] text-red-600 font-bold mt-1">
                                                                                 {new Date(s.startTime).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', timeZone: 'UTC' })}
                                                                             </p>
+                                                                        )}
+                                                                        {s.isOwn && (
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                className="h-6 px-2 mt-2 text-[10px] text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-100"
+                                                                                onClick={() => handleEditClick(s)}
+                                                                            >
+                                                                                <Edit className="h-3 w-3 mr-1" />
+                                                                                Editar
+                                                                            </Button>
                                                                         )}
                                                                     </div>
                                                                     {!s.isOwn && (
@@ -327,6 +427,118 @@ const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTi
                     })}
                 </div>
             </CardContent>
+
+            {/* Modal de Edición */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Edit className="h-5 w-5 text-red-600" />
+                            Editar Clase
+                        </DialogTitle>
+                        <DialogDescription>
+                            Modifica los detalles de tu sesión programada.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {editingSchedule && (
+                        <form onSubmit={handleSaveEdit} className="space-y-4 py-4">
+                            <div className="grid gap-2">
+                                <Label className="text-slate-500 text-xs font-bold uppercase">Curso</Label>
+                                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm font-semibold text-slate-700">
+                                    {editingSchedule.course.title}
+                                </div>
+                            </div>
+
+                            {!editingSchedule.isRecurring && (
+                                <div className="grid gap-2">
+                                    <Label className="text-slate-500 text-xs font-bold uppercase">Fecha</Label>
+                                    <div className="p-3 bg-red-50 rounded-lg border border-red-100 text-sm font-bold text-red-700">
+                                        {new Date(editingSchedule.startTime).toLocaleDateString('es-ES', {
+                                            weekday: 'long',
+                                            day: 'numeric',
+                                            month: 'long',
+                                            year: 'numeric',
+                                            timeZone: 'UTC'
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="startTime">Hora Inicio</Label>
+                                    <Input
+                                        id="startTime"
+                                        name="startTime"
+                                        type="time"
+                                        defaultValue={formatTime(editingSchedule.startTime)}
+                                        required
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="endTime">Hora Fin</Label>
+                                    <Input
+                                        id="endTime"
+                                        name="endTime"
+                                        type="time"
+                                        defaultValue={formatTime(editingSchedule.endTime)}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="subject">Asignatura / Módulo</Label>
+                                <Input
+                                    id="subject"
+                                    name="subject"
+                                    defaultValue={editingSchedule.subject}
+                                    placeholder="Ej: Legislación Sanitaria"
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="classroom">Aula</Label>
+                                <Input
+                                    id="classroom"
+                                    name="classroom"
+                                    defaultValue={editingSchedule.classroom}
+                                    placeholder="Ej: Online, Aula 4"
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="notes">Notas</Label>
+                                <Input
+                                    id="notes"
+                                    name="notes"
+                                    defaultValue={editingSchedule.notes}
+                                    placeholder="Indicaciones adicionales..."
+                                />
+                            </div>
+
+                            <DialogFooter className="pt-4 gap-2">
+                                <Button type="button" variant="ghost" onClick={() => setIsEditDialogOpen(false)} disabled={isSaving}>
+                                    Cancelar
+                                </Button>
+                                <Button type="submit" className="bg-red-600 hover:bg-red-700 shadow-md shadow-red-100" disabled={isSaving}>
+                                    {isSaving ? (
+                                        <>
+                                            <div className="h-4 w-4 border-2 border-white/30 border-t-white animate-spin rounded-full mr-2" />
+                                            Guardando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save className="h-4 w-4 mr-2" />
+                                            Guardar Cambios
+                                        </>
+                                    )}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    )}
+                </DialogContent>
+            </Dialog>
         </Card>
     )
 }

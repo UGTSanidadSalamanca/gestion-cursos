@@ -44,6 +44,7 @@ interface PublicCourse {
         startTime: string
         endTime: string
         classroom?: string
+        isRecurring?: boolean
     }[]
 }
 
@@ -213,6 +214,11 @@ export default function PublicCoursePage() {
 
         const daySpan = dayMap[schedule.dayOfWeek] || schedule.dayOfWeek;
         const timeStr = `${formatTimeUTC(schedule.startTime)} - ${formatTimeUTC(schedule.endTime)}`;
+
+        if (schedule.isRecurring === false) {
+            const datePart = new Date(schedule.startTime).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', timeZone: 'UTC' });
+            return `${daySpan}, ${datePart} a las ${timeStr}`;
+        }
 
         if (!startDate) return `${daySpan} de ${timeStr}`;
 

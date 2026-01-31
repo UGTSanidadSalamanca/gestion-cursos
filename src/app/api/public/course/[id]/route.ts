@@ -41,7 +41,8 @@ export async function GET(
                         dayOfWeek: true,
                         startTime: true,
                         endTime: true,
-                        classroom: true
+                        classroom: true,
+                        isRecurring: true
                     },
                     orderBy: {
                         startTime: 'asc'
