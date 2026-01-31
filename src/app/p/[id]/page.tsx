@@ -721,13 +721,15 @@ export default function PublicCoursePage() {
                                                                     <p className="text-[9px] text-red-600/70 font-medium">Activa esta casilla para aplicar el precio reducido.</p>
                                                                 </div>
                                                             </div>
+                                                            <p className="text-[10px] text-slate-500 leading-relaxed px-1">
+                                                                Al inscribirte, tus datos quedarán registrados y serán usados únicamente para la gestión del curso según la LOPDGDD. Deberás completar el pago para confirmar tu plaza.
+                                                            </p>
                                                         </div>
                                                     </div>
                                                     <DialogFooter className="p-8 bg-slate-50 border-t flex flex-col gap-3">
                                                         <Button type="submit" disabled={isSubmitting} className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-red-100">
                                                             {isSubmitting ? "Procesando..." : "Confirmar Pre-inscripción"}
                                                         </Button>
-                                                        <p className="text-[9px] text-slate-400 text-center leading-relaxed">Al inscribirte, tus datos quedarán registrados para la gestión del curso. Deberás completar el pago para confirmar tu plaza.</p>
                                                     </DialogFooter>
                                                 </form>
                                             ) : (

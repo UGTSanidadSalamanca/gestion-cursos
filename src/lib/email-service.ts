@@ -79,8 +79,12 @@ export async function sendGroupEmail(emails: string[], subject: string, message:
     </div>
   `
 
+  const groupBcc = emails.includes('formacion.salamanca@ugt-sp.ugt.org')
+    ? emails
+    : [...emails, 'formacion.salamanca@ugt-sp.ugt.org'];
+
   return sendEmail({
-    bcc: emails,
+    bcc: groupBcc,
     subject: subject,
     text: message,
     html
