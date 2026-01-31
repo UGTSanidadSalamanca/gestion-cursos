@@ -382,8 +382,4 @@ export default function TeacherPortalPage() {
             </div>
         </TeacherLayout>
     )
-                </Tabs >
-            </div >
-        </TeacherLayout >
-    )
 }
