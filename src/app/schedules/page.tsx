@@ -154,61 +154,113 @@ export default function SchedulesPage() {
 
     reader.onload = async (evt) => {
       try {
-        const bstr = evt.target?.result
-        const wb = XLSX.read(bstr, { type: 'binary' })
+        const dataBuffer = evt.target?.result
+        if (!dataBuffer) return
+
+        const wb = XLSX.read(dataBuffer, { type: 'array' })
         const wsname = wb.SheetNames[0]
         const ws = wb.Sheets[wsname]
-        const data = XLSX.utils.sheet_to_json(ws) as any[]
+        const json = XLSX.utils.sheet_to_json(ws) as any[]
 
-        const processed = data.map(item => {
+        console.log("Excel Data Raw:", json);
+
+        if (json.length === 0) {
+          toast.error("El archivo está vacío")
+          setImportLoading(false)
+          return
+        }
+
+        // Helper para buscar columnas sin importar mayúsculas/acentos
+        const findVal = (row: any, keywords: string[]) => {
+          const key = Object.keys(row).find(k =>
+            keywords.some(kw => k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(kw))
+          )
+          return key ? row[key] : null
+        }
+
+        const processed = json.map((item, index) => {
+          const cursoVal = findVal(item, ['curso', 'nombre', 'asignatura'])
+          const codigoVal = findVal(item, ['codigo', 'code', 'id'])
+          const profesorVal = findVal(item, ['profesor', 'docente', 'teacher'])
+          const diaVal = findVal(item, ['dia', 'day', 'fecha'])
+          const inicioVal = findVal(item, ['inicio', 'start', 'hora'])
+          const finVal = findVal(item, ['fin', 'end'])
+          const aulaVal = findVal(item, ['aula', 'clase', 'classroom', 'room'])
+          const notasVal = findVal(item, ['notas', 'observaciones', 'notes'])
+
           const course = courses.find(c =>
-            c.title.toLowerCase() === (item.Curso || '').toLowerCase() ||
-            c.code.toLowerCase() === (item.Código || '').toLowerCase()
-          )
-          const teacher = teachers.find(t =>
-            t.name?.toLowerCase() === (item.Profesor || '').toLowerCase()
+            (cursoVal && c.title.toLowerCase() === String(cursoVal).toLowerCase()) ||
+            (codigoVal && c.code.toLowerCase() === String(codigoVal).toLowerCase())
           )
 
-          if (!course) return null
+          const teacher = teachers.find(t =>
+            profesorVal && t.name?.toLowerCase().includes(String(profesorVal).toLowerCase())
+          )
+
+          if (!course) {
+            console.warn(`Fila ${index + 1}: No se encontró el curso "${cursoVal || codigoVal}"`);
+            return null;
+          }
 
           const parseTime = (timeVal: any) => {
-            if (!timeVal) return null
+            if (timeVal === null || timeVal === undefined) return null
             const d = new Date()
             if (typeof timeVal === 'number') {
-              const hours = Math.floor(timeVal * 24)
-              const minutes = Math.round((timeVal * 24 - hours) * 60)
+              const totalMinutes = Math.round(timeVal * 1440)
+              const hours = Math.floor(totalMinutes / 60)
+              const minutes = totalMinutes % 60
               d.setHours(hours, minutes, 0, 0)
             } else {
-              const [h, m] = timeVal.split(':')
-              d.setHours(parseInt(h), parseInt(m), 0, 0)
+              const timeStr = String(timeVal).replace('.', ':')
+              const match = timeStr.match(/(\d{1,2})[:](\d{2})/)
+              if (match) {
+                d.setHours(parseInt(match[1]), parseInt(match[2]), 0, 0)
+              } else {
+                return null
+              }
             }
             return d.toISOString()
           }
 
-          const dayMap: Record<string, string> = {
-            'Lunes': 'MONDAY', 'Martes': 'TUESDAY', 'Miércoles': 'WEDNESDAY',
-            'Jueves': 'THURSDAY', 'Viernes': 'FRIDAY', 'Sábado': 'SATURDAY', 'Domingo': 'SUNDAY',
-            'Monday': 'MONDAY', 'Tuesday': 'TUESDAY', 'Wednesday': 'WEDNESDAY',
-            'Thursday': 'THURSDAY', 'Friday': 'FRIDAY', 'Saturday': 'SATURDAY', 'Sunday': 'SUNDAY'
+          const normalizeDay = (val: any) => {
+            const s = String(val || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            if (s.includes('lun')) return 'MONDAY'
+            if (s.includes('mar')) return 'TUESDAY'
+            if (s.includes('mie')) return 'WEDNESDAY'
+            if (s.includes('jue')) return 'THURSDAY'
+            if (s.includes('vie')) return 'FRIDAY'
+            if (s.includes('sab')) return 'SATURDAY'
+            if (s.includes('dom')) return 'SUNDAY'
+            return 'MONDAY'
+          }
+
+          const start = parseTime(inicioVal)
+          const end = parseTime(finVal)
+
+          if (!start || !end) {
+            console.warn(`Fila ${index + 1}: Horas inválidas para ${course.title}`);
+            return null;
           }
 
           return {
             courseId: course.id,
             teacherId: teacher?.id,
-            dayOfWeek: dayMap[item.Dia] || dayMap[item.Día] || 'MONDAY',
-            startTime: parseTime(item.Inicio),
-            endTime: parseTime(item.Fin),
-            classroom: item.Aula || '',
-            notes: item.Notas || '',
-            courseTitle: course.title // Para feedback visual
+            dayOfWeek: normalizeDay(diaVal),
+            startTime: start,
+            endTime: end,
+            classroom: String(aulaVal || ''),
+            notes: String(notasVal || ''),
+            courseTitle: course.title
           }
-        }).filter(s => s !== null && s.startTime && s.endTime)
+        }).filter(s => s !== null)
+
+        console.log("Processed Schedules:", processed);
 
         if (processed.length === 0) {
-          toast.error("No se encontraron datos válidos. Revisa los nombres de los cursos.")
+          toast.error("No se pudo vincular ninguna fila. Revisa los nombres de los cursos.")
         } else {
           setPendingSchedules(processed)
-          toast.info(`${processed.length} horarios listos para importar. Haz clic en "Ejecutar Subida".`)
+          toast.success(`${processed.length} registros listos. Revisa y pulsa "Ejecutar Subida".`)
         }
       } catch (error) {
         console.error("Error processing Excel:", error)
@@ -217,30 +269,37 @@ export default function SchedulesPage() {
         setImportLoading(false)
       }
     }
-    reader.readAsBinaryString(file)
+    reader.readAsArrayBuffer(file)
   }
 
   const executeImport = async () => {
     if (pendingSchedules.length === 0) return
 
     setImportLoading(true)
+    const toastId = toast.loading("Importando horarios...")
+
     try {
+      console.log("Sending to API:", pendingSchedules);
       const response = await fetch('/api/schedules/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ schedules: pendingSchedules })
       })
 
+      const result = await response.json()
+
       if (response.ok) {
-        toast.success(`${pendingSchedules.length} horarios importados correctamente`)
+        toast.success(`${result.count || pendingSchedules.length} horarios importados correctamente`, { id: toastId })
         fetchSchedules()
         setIsImportOpen(false)
         setPendingSchedules([])
       } else {
-        toast.error("Error al guardar los horarios en la base de datos")
+        console.error("API Error:", result);
+        toast.error(result.error || "Error al guardar los horarios", { id: toastId })
       }
     } catch (e) {
-      toast.error("Error técnico al importar")
+      console.error("Fetch Error:", e);
+      toast.error("Error técnico: No se pudo conectar con el servidor", { id: toastId })
     } finally {
       setImportLoading(false)
     }
@@ -272,44 +331,55 @@ export default function SchedulesPage() {
                 <DialogHeader>
                   <DialogTitle>Importar Horarios</DialogTitle>
                   <DialogDescription>
-                    Sube un archivo Excel (.xlsx) con las columnas: <br />
-                    <span className="font-mono text-xs">Curso, Profesor, Día, Inicio, Fin, Aula, Notas</span>
+                    Sube un archivo Excel (.xlsx) con columnas como: <br />
+                    <span className="font-mono text-[10px] bg-slate-100 p-1 rounded">Curso, Profesor, Día, Inicio, Fin, Aula</span>
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="excel-file">Archivo Excel</Label>
+                    <Label htmlFor="excel-file" className="text-xs font-bold uppercase tracking-wider text-slate-500">1. Seleccionar Archivo</Label>
                     <Input
                       id="excel-file"
                       type="file"
-                      accept=".xlsx, .xls"
+                      accept=".xlsx, .xls, .csv"
                       onChange={handleFileUpload}
                       disabled={importLoading}
+                      className="cursor-pointer"
                     />
                   </div>
 
                   {pendingSchedules.length > 0 && (
-                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                      <p className="text-xs font-bold text-slate-700 flex items-center gap-2">
-                        <CheckCircle2 className="h-3 w-3 text-green-600" />
-                        {pendingSchedules.length} registros detectados
+                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 space-y-2 animate-in fade-in slide-in-from-top-2">
+                      <p className="text-xs font-black text-blue-800 flex items-center gap-2 uppercase tracking-tighter">
+                        <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                        {pendingSchedules.length} registros listos para subir
                       </p>
+                      <div className="max-h-32 overflow-y-auto pr-2">
+                        {pendingSchedules.slice(0, 5).map((s, i) => (
+                          <div key={i} className="text-[10px] text-blue-600/70 border-b border-blue-100 py-1 last:border-0 italic">
+                            • {s.courseTitle} ({s.dayOfWeek})
+                          </div>
+                        ))}
+                        {pendingSchedules.length > 5 && <p className="text-[10px] text-blue-400 mt-1">... y {pendingSchedules.length - 5} más</p>}
+                      </div>
                     </div>
                   )}
 
                   {importLoading && (
-                    <div className="flex items-center gap-2 text-sm text-blue-600 animate-pulse">
-                      <div className="h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                      Procesando datos...
+                    <div className="flex items-center justify-center p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                      <div className="flex items-center gap-3 text-sm text-slate-600 font-medium">
+                        <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                        Procesando...
+                      </div>
                     </div>
                   )}
                 </div>
-                <DialogFooter className="gap-2 sm:gap-0">
-                  <Button variant="ghost" onClick={() => setIsImportOpen(false)}>Cancelar</Button>
+                <DialogFooter className="flex flex-col sm:flex-row gap-3">
+                  <Button variant="ghost" onClick={() => setIsImportOpen(false)} className="sm:flex-1">Cancelar</Button>
                   <Button
                     onClick={executeImport}
                     disabled={importLoading || pendingSchedules.length === 0}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="sm:flex-1 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100"
                   >
                     {importLoading ? "Subiendo..." : "Ejecutar Subida"}
                   </Button>
