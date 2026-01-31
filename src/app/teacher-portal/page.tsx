@@ -66,6 +66,13 @@ export default function TeacherPortalPage() {
         }
     }
 
+    const formatTime = (dateStr: string) => {
+        const date = new Date(dateStr)
+        const hours = date.getUTCHours().toString().padStart(2, '0')
+        const minutes = date.getUTCMinutes().toString().padStart(2, '0')
+        return `${hours}:${minutes}`
+    }
+
     const daysMap: Record<string, string> = {
         'MONDAY': 'Lunes', 'TUESDAY': 'Martes', 'WEDNESDAY': 'Miércoles',
         'THURSDAY': 'Jueves', 'FRIDAY': 'Viernes', 'SATURDAY': 'Sábado', 'SUNDAY': 'Domingo'
@@ -192,7 +199,7 @@ export default function TeacherPortalPage() {
                                                     <CardContent className="p-4">
                                                         <div className="flex justify-between items-start mb-2">
                                                             <span className="text-xs font-bold text-red-600 uppercase tracking-wider">
-                                                                {new Date(s.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(s.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                {formatTime(s.startTime)} - {formatTime(s.endTime)}
                                                             </span>
                                                             <Badge variant="outline" className="text-[10px] bg-slate-50">{s.course.code}</Badge>
                                                         </div>
@@ -229,14 +236,14 @@ export default function TeacherPortalPage() {
                     </TabsContent>
 
                     <TabsContent value="calendar">
-                        <MonthlyCalendar schedules={schedules} />
+                        <MonthlyCalendar schedules={schedules} formatTime={formatTime} />
                     </TabsContent>
                 </Tabs>
             </div>
         </TeacherLayout>
     )
 }
-const MonthlyCalendar = ({ schedules }: { schedules: any[] }) => {
+const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTime: (s: string) => string }) => {
     const [currentDate, setCurrentDate] = useState(new Date())
 
     const year = currentDate.getFullYear()
@@ -304,7 +311,7 @@ const MonthlyCalendar = ({ schedules }: { schedules: any[] }) => {
                                     {daySchedules.map(s => (
                                         <div key={s.id} className="text-[10px] p-1.5 rounded-md bg-white border border-slate-200 shadow-sm leading-tight hover:border-red-200 transition-all cursor-default overflow-hidden whitespace-nowrap overflow-ellipsis">
                                             <div className="font-bold text-red-600 mb-0.5">
-                                                {new Date(s.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {formatTime(s.startTime)}
                                             </div>
                                             <div className="font-medium text-slate-800 uppercase tracking-tighter truncate">{s.course.title}</div>
                                         </div>
