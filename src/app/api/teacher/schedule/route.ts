@@ -85,14 +85,28 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: 'Schedule not found' }, { status: 404 })
         }
 
-        if (schedule.teacherId !== teacher.id) {
-            return NextResponse.json({ error: 'Unauthorized: You do not own this schedule' }, { status: 403 })
+        // Check if teacher has permission for this course
+        // Permission is granted if the teacher is assigned to at least one schedule 
+        // or module in the same course.
+        const courseWithPermission = await db.course.findFirst({
+            where: {
+                id: schedule.courseId,
+                OR: [
+                    { schedules: { some: { teacherId: teacher.id } } },
+                    { modules: { some: { teacherId: teacher.id } } }
+                ]
+            }
+        })
+
+        if (!courseWithPermission) {
+            return NextResponse.json({ error: 'Unauthorized: You do not have permission for this course' }, { status: 403 })
         }
 
         // Update schedule
         const updatedSchedule = await db.schedule.update({
             where: { id: id },
             data: {
+                teacherId: body.teacherId !== undefined ? body.teacherId : undefined,
                 startTime: startTime ? new Date(startTime) : undefined,
                 endTime: endTime ? new Date(endTime) : undefined,
                 classroom: classroom !== undefined ? classroom : undefined,

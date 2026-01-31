@@ -12,7 +12,9 @@ import {
     ChevronLeft,
     ChevronRight,
     BookOpen,
-    Info
+    Info,
+    Edit,
+    User
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn, formatTimeUTC } from "@/lib/utils"
@@ -64,12 +66,26 @@ export default function TeacherSchedulePage() {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
     const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null)
     const [isSaving, setIsSaving] = useState(false)
+    const [allTeachers, setAllTeachers] = useState<any[]>([])
 
     useEffect(() => {
         if (session?.user?.id) {
             fetchSchedule(session.user.id)
+            fetchTeachers()
         }
     }, [session])
+
+    const fetchTeachers = async () => {
+        try {
+            const res = await fetch('/api/teachers?status=ACTIVE')
+            if (res.ok) {
+                const data = await res.json()
+                setAllTeachers(data)
+            }
+        } catch (e) {
+            console.error("Error loading teachers", e)
+        }
+    }
 
     const fetchSchedule = async (userId: string) => {
         try {
@@ -136,6 +152,7 @@ export default function TeacherSchedulePage() {
 
         const data = {
             id: editingSchedule.id,
+            teacherId: formData.get('teacherId'),
             startTime: finalStartTime,
             endTime: finalEndTime,
             classroom: formData.get('classroom'),
@@ -260,17 +277,20 @@ export default function TeacherSchedulePage() {
                                                                                 {new Date(s.startTime).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', timeZone: 'UTC' })}
                                                                             </p>
                                                                         )}
-                                                                        {s.isOwn && (
-                                                                            <Button
-                                                                                variant="ghost"
-                                                                                size="sm"
-                                                                                className="h-6 px-2 mt-2 text-[10px] text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-100"
-                                                                                onClick={() => handleEditClick(s)}
-                                                                            >
-                                                                                <Edit className="h-3 w-3 mr-1" />
-                                                                                Editar
-                                                                            </Button>
-                                                                        )}
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            className={cn(
+                                                                                "h-6 px-2 mt-2 text-[10px] hover:bg-white border transition-all",
+                                                                                s.isOwn
+                                                                                    ? "text-red-600 hover:text-red-700 border-red-100"
+                                                                                    : "text-slate-400 hover:text-slate-600 border-slate-200"
+                                                                            )}
+                                                                            onClick={() => handleEditClick(s)}
+                                                                        >
+                                                                            <Edit className="h-3 w-3 mr-1" />
+                                                                            {s.isOwn ? 'Editar' : 'Gestionar'}
+                                                                        </Button>
                                                                     </div>
                                                                     {!s.isOwn && (
                                                                         <Badge variant="outline" className="text-[9px] py-0 h-4 bg-slate-50 text-slate-400 border-slate-200">
@@ -402,6 +422,7 @@ const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTi
                                                     : "bg-slate-50 border-slate-100 opacity-70 grayscale-[0.5]"
                                             )}
                                             title={s.isOwn ? "Tu clase" : `Clase de ${s.teacher?.name || 'compañero/a'}`}
+                                            onClick={() => handleEditClick(s)}
                                         >
                                             <div className={cn("font-bold mb-0.5", s.isOwn ? "text-red-600" : "text-slate-400")}>
                                                 {formatTime(s.startTime)}
@@ -463,6 +484,20 @@ const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTi
                                     </div>
                                 </div>
                             )}
+
+                            <div className="grid gap-2">
+                                <Label className="text-slate-500 text-xs font-bold uppercase">Profesor Docente</Label>
+                                <select
+                                    name="teacherId"
+                                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    defaultValue={editingSchedule.teacherId || ""}
+                                >
+                                    <option value="" disabled>Selecciona un profesor</option>
+                                    {allTeachers.map(t => (
+                                        <option key={t.id} value={t.id}>{t.name}</option>
+                                    ))}
+                                </select>
+                            </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-2">
