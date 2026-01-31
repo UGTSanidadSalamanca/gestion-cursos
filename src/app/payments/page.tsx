@@ -789,247 +789,245 @@ export default function PaymentsPage() {
           </Card>
         </div>
 
-      </div>
+        <Tabs defaultValue="list" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="list">Lista de Pagos Recibidos</TabsTrigger>
+            <TabsTrigger value="tracking">Seguimiento por Alumno (Matrículas)</TabsTrigger>
+          </TabsList>
 
-      <Tabs defaultValue="list" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="list">Lista de Pagos Recibidos</TabsTrigger>
-          <TabsTrigger value="tracking">Seguimiento por Alumno (Matrículas)</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="list" className="space-y-4">
-          {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="relative w-full sm:w-96">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por alumno, curso o referencia..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          <TabsContent value="list" className="space-y-4">
+            {/* Search and Filters */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="relative w-full sm:w-96">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por alumno, curso o referencia..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="PAID">Pagados</SelectItem>
+                    <SelectItem value="PENDING">Pendientes</SelectItem>
+                    <SelectItem value="OVERDUE">Vencidos</SelectItem>
+                    <SelectItem value="CANCELLED">Cancelados</SelectItem>
+                    <SelectItem value="REFUNDED">Reembolsados</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="PAID">Pagados</SelectItem>
-                  <SelectItem value="PENDING">Pendientes</SelectItem>
-                  <SelectItem value="OVERDUE">Vencidos</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelados</SelectItem>
-                  <SelectItem value="REFUNDED">Reembolsados</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
-          {/* Payments Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Lista de Pagos</CardTitle>
-              <CardDescription>Pagos individuales registrados en el sistema ({payments.length} totales)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Alumno</TableHead>
-                    <TableHead>Curso</TableHead>
-                    <TableHead>Importe</TableHead>
-                    <TableHead>Método</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPayments.map((payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{payment.student?.name || 'No asignado'}</div>
-                          {payment.student?.email && (
-                            <div className="text-xs text-muted-foreground">{payment.student.email}</div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{payment.course?.title || 'No asignado'}</div>
-                          {payment.course?.price && (
-                            <div className="text-xs text-muted-foreground">€{payment.course.price}</div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">€{payment.amount}</TableCell>
-                      <TableCell>{getPaymentMethodBadge(payment.paymentMethod)}</TableCell>
-                      <TableCell>{getStatusBadge(payment.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-sm">{payment.paymentDate}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Dialog open={isViewDialogOpen && selectedPayment?.id === payment.id} onOpenChange={(open) => {
-                            setIsViewDialogOpen(open)
-                            if (open) setSelectedPayment(payment)
-                          }}>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>Detalles del Pago</DialogTitle>
-                              </DialogHeader>
-                              {selectedPayment && <PaymentDetails payment={selectedPayment} />}
-                            </DialogContent>
-                          </Dialog>
-
-                          <Dialog open={isEditDialogOpen && selectedPayment?.id === payment.id} onOpenChange={(open) => {
-                            setIsEditDialogOpen(open)
-                            if (open) setSelectedPayment(payment)
-                          }}>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>Editar Pago</DialogTitle>
-                                <DialogDescription>
-                                  Actualiza la información del pago
-                                </DialogDescription>
-                              </DialogHeader>
-                              {selectedPayment && (
-                                <PaymentForm
-                                  payment={selectedPayment}
-                                  onSubmit={handleEditPayment}
-                                  onCancel={() => setIsEditDialogOpen(false)}
-                                />
-                              )}
-                            </DialogContent>
-                          </Dialog>
-
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeletePayment(payment.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="tracking" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-blue-500" />
-                Estado de Cobros por Alumno
-              </CardTitle>
-              <CardDescription>
-                Comparativa entre lo que el alumno debería haber pagado según su matrícula y lo cobrado realmente.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Alumno</TableHead>
-                    <TableHead>Curso</TableHead>
-                    <TableHead>Precio/Unidad</TableHead>
-                    <TableHead>Previsto</TableHead>
-                    <TableHead>Pagado</TableHead>
-                    <TableHead>Pendiente</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Acción</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tracking.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.studentName}</TableCell>
-                      <TableCell>{item.courseTitle}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span>€{item.coursePrice}</span>
-                          <span className="text-[10px] text-muted-foreground uppercase">{item.priceUnit}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-slate-500">€{Math.round(item.expectedToDate)}</TableCell>
-                      <TableCell className="font-bold text-green-600">€{item.paidTotal}</TableCell>
-                      <TableCell>
-                        <span className={cn(
-                          "font-bold",
-                          item.pendingAmount > 0 ? "text-red-600" : "text-slate-400"
-                        )}>
-                          €{Math.round(item.pendingAmount)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {item.status === 'PAID' ? (
-                          <Badge className="bg-green-500">Al día</Badge>
-                        ) : item.status === 'PARTIAL' ? (
-                          <Badge className="bg-yellow-500 text-yellow-950">Pago parcial</Badge>
-                        ) : (
-                          <Badge variant="destructive">Pendiente</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {item.pendingAmount > 0 && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 px-2 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
-                            onClick={() => {
-                              setPrefilledData({
-                                studentId: item.studentId,
-                                courseId: item.courseId,
-                                amount: item.pendingAmount,
-                                description: `Cobro pendiente para ${item.courseTitle}`,
-                                status: 'PAID',
-                                paidDate: new Date().toISOString().split('T')[0],
-                                paymentDate: new Date().toISOString().split('T')[0]
-                              })
-                              setIsCreateDialogOpen(true)
-                            }}
-                          >
-                            <DollarSign className="h-3 w-3 mr-1" />
-                            Cobrar
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {tracking.length === 0 && (
+            {/* Payments Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Lista de Pagos</CardTitle>
+                <CardDescription>Pagos individuales registrados en el sistema ({payments.length} totales)</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
-                        No hay matrículas activas registradas para seguimiento.
-                      </TableCell>
+                      <TableHead>Alumno</TableHead>
+                      <TableHead>Curso</TableHead>
+                      <TableHead>Importe</TableHead>
+                      <TableHead>Método</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Acciones</TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-    </MainLayout >
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPayments.map((payment) => (
+                      <TableRow key={payment.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{payment.student?.name || 'No asignado'}</div>
+                            {payment.student?.email && (
+                              <div className="text-xs text-muted-foreground">{payment.student.email}</div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{payment.course?.title || 'No asignado'}</div>
+                            {payment.course?.price && (
+                              <div className="text-xs text-muted-foreground">€{payment.course.price}</div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">€{payment.amount}</TableCell>
+                        <TableCell>{getPaymentMethodBadge(payment.paymentMethod)}</TableCell>
+                        <TableCell>{getStatusBadge(payment.status)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm">{payment.paymentDate}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Dialog open={isViewDialogOpen && selectedPayment?.id === payment.id} onOpenChange={(open) => {
+                              setIsViewDialogOpen(open)
+                              if (open) setSelectedPayment(payment)
+                            }}>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Detalles del Pago</DialogTitle>
+                                </DialogHeader>
+                                {selectedPayment && <PaymentDetails payment={selectedPayment} />}
+                              </DialogContent>
+                            </Dialog>
+
+                            <Dialog open={isEditDialogOpen && selectedPayment?.id === payment.id} onOpenChange={(open) => {
+                              setIsEditDialogOpen(open)
+                              if (open) setSelectedPayment(payment)
+                            }}>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Editar Pago</DialogTitle>
+                                  <DialogDescription>
+                                    Actualiza la información del pago
+                                  </DialogDescription>
+                                </DialogHeader>
+                                {selectedPayment && (
+                                  <PaymentForm
+                                    payment={selectedPayment}
+                                    onSubmit={handleEditPayment}
+                                    onCancel={() => setIsEditDialogOpen(false)}
+                                  />
+                                )}
+                              </DialogContent>
+                            </Dialog>
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeletePayment(payment.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="tracking" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-blue-500" />
+                  Estado de Cobros por Alumno
+                </CardTitle>
+                <CardDescription>
+                  Comparativa entre lo que el alumno debería haber pagado según su matrícula y lo cobrado realmente.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Alumno</TableHead>
+                      <TableHead>Curso</TableHead>
+                      <TableHead>Precio/Unidad</TableHead>
+                      <TableHead>Previsto</TableHead>
+                      <TableHead>Pagado</TableHead>
+                      <TableHead>Pendiente</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Acción</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tracking.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.studentName}</TableCell>
+                        <TableCell>{item.courseTitle}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span>€{item.coursePrice}</span>
+                            <span className="text-[10px] text-muted-foreground uppercase">{item.priceUnit}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-slate-500">€{Math.round(item.expectedToDate)}</TableCell>
+                        <TableCell className="font-bold text-green-600">€{item.paidTotal}</TableCell>
+                        <TableCell>
+                          <span className={cn(
+                            "font-bold",
+                            item.pendingAmount > 0 ? "text-red-600" : "text-slate-400"
+                          )}>
+                            €{Math.round(item.pendingAmount)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {item.status === 'PAID' ? (
+                            <Badge className="bg-green-500">Al día</Badge>
+                          ) : item.status === 'PARTIAL' ? (
+                            <Badge className="bg-yellow-500 text-yellow-950">Pago parcial</Badge>
+                          ) : (
+                            <Badge variant="destructive">Pendiente</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {item.pendingAmount > 0 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 px-2 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
+                              onClick={() => {
+                                setPrefilledData({
+                                  studentId: item.studentId,
+                                  courseId: item.courseId,
+                                  amount: item.pendingAmount,
+                                  description: `Cobro pendiente para ${item.courseTitle}`,
+                                  status: 'PAID',
+                                  paidDate: new Date().toISOString().split('T')[0],
+                                  paymentDate: new Date().toISOString().split('T')[0]
+                                })
+                                setIsCreateDialogOpen(true)
+                              }}
+                            >
+                              <DollarSign className="h-3 w-3 mr-1" />
+                              Cobrar
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {tracking.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
+                          No hay matrículas activas registradas para seguimiento.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </MainLayout>
   )
 }
