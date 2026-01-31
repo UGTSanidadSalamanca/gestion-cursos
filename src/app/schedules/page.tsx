@@ -729,8 +729,6 @@ export default function SchedulesPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-    </div>
-    </MainLayout >
+    </MainLayout>
   )
 }
