@@ -15,7 +15,7 @@ import {
     Info
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { cn, formatTimeUTC } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CalendarDays } from "lucide-react"
 
@@ -74,13 +74,7 @@ export default function TeacherSchedulePage() {
         return schedules.filter(s => s.dayOfWeek === dayKey)
     }
 
-    const formatTime = (dateStr: string) => {
-        const date = new Date(dateStr)
-        // Usar métodos UTC para evitar desfases de zona horaria si el usuario lo pide expresamente
-        const hours = date.getUTCHours().toString().padStart(2, '0')
-        const minutes = date.getUTCMinutes().toString().padStart(2, '0')
-        return `${hours}:${minutes}`
-    }
+    const formatTime = (dateStr: string) => formatTimeUTC(dateStr)
 
     if (loading) {
         return (

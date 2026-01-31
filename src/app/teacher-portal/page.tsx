@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar, Users, Clock, ArrowRight, BookOpen, MapPin, Loader2, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
+import { cn, formatTimeUTC } from "@/lib/utils"
 
 interface Course {
     id: string
@@ -186,12 +186,7 @@ export default function TeacherPortalPage() {
         }
     }
 
-    const formatTime = (dateStr: string) => {
-        const date = new Date(dateStr)
-        const hours = date.getUTCHours().toString().padStart(2, '0')
-        const minutes = date.getUTCMinutes().toString().padStart(2, '0')
-        return `${hours}:${minutes}`
-    }
+    const formatTime = (dateStr: string) => formatTimeUTC(dateStr)
 
     const daysMap: Record<string, string> = {
         'MONDAY': 'Lunes', 'TUESDAY': 'Martes', 'WEDNESDAY': 'Miércoles',
@@ -276,7 +271,7 @@ export default function TeacherPortalPage() {
                                             <div className="flex items-center text-sm text-slate-600 gap-2">
                                                 <Calendar className="h-4 w-4 text-slate-400" />
                                                 <span>
-                                                    {course.startDate ? new Date(course.startDate).toLocaleDateString() : 'Por definir'}
+                                                    {course.startDate ? new Date(course.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: '2-digit', year: 'numeric', timeZone: 'UTC' }) : 'Por definir'}
                                                 </span>
                                             </div>
                                             <div className="flex items-center text-sm text-slate-600 gap-2">

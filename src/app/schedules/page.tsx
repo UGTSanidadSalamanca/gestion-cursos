@@ -37,6 +37,7 @@ import { toast } from "sonner"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { formatTimeUTC } from "@/lib/utils"
 
 interface Schedule {
   id: string
@@ -133,9 +134,8 @@ export default function SchedulesPage() {
       if (!timeStr) return null
       const match = String(timeStr).match(/(\d{1,2})[:.](\d{2})/)
       if (!match) return null
-      const d = new Date()
-      d.setFullYear(1970, 0, 1)
-      d.setHours(parseInt(match[1]), parseInt(match[2]), 0, 0)
+      const d = new Date(0) // Start with epoch 1970-01-01T00:00:00Z
+      d.setUTCHours(parseInt(match[1]), parseInt(match[2]), 0, 0)
       return d.toISOString()
     }
 
@@ -173,9 +173,7 @@ export default function SchedulesPage() {
       toast.error("Error de conexión", { id: tid })
     }
   }
-  const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
+  const formatTime = (dateStr: string) => formatTimeUTC(dateStr)
 
   const groupSchedulesByDay = (): ScheduleGroup[] => {
     const daysMap: Record<string, string> = {
@@ -298,10 +296,10 @@ export default function SchedulesPage() {
               const monthName = dateMatch[2].toLowerCase()
               const monthNum = monthsMap[monthName]
               if (monthNum !== undefined) {
-                const year = new Date().getFullYear() // 2026
-                specificDate = new Date(year, monthNum, dayNum)
+                const year = new Date().getUTCFullYear()
+                specificDate = new Date(Date.UTC(year, monthNum, dayNum))
                 const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
-                dayOfWeekResult = days[specificDate.getDay()]
+                dayOfWeekResult = days[specificDate.getUTCDay()]
                 isRecurringResult = false
                 return
               }
@@ -322,15 +320,21 @@ export default function SchedulesPage() {
           // 4. Parsear Horas
           const parseTime = (timeVal: any, baseDate: Date | null) => {
             if (timeVal === null || timeVal === undefined) return null
-            const d = baseDate ? new Date(baseDate) : new Date()
-            if (!baseDate) d.setFullYear(1970, 0, 1)
+
+            let d: Date
+            if (baseDate) {
+              // Creating a UTC date from the baseDate parts
+              d = new Date(Date.UTC(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate()))
+            } else {
+              d = new Date(0) // Epoch 1970-01-01T00:00:00Z
+            }
 
             if (typeof timeVal === 'number') {
               const totalMinutes = Math.round(timeVal * 1440)
-              d.setHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0)
+              d.setUTCHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0)
             } else {
               const match = String(timeVal).match(/(\d{1,2})[:.](\d{2})/)
-              if (match) d.setHours(parseInt(match[1]), parseInt(match[2]), 0, 0)
+              if (match) d.setUTCHours(parseInt(match[1]), parseInt(match[2]), 0, 0)
               else return null
             }
             return d.toISOString()

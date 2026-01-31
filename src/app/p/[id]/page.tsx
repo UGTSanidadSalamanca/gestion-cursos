@@ -14,6 +14,7 @@ import { toast } from "sonner"
 import { QRCodeSVG } from "qrcode.react"
 import { jsPDF } from "jspdf"
 import html2canvas from "html2canvas"
+import { formatTimeUTC } from "@/lib/utils"
 
 interface PublicCourse {
     title: string
@@ -211,17 +212,7 @@ export default function PublicCoursePage() {
         };
 
         const daySpan = dayMap[schedule.dayOfWeek] || schedule.dayOfWeek;
-        const timeStr = `${new Date(schedule.startTime).toLocaleTimeString('es-ES', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-            timeZone: 'UTC'
-        })} - ${new Date(schedule.endTime).toLocaleTimeString('es-ES', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-            timeZone: 'UTC'
-        })}`;
+        const timeStr = `${formatTimeUTC(schedule.startTime)} - ${formatTimeUTC(schedule.endTime)}`;
 
         if (!startDate) return `${daySpan} de ${timeStr}`;
 
@@ -441,7 +432,7 @@ export default function PublicCoursePage() {
                                 <span className="text-white/20 print:hidden">|</span>
                                 <div className="flex items-center gap-2 text-white text-xs md:text-sm font-medium print:text-red-900 print:bg-red-50 print:px-2 print:py-0.5 print:rounded-full print:text-[9px]">
                                     <Calendar className="h-3 w-3 md:h-4 md:w-4" />
-                                    <span>Inicio: {new Date(course.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                                    <span>Inicio: {new Date(course.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}</span>
                                 </div>
                             </>
                         )}
@@ -554,7 +545,7 @@ export default function PublicCoursePage() {
                                 <div>
                                     <p className="text-sm font-bold text-slate-400 uppercase print:text-[10px]">Próximo Inicio</p>
                                     <p className="text-xl font-bold text-slate-800 print:text-sm">
-                                        {course.startDate ? new Date(course.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'Próximamente'}
+                                        {course.startDate ? new Date(course.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', timeZone: 'UTC' }) : 'Próximamente'}
                                     </p>
                                 </div>
                             </div>
