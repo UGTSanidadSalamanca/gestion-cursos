@@ -38,11 +38,22 @@ export async function GET(request: NextRequest) {
         // Find courses where the teacher is assigned to a module
         const courses = await db.course.findMany({
             where: {
-                modules: {
-                    some: {
-                        teacherId: teacher.id
+                OR: [
+                    {
+                        modules: {
+                            some: {
+                                teacherId: teacher.id
+                            }
+                        }
+                    },
+                    {
+                        schedules: {
+                            some: {
+                                teacherId: teacher.id
+                            }
+                        }
                     }
-                }
+                ]
             },
             include: {
                 _count: {

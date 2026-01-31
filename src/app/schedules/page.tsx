@@ -109,17 +109,24 @@ export default function SchedulesPage() {
   }
 
   const groupSchedulesByDay = (): ScheduleGroup[] => {
-    const daysOrder = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    const daysMap: Record<string, string> = {
+      'MONDAY': 'Lunes', 'TUESDAY': 'Martes', 'WEDNESDAY': 'Miércoles',
+      'THURSDAY': 'Jueves', 'FRIDAY': 'Viernes', 'SATURDAY': 'Sábado', 'SUNDAY': 'Domingo'
+    }
+
+    const daysOrder = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
 
     if (selectedDay === 'all') {
-      return daysOrder.map(day => ({
-        day,
-        schedules: schedules.filter(s => s.dayOfWeek === day)
+      return daysOrder.map(dayKey => ({
+        day: daysMap[dayKey],
+        schedules: schedules.filter(s => s.dayOfWeek === dayKey)
       })).filter(group => group.schedules.length > 0)
     } else {
+      // Find the key for the selected Spanish day
+      const selectedKey = Object.keys(daysMap).find(key => daysMap[key] === selectedDay)
       return [{
         day: selectedDay,
-        schedules: schedules.filter(s => s.dayOfWeek === selectedDay)
+        schedules: schedules.filter(s => s.dayOfWeek === selectedKey)
       }]
     }
   }
