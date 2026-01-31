@@ -19,17 +19,36 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Teacher profile not found' }, { status: 404 })
         }
 
+        // Fetch all schedules for courses where this teacher has at least one scheduled session
         const schedules = await db.schedule.findMany({
             where: {
-                teacherId: teacher.id
+                course: {
+                    schedules: {
+                        some: {
+                            teacherId: teacher.id
+                        }
+                    }
+                }
             },
             include: {
-                course: true
+                course: true,
+                teacher: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
             },
             orderBy: { startTime: 'asc' }
         })
 
-        return NextResponse.json(schedules)
+        // Identify which schedules belong to the current teacher for the frontend to highlight
+        const schedulesWithOwnership = schedules.map(s => ({
+            ...s,
+            isOwn: s.teacherId === teacher.id
+        }))
+
+        return NextResponse.json(schedulesWithOwnership)
     } catch (error) {
         console.error('Error fetching teacher schedule:', error)
         return NextResponse.json(
