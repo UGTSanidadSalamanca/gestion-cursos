@@ -30,7 +30,7 @@ export async function PUT(
     try {
         const id = params.id
         const body = await request.json()
-        const { courseId, dayOfWeek, startTime, endTime, classroom, isRecurring, notes } = body
+        const { courseId, teacherId, dayOfWeek, startTime, endTime, classroom, isRecurring, notes } = body
 
         if (!id) {
             return NextResponse.json({ error: 'Schedule ID is required' }, { status: 400 })
@@ -38,6 +38,7 @@ export async function PUT(
 
         const data: any = {}
         if (courseId) data.courseId = courseId
+        if (teacherId !== undefined) data.teacherId = (teacherId === 'none' ? null : teacherId)
         if (dayOfWeek) data.dayOfWeek = dayOfWeek
         if (startTime) data.startTime = new Date(startTime)
         if (endTime) data.endTime = new Date(endTime)
