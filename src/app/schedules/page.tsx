@@ -143,6 +143,8 @@ export default function SchedulesPage() {
     avgCapacity: schedules.length > 0 ? Math.round(schedules.reduce((sum, s) => sum + ((s.course._count?.enrollments || 0) / s.course.maxStudents), 0) / schedules.length * 100) : 0
   }
 
+  const [pendingSchedules, setPendingSchedules] = useState<any[]>([])
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -158,8 +160,7 @@ export default function SchedulesPage() {
         const ws = wb.Sheets[wsname]
         const data = XLSX.utils.sheet_to_json(ws) as any[]
 
-        // Simple mapping attempt
-        const processedSchedules = data.map(item => {
+        const processed = data.map(item => {
           const course = courses.find(c =>
             c.title.toLowerCase() === (item.Curso || '').toLowerCase() ||
             c.code.toLowerCase() === (item.Código || '').toLowerCase()
@@ -170,12 +171,10 @@ export default function SchedulesPage() {
 
           if (!course) return null
 
-          // Handle time (expecting string like "09:00" or Excel time)
           const parseTime = (timeVal: any) => {
             if (!timeVal) return null
             const d = new Date()
             if (typeof timeVal === 'number') {
-              // Excel serial time
               const hours = Math.floor(timeVal * 24)
               const minutes = Math.round((timeVal * 24 - hours) * 60)
               d.setHours(hours, minutes, 0, 0)
@@ -201,27 +200,15 @@ export default function SchedulesPage() {
             endTime: parseTime(item.Fin),
             classroom: item.Aula || '',
             notes: item.Notas || '',
+            courseTitle: course.title // Para feedback visual
           }
         }).filter(s => s !== null && s.startTime && s.endTime)
 
-        if (processedSchedules.length === 0) {
-          toast.error("No se encontraron datos válidos en el Excel. Asegúrate de que los nombres de los cursos coincidan.")
-          setImportLoading(false)
-          return
-        }
-
-        const response = await fetch('/api/schedules/batch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ schedules: processedSchedules })
-        })
-
-        if (response.ok) {
-          toast.success(`${processedSchedules.length} horarios importados correctamente`)
-          fetchSchedules()
-          setIsImportOpen(false)
+        if (processed.length === 0) {
+          toast.error("No se encontraron datos válidos. Revisa los nombres de los cursos.")
         } else {
-          toast.error("Error al guardar los horarios en la base de datos")
+          setPendingSchedules(processed)
+          toast.info(`${processed.length} horarios listos para importar. Haz clic en "Ejecutar Subida".`)
         }
       } catch (error) {
         console.error("Error processing Excel:", error)
@@ -230,8 +217,33 @@ export default function SchedulesPage() {
         setImportLoading(false)
       }
     }
-
     reader.readAsBinaryString(file)
+  }
+
+  const executeImport = async () => {
+    if (pendingSchedules.length === 0) return
+
+    setImportLoading(true)
+    try {
+      const response = await fetch('/api/schedules/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ schedules: pendingSchedules })
+      })
+
+      if (response.ok) {
+        toast.success(`${pendingSchedules.length} horarios importados correctamente`)
+        fetchSchedules()
+        setIsImportOpen(false)
+        setPendingSchedules([])
+      } else {
+        toast.error("Error al guardar los horarios en la base de datos")
+      }
+    } catch (e) {
+      toast.error("Error técnico al importar")
+    } finally {
+      setImportLoading(false)
+    }
   }
 
   return (
@@ -246,7 +258,10 @@ export default function SchedulesPage() {
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex gap-2">
-            <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+            <Dialog open={isImportOpen} onOpenChange={(open) => {
+              setIsImportOpen(open)
+              if (!open) setPendingSchedules([])
+            }}>
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <FileUp className="h-4 w-4 mr-2" />
@@ -272,15 +287,32 @@ export default function SchedulesPage() {
                       disabled={importLoading}
                     />
                   </div>
+
+                  {pendingSchedules.length > 0 && (
+                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                      <p className="text-xs font-bold text-slate-700 flex items-center gap-2">
+                        <CheckCircle2 className="h-3 w-3 text-green-600" />
+                        {pendingSchedules.length} registros detectados
+                      </p>
+                    </div>
+                  )}
+
                   {importLoading && (
                     <div className="flex items-center gap-2 text-sm text-blue-600 animate-pulse">
                       <div className="h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                      Procesando e importando datos...
+                      Procesando datos...
                     </div>
                   )}
                 </div>
-                <DialogFooter>
+                <DialogFooter className="gap-2 sm:gap-0">
                   <Button variant="ghost" onClick={() => setIsImportOpen(false)}>Cancelar</Button>
+                  <Button
+                    onClick={executeImport}
+                    disabled={importLoading || pendingSchedules.length === 0}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {importLoading ? "Subiendo..." : "Ejecutar Subida"}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
