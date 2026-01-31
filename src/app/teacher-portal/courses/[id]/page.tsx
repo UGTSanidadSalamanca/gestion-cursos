@@ -66,18 +66,20 @@ export default function TeacherCourseDetail() {
     const handleExportExcel = () => {
         if (!course?.enrollments) return
 
-        const data = course.enrollments.map((e: any) => ({
-            'Nombre Completo': e.student.name,
-            'DNI': e.student.dni || '',
-            'Email': e.student.email || '',
-            'Teléfono': e.student.phone || '',
-            'Dirección': e.student.address || '',
-            'Afiliado': e.student.isAffiliated ? 'SÍ' : 'NO',
-            'Nº Afiliado': e.student.affiliateNumber || '',
-            'Estado Alumno': e.student.status === 'ACTIVE' ? 'Activo' : e.student.status === 'INACTIVE' ? 'Inactivo' : e.student.status,
-            'Estado Matrícula': e.status === 'ENROLLED' ? 'Matriculado' : e.status === 'PENDING' ? 'Pendiente' : e.status,
-            'Fecha Inscripción': new Date(e.createdAt).toLocaleDateString('es-ES')
-        }))
+        const data = course.enrollments
+            .filter((e: any) => e.status !== 'PENDING')
+            .map((e: any) => ({
+                'Nombre Completo': e.student.name,
+                'DNI': e.student.dni || '',
+                'Email': e.student.email || '',
+                'Teléfono': e.student.phone || '',
+                'Dirección': e.student.address || '',
+                'Afiliado': e.student.isAffiliated ? 'SÍ' : 'NO',
+                'Nº Afiliado': e.student.affiliateNumber || '',
+                'Estado Alumno': e.student.status === 'ACTIVE' ? 'Activo' : e.student.status === 'INACTIVE' ? 'Inactivo' : e.student.status,
+                'Estado Matrícula': e.status === 'ENROLLED' ? 'Matriculado' : e.status === 'PENDING' ? 'Pendiente' : e.status,
+                'Fecha Inscripción': new Date(e.createdAt).toLocaleDateString('es-ES')
+            }))
 
         const ws = XLSX.utils.json_to_sheet(data)
         const wb = XLSX.utils.book_new()
@@ -86,11 +88,13 @@ export default function TeacherCourseDetail() {
         toast.success("Excel generado correctamente")
     }
 
-    const filteredEnrollments = course?.enrollments?.filter((enr: any) =>
+    const confirmedEnrollments = course?.enrollments?.filter((enr: any) => enr.status !== 'PENDING') || []
+
+    const filteredEnrollments = confirmedEnrollments.filter((enr: any) =>
         enr.student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enr.student.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enr.student.dni?.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || []
+    )
 
     if (loading) {
         return (
@@ -128,7 +132,7 @@ export default function TeacherCourseDetail() {
                                 </span>
                                 <span className="flex items-center">
                                     <Users className="h-4 w-4 mr-2" />
-                                    {course.enrollments?.length || 0} Alumnos
+                                    {confirmedEnrollments.length} Alumnos
                                 </span>
                             </div>
                         </div>

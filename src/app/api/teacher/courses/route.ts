@@ -46,7 +46,13 @@ export async function GET(request: NextRequest) {
             },
             include: {
                 _count: {
-                    select: { enrollments: true }
+                    select: {
+                        enrollments: {
+                            where: {
+                                NOT: { status: 'PENDING' }
+                            }
+                        }
+                    }
                 },
                 // We might want next session info or schedule
             },
