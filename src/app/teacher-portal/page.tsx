@@ -106,6 +106,10 @@ export default function TeacherPortalPage() {
                             <CalendarDays className="h-4 w-4 mr-2" />
                             Mi Agenda Semanal
                         </TabsTrigger>
+                        <TabsTrigger value="calendar" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Mi Calendario Mensual
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="courses">
@@ -170,6 +174,7 @@ export default function TeacherPortalPage() {
                     </TabsContent>
 
                     <TabsContent value="agenda">
+                        {/* Weekly agenda content stays the same */}
                         <div className="grid grid-cols-1 gap-6">
                             {daysOrder.map(dayKey => {
                                 const daySchedules = schedules.filter(s => s.dayOfWeek === dayKey);
@@ -183,15 +188,15 @@ export default function TeacherPortalPage() {
                                         </h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                             {daySchedules.map(s => (
-                                                <Card key={s.id} className="border-l-4 border-l-red-500 shadow-sm">
+                                                <Card key={s.id} className="border-l-4 border-l-red-500 shadow-sm group hover:border-l-red-600 transition-all">
                                                     <CardContent className="p-4">
                                                         <div className="flex justify-between items-start mb-2">
                                                             <span className="text-xs font-bold text-red-600 uppercase tracking-wider">
                                                                 {new Date(s.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(s.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                             </span>
-                                                            <Badge variant="outline" className="text-[10px]">{s.course.code}</Badge>
+                                                            <Badge variant="outline" className="text-[10px] bg-slate-50">{s.course.code}</Badge>
                                                         </div>
-                                                        <h4 className="font-bold text-slate-900 leading-tight mb-2">{s.course.title}</h4>
+                                                        <h4 className="font-bold text-slate-900 leading-tight mb-2 group-hover:text-red-600 transition-colors">{s.course.title}</h4>
                                                         <div className="flex items-center gap-2 text-xs text-slate-500">
                                                             <MapPin className="h-3 w-3" />
                                                             {s.classroom || 'Aula por definir'}
@@ -208,14 +213,13 @@ export default function TeacherPortalPage() {
                                     </div>
                                 );
                             })}
-
+                            {/* Empty/Loading states stay here */}
                             {schedules.length === 0 && !schedulesLoading && (
                                 <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
                                     <CalendarDays className="h-10 w-10 text-slate-300 mx-auto mb-4" />
                                     <p className="text-slate-500">No tienes clases programadas en tu agenda semanal.</p>
                                 </div>
                             )}
-
                             {schedulesLoading && (
                                 <div className="flex justify-center py-20">
                                     <Loader2 className="h-8 w-8 animate-spin text-red-600" />
@@ -223,8 +227,94 @@ export default function TeacherPortalPage() {
                             )}
                         </div>
                     </TabsContent>
+
+                    <TabsContent value="calendar">
+                        <MonthlyCalendar schedules={schedules} />
+                    </TabsContent>
                 </Tabs>
             </div>
         </TeacherLayout>
+    )
+}
+const MonthlyCalendar = ({ schedules }: { schedules: any[] }) => {
+    const [currentDate, setCurrentDate] = useState(new Date())
+
+    const year = currentDate.getFullYear()
+    const month = currentDate.getMonth()
+
+    const monthName = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(currentDate)
+    const firstDayOfMonth = new Date(year, month, 1).getDay()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+    // Adjust first day to start from Monday (0: Monday, ..., 6: Sunday)
+    const offset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1
+
+    const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1))
+    const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1))
+
+    const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+    const dayEnums = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
+
+    return (
+        <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50 border-b border-slate-200">
+                <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl font-bold text-slate-800 capitalize">
+                        {monthName} {year}
+                    </CardTitle>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="icon" onClick={prevMonth} className="h-8 w-8 rounded-lg">
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" onClick={nextMonth} className="h-8 w-8 rounded-lg">
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className="p-0">
+                <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50/50">
+                    {dayNames.map(d => (
+                        <div key={d} className="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-widest">{d}</div>
+                    ))}
+                </div>
+                <div className="grid grid-cols-7">
+                    {/* Offset days */}
+                    {Array.from({ length: offset }).map((_, i) => (
+                        <div key={`offset-${i}`} className="min-h-[120px] bg-slate-50/30 border-r border-b border-slate-100" />
+                    ))}
+
+                    {/* Month days */}
+                    {Array.from({ length: daysInMonth }).map((_, i) => {
+                        const dayNum = i + 1
+                        const date = new Date(year, month, dayNum)
+                        const dayOfWeekEnum = dayEnums[date.getDay() === 0 ? 6 : date.getDay() - 1]
+
+                        const daySchedules = schedules.filter(s => s.dayOfWeek === dayOfWeekEnum)
+                        const isToday = new Date().toDateString() === date.toDateString()
+
+                        return (
+                            <div key={dayNum} className={`min-h-[120px] p-2 border-r border-b border-slate-100 group hover:bg-slate-50/50 transition-colors ${isToday ? 'bg-red-50/20' : ''}`}>
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className={`text-sm font-bold ${isToday ? 'bg-red-600 text-white w-6 h-6 flex items-center justify-center rounded-full' : 'text-slate-400'}`}>
+                                        {dayNum}
+                                    </span>
+                                </div>
+                                <div className="space-y-1">
+                                    {daySchedules.map(s => (
+                                        <div key={s.id} className="text-[10px] p-1.5 rounded-md bg-white border border-slate-200 shadow-sm leading-tight hover:border-red-200 transition-all cursor-default overflow-hidden whitespace-nowrap overflow-ellipsis">
+                                            <div className="font-bold text-red-600 mb-0.5">
+                                                {new Date(s.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </div>
+                                            <div className="font-medium text-slate-800 uppercase tracking-tighter truncate">{s.course.title}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            </CardContent>
+        </Card>
     )
 }
