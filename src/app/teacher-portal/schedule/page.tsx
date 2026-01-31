@@ -27,9 +27,14 @@ interface Schedule {
     endTime: string
     classroom?: string
     notes?: string
+    isOwn?: boolean
+    isRecurring?: boolean
     course: {
         title: string
-        color?: string
+        code: string
+    }
+    teacher?: {
+        name: string
     }
 }
 
@@ -148,14 +153,29 @@ export default function TeacherSchedulePage() {
                                                     </div>
                                                 ) : (
                                                     daySchedules.map((s) => (
-                                                        <Card key={s.id} className="group hover:border-red-400 transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md">
-                                                            <div className="h-1.5 bg-red-500" />
+                                                        <Card key={s.id} className={cn(
+                                                            "group transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md border-l-4",
+                                                            s.isOwn ? "border-l-red-500 hover:border-red-400" : "border-l-slate-300 hover:border-slate-400 opacity-80"
+                                                        )}>
                                                             <CardContent className="p-4 space-y-3">
-                                                                <h4 className="font-bold text-slate-800 text-sm leading-tight group-hover:text-red-600 transition-colors">
-                                                                    {s.course.title}
-                                                                </h4>
+                                                                <div className="flex justify-between items-start">
+                                                                    <h4 className={cn(
+                                                                        "font-bold text-sm leading-tight transition-colors",
+                                                                        s.isOwn ? "text-slate-800 group-hover:text-red-600" : "text-slate-500"
+                                                                    )}>
+                                                                        {s.course.title}
+                                                                    </h4>
+                                                                    {!s.isOwn && (
+                                                                        <Badge variant="outline" className="text-[9px] py-0 h-4 bg-slate-50 text-slate-400 border-slate-200">
+                                                                            {s.teacher?.name || 'Compañero/a'}
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
                                                                 <div className="space-y-1.5">
-                                                                    <div className="flex items-center text-[11px] font-medium text-red-700 bg-red-50 px-2 py-1 rounded-md w-fit gap-1.5">
+                                                                    <div className={cn(
+                                                                        "flex items-center text-[11px] font-medium px-2 py-1 rounded-md w-fit gap-1.5",
+                                                                        s.isOwn ? "text-red-700 bg-red-50" : "text-slate-600 bg-slate-100"
+                                                                    )}>
                                                                         <Clock className="h-3 w-3" />
                                                                         {formatTime(s.startTime)} - {formatTime(s.endTime)}
                                                                     </div>
@@ -188,7 +208,13 @@ export default function TeacherSchedulePage() {
 }
 
 const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTime: (s: string) => string }) => {
-    const [currentDate, setCurrentDate] = useState(new Date())
+    const [currentDate, setCurrentDate] = useState<Date | null>(null)
+
+    useEffect(() => {
+        setCurrentDate(new Date())
+    }, [])
+
+    if (!currentDate) return <div className="h-[400px] flex items-center justify-center">Cargando calendario...</div>
 
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
@@ -260,11 +286,27 @@ const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTi
                                 </div>
                                 <div className="space-y-1">
                                     {daySchedules.map(s => (
-                                        <div key={s.id} className="text-[10px] p-1.5 rounded-md bg-white border border-slate-200 shadow-sm leading-tight hover:border-red-200 transition-all cursor-default overflow-hidden whitespace-nowrap overflow-ellipsis">
-                                            <div className="font-bold text-red-600 mb-0.5">
+                                        <div
+                                            key={s.id}
+                                            className={cn(
+                                                "text-[9px] p-1.5 rounded-md border shadow-sm leading-tight transition-all cursor-default overflow-hidden",
+                                                s.isOwn
+                                                    ? "bg-white border-red-200 hover:border-red-400"
+                                                    : "bg-slate-50 border-slate-100 opacity-70 grayscale-[0.5]"
+                                            )}
+                                            title={s.isOwn ? "Tu clase" : `Clase de ${s.teacher?.name || 'compañero/a'}`}
+                                        >
+                                            <div className={cn("font-bold mb-0.5", s.isOwn ? "text-red-600" : "text-slate-400")}>
                                                 {formatTime(s.startTime)}
                                             </div>
-                                            <div className="font-medium text-slate-800 uppercase tracking-tighter truncate">{s.course.title}</div>
+                                            <div className={cn("font-medium uppercase tracking-tighter truncate", s.isOwn ? "text-slate-800" : "text-slate-400")}>
+                                                {s.course?.title || "Curso sin título"}
+                                            </div>
+                                            {!s.isOwn && (
+                                                <div className="mt-0.5 text-[8px] text-slate-400 italic truncate border-t border-slate-100 pt-0.5">
+                                                    {s.teacher?.name || 'Compañero/a'}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

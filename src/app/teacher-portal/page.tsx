@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar, Users, Clock, ArrowRight, BookOpen, MapPin, Loader2, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
+import { cn } from "@/lib/utils"
 
 interface Course {
     id: string
@@ -16,11 +17,130 @@ interface Course {
     code: string
     startDate?: string
     endDate?: string
-    status?: string // Calculated or from isActive
+    status?: string
     isActive: boolean
     _count?: {
         enrollments: number
     }
+}
+
+// Subcomponent moved up for better hoisting and organization
+const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTime: (s: string) => string }) => {
+    const [currentDate, setCurrentDate] = useState<Date | null>(null)
+
+    // Wait for client-side to set the date to avoid hydration mismatch
+    useEffect(() => {
+        setCurrentDate(new Date())
+    }, [])
+
+    if (!currentDate) return <div className="h-[400px] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-red-600" /></div>
+
+    const year = currentDate.getFullYear()
+    const month = currentDate.getMonth()
+
+    const monthName = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(currentDate)
+    const firstDayOfMonth = new Date(year, month, 1).getDay()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+    const offset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1
+
+    const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1))
+    const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1))
+
+    const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+    const dayEnums = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
+
+    return (
+        <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50 border-b border-slate-200">
+                <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl font-bold text-slate-800 capitalize">
+                        {monthName} {year}
+                    </CardTitle>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="icon" onClick={prevMonth} className="h-8 w-8 rounded-lg">
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" onClick={nextMonth} className="h-8 w-8 rounded-lg">
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className="p-0">
+                <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50/50">
+                    {dayNames.map(d => (
+                        <div key={d} className="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-widest">{d}</div>
+                    ))}
+                </div>
+                <div className="grid grid-cols-7">
+                    {Array.from({ length: offset }).map((_, i) => (
+                        <div key={`offset-${i}`} className="min-h-[120px] bg-slate-50/30 border-r border-b border-slate-100" />
+                    ))}
+
+                    {Array.from({ length: daysInMonth }).map((_, i) => {
+                        const dayNum = i + 1
+                        const date = new Date(year, month, dayNum)
+                        const dayOfWeekEnum = dayEnums[date.getDay() === 0 ? 6 : date.getDay() - 1]
+
+                        const daySchedules = schedules.filter(s => {
+                            if (s.isRecurring) {
+                                return s.dayOfWeek === dayOfWeekEnum
+                            } else {
+                                const sDate = new Date(s.startTime)
+                                return sDate.getDate() === date.getDate() &&
+                                    sDate.getMonth() === date.getMonth() &&
+                                    sDate.getFullYear() === date.getFullYear()
+                            }
+                        })
+                        const isToday = new Date().toDateString() === date.toDateString()
+
+                        return (
+                            <div key={dayNum} className={cn(
+                                "min-h-[120px] p-2 border-r border-b border-slate-100 group hover:bg-slate-50/50 transition-colors",
+                                isToday ? 'bg-red-50/20' : ''
+                            )}>
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className={cn(
+                                        "text-sm font-bold",
+                                        isToday ? 'bg-red-600 text-white w-6 h-6 flex items-center justify-center rounded-full' : 'text-slate-400'
+                                    )}>
+                                        {dayNum}
+                                    </span>
+                                </div>
+                                <div className="space-y-1">
+                                    {daySchedules.map(s => (
+                                        <div
+                                            key={s.id}
+                                            className={cn(
+                                                "text-[9px] p-1.5 rounded-md border shadow-sm leading-tight transition-all cursor-default overflow-hidden",
+                                                s.isOwn
+                                                    ? "bg-white border-red-200 hover:border-red-400"
+                                                    : "bg-slate-50 border-slate-100 opacity-70 grayscale-[0.5]"
+                                            )}
+                                            title={s.isOwn ? "Tu clase" : `Clase de ${s.teacher?.name || 'compañero/a'}`}
+                                        >
+                                            <div className={cn("font-bold mb-0.5", s.isOwn ? "text-red-600" : "text-slate-400")}>
+                                                {formatTime(s.startTime)}
+                                            </div>
+                                            <div className={cn("font-medium uppercase tracking-tighter truncate", s.isOwn ? "text-slate-800" : "text-slate-400")}>
+                                                {s.course?.title || "Curso sin título"}
+                                            </div>
+                                            {!s.isOwn && (
+                                                <div className="mt-0.5 text-[8px] text-slate-400 italic truncate border-t border-slate-100 pt-0.5">
+                                                    {s.teacher?.name || 'Compañero/a'}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            </CardContent>
+        </Card>
+    )
 }
 
 export default function TeacherPortalPage() {
@@ -262,111 +382,8 @@ export default function TeacherPortalPage() {
             </div>
         </TeacherLayout>
     )
-}
-const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTime: (s: string) => string }) => {
-    const [currentDate, setCurrentDate] = useState(new Date())
-
-    const year = currentDate.getFullYear()
-    const month = currentDate.getMonth()
-
-    const monthName = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(currentDate)
-    const firstDayOfMonth = new Date(year, month, 1).getDay()
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
-
-    // Adjust first day to start from Monday (0: Monday, ..., 6: Sunday)
-    const offset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1
-
-    const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1))
-    const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1))
-
-    const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
-    const dayEnums = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
-
-    return (
-        <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <CardHeader className="bg-slate-50 border-b border-slate-200">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl font-bold text-slate-800 capitalize">
-                        {monthName} {year}
-                    </CardTitle>
-                    <div className="flex gap-2">
-                        <Button variant="outline" size="icon" onClick={prevMonth} className="h-8 w-8 rounded-lg">
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="icon" onClick={nextMonth} className="h-8 w-8 rounded-lg">
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent className="p-0">
-                <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50/50">
-                    {dayNames.map(d => (
-                        <div key={d} className="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-widest">{d}</div>
-                    ))}
-                </div>
-                <div className="grid grid-cols-7">
-                    {/* Offset days */}
-                    {Array.from({ length: offset }).map((_, i) => (
-                        <div key={`offset-${i}`} className="min-h-[120px] bg-slate-50/30 border-r border-b border-slate-100" />
-                    ))}
-
-                    {/* Month days */}
-                    {Array.from({ length: daysInMonth }).map((_, i) => {
-                        const dayNum = i + 1
-                        const date = new Date(year, month, dayNum)
-                        const dayOfWeekEnum = dayEnums[date.getDay() === 0 ? 6 : date.getDay() - 1]
-
-                        const daySchedules = schedules.filter(s => {
-                            if (s.isRecurring) {
-                                return s.dayOfWeek === dayOfWeekEnum
-                            } else {
-                                const sDate = new Date(s.startTime)
-                                return sDate.getDate() === date.getDate() &&
-                                    sDate.getMonth() === date.getMonth() &&
-                                    sDate.getFullYear() === date.getFullYear()
-                            }
-                        })
-                        const isToday = new Date().toDateString() === date.toDateString()
-
-                        return (
-                            <div key={dayNum} className={`min-h-[120px] p-2 border-r border-b border-slate-100 group hover:bg-slate-50/50 transition-colors ${isToday ? 'bg-red-50/20' : ''}`}>
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className={`text-sm font-bold ${isToday ? 'bg-red-600 text-white w-6 h-6 flex items-center justify-center rounded-full' : 'text-slate-400'}`}>
-                                        {dayNum}
-                                    </span>
-                                </div>
-                                <div className="space-y-1">
-                                    {daySchedules.map(s => (
-                                        <div
-                                            key={s.id}
-                                            className={cn(
-                                                "text-[9px] p-1.5 rounded-md border shadow-sm leading-tight transition-all cursor-default overflow-hidden",
-                                                s.isOwn
-                                                    ? "bg-white border-red-200 hover:border-red-400"
-                                                    : "bg-slate-50 border-slate-100 opacity-70 grayscale-[0.5]"
-                                            )}
-                                            title={s.isOwn ? "Tu clase" : `Clase de ${s.teacher?.name || 'compañero/a'}`}
-                                        >
-                                            <div className={cn("font-bold mb-0.5", s.isOwn ? "text-red-600" : "text-slate-400")}>
-                                                {formatTime(s.startTime)}
-                                            </div>
-                                            <div className={cn("font-medium uppercase tracking-tighter truncate", s.isOwn ? "text-slate-800" : "text-slate-400")}>
-                                                {s.course.title}
-                                            </div>
-                                            {!s.isOwn && (
-                                                <div className="mt-0.5 text-[8px] text-slate-400 italic truncate border-t border-slate-100 pt-0.5">
-                                                    {s.teacher?.name || 'Compañero/a'}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )
-                    })}
-                </div>
-            </CardContent>
-        </Card>
+                </Tabs >
+            </div >
+        </TeacherLayout >
     )
 }
