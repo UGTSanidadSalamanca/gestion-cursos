@@ -150,13 +150,21 @@ export default function SchedulesPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    if (courses.length === 0) {
+      toast.error("Error: No se han cargado los cursos de la base de datos. Recarga la página.")
+      return
+    }
+
     setImportLoading(true)
     const reader = new FileReader()
 
     reader.onload = async (evt) => {
       try {
         const dataBuffer = evt.target?.result
-        if (!dataBuffer) return
+        if (!dataBuffer) {
+          toast.error("No se pudo leer el contenido del archivo.");
+          return;
+        }
 
         const wb = XLSX.read(dataBuffer, { type: 'array' })
         const wsname = wb.SheetNames[0]
@@ -166,7 +174,7 @@ export default function SchedulesPage() {
         console.log("Excel Data Raw:", json);
 
         if (json.length === 0) {
-          toast.error("El archivo está vacío")
+          toast.error("El archivo Excel parece estar vacío.")
           setImportLoading(false)
           return
         }
@@ -179,27 +187,40 @@ export default function SchedulesPage() {
           return key ? row[key] : null
         }
 
+        // Verificar si faltan columnas esenciales en la primera fila
+        const firstRow = json[0];
+        const hasCurso = findVal(firstRow, ['curso', 'nombre', 'asignatura', 'codigo', 'code']);
+        const hasDia = findVal(firstRow, ['dia', 'day', 'fecha']);
+        const hasInicio = findVal(firstRow, ['inicio', 'start', 'hora']);
+
+        if (!hasCurso || !hasDia || !hasInicio) {
+          toast.error("Columnas no detectadas. El Excel debe tener: Curso, Día e Inicio.");
+          setImportLoading(false);
+          return;
+        }
+
         const processed = json.map((item, index) => {
-          const cursoVal = findVal(item, ['curso', 'nombre', 'asignatura'])
-          const codigoVal = findVal(item, ['codigo', 'code', 'id'])
-          const profesorVal = findVal(item, ['profesor', 'docente', 'teacher'])
-          const diaVal = findVal(item, ['dia', 'day', 'fecha'])
+          const cursoVal = String(findVal(item, ['curso', 'nombre', 'asignatura']) || '').trim()
+          const codigoVal = String(findVal(item, ['codigo', 'code', 'id']) || '').trim()
+          const profesorVal = String(findVal(item, ['profesor', 'docente', 'teacher']) || '').trim()
+          const diaVal = String(findVal(item, ['dia', 'day', 'fecha']) || '').trim()
           const inicioVal = findVal(item, ['inicio', 'start', 'hora'])
           const finVal = findVal(item, ['fin', 'end'])
-          const aulaVal = findVal(item, ['aula', 'clase', 'classroom', 'room'])
-          const notasVal = findVal(item, ['notas', 'observaciones', 'notes'])
+          const aulaVal = String(findVal(item, ['aula', 'clase', 'classroom', 'room']) || '').trim()
+          const notasVal = String(findVal(item, ['notas', 'observaciones', 'notes']) || '').trim()
 
+          // Búsqueda de curso por título o código
           const course = courses.find(c =>
-            (cursoVal && c.title.toLowerCase() === String(cursoVal).toLowerCase()) ||
-            (codigoVal && c.code.toLowerCase() === String(codigoVal).toLowerCase())
+            (cursoVal && c.title.toLowerCase().trim() === cursoVal.toLowerCase()) ||
+            (codigoVal && c.code.toLowerCase().trim() === codigoVal.toLowerCase())
           )
 
           const teacher = teachers.find(t =>
-            profesorVal && t.name?.toLowerCase().includes(String(profesorVal).toLowerCase())
+            profesorVal && t.name?.toLowerCase().includes(profesorVal.toLowerCase())
           )
 
           if (!course) {
-            console.warn(`Fila ${index + 1}: No se encontró el curso "${cursoVal || codigoVal}"`);
+            console.warn(`Fila ${index + 2}: No se encontró el curso "${cursoVal || codigoVal}"`);
             return null;
           }
 
@@ -212,7 +233,7 @@ export default function SchedulesPage() {
               const minutes = totalMinutes % 60
               d.setHours(hours, minutes, 0, 0)
             } else {
-              const timeStr = String(timeVal).replace('.', ':')
+              const timeStr = String(timeVal).replace('.', ':').trim()
               const match = timeStr.match(/(\d{1,2})[:](\d{2})/)
               if (match) {
                 d.setHours(parseInt(match[1]), parseInt(match[2]), 0, 0)
@@ -239,7 +260,7 @@ export default function SchedulesPage() {
           const end = parseTime(finVal)
 
           if (!start || !end) {
-            console.warn(`Fila ${index + 1}: Horas inválidas para ${course.title}`);
+            console.warn(`Fila ${index + 2}: Horas inválidas para ${course.title}`);
             return null;
           }
 
@@ -249,8 +270,8 @@ export default function SchedulesPage() {
             dayOfWeek: normalizeDay(diaVal),
             startTime: start,
             endTime: end,
-            classroom: String(aulaVal || ''),
-            notes: String(notasVal || ''),
+            classroom: aulaVal,
+            notes: notasVal,
             courseTitle: course.title
           }
         }).filter(s => s !== null)
@@ -258,14 +279,14 @@ export default function SchedulesPage() {
         console.log("Processed Schedules:", processed);
 
         if (processed.length === 0) {
-          toast.error("No se pudo vincular ninguna fila. Revisa los nombres de los cursos.")
+          toast.error("No se emparejó ninguna fila. ¿Los nombres de los cursos coinciden con los de la aplicación?")
         } else {
           setPendingSchedules(processed)
           toast.success(`${processed.length} registros listos. Revisa y pulsa "Ejecutar Subida".`)
         }
       } catch (error) {
         console.error("Error processing Excel:", error)
-        toast.error("Error al procesar el archivo Excel")
+        toast.error("Error crítico al procesar el Excel.")
       } finally {
         setImportLoading(false)
       }
@@ -274,10 +295,13 @@ export default function SchedulesPage() {
   }
 
   const executeImport = async () => {
-    if (pendingSchedules.length === 0) return
+    if (pendingSchedules.length === 0) {
+      toast.error("No hay registros para subir.");
+      return;
+    }
 
     setImportLoading(true)
-    const toastId = toast.loading("Importando horarios...")
+    const toastId = toast.loading("Subiendo horarios a la base de datos...")
 
     try {
       console.log("Sending to API:", pendingSchedules);
@@ -290,17 +314,17 @@ export default function SchedulesPage() {
       const result = await response.json()
 
       if (response.ok) {
-        toast.success(`${result.count || pendingSchedules.length} horarios importados correctamente`, { id: toastId })
+        toast.success(`¡Éxito! ${result.count || pendingSchedules.length} horarios guardados.`, { id: toastId })
         fetchSchedules()
         setIsImportOpen(false)
         setPendingSchedules([])
       } else {
         console.error("API Error:", result);
-        toast.error(result.error || "Error al guardar los horarios", { id: toastId })
+        toast.error(result.error || "Error al guardar en la base de datos", { id: toastId })
       }
     } catch (e) {
       console.error("Fetch Error:", e);
-      toast.error("Error técnico: No se pudo conectar con el servidor", { id: toastId })
+      toast.error("Error de conexión con el servidor", { id: toastId })
     } finally {
       setImportLoading(false)
     }
@@ -333,7 +357,7 @@ export default function SchedulesPage() {
                   <DialogTitle>Importar Horarios</DialogTitle>
                   <DialogDescription>
                     Sube un archivo Excel (.xlsx) con columnas como: <br />
-                    <span className="font-mono text-[10px] bg-slate-100 p-1 rounded">Curso, Profesor, Día, Inicio, Fin, Aula</span>
+                    <span className="font-mono text-[10px] bg-slate-100 p-1 rounded">Curso, Profesor, Día, Inicio, Fin</span>
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -350,18 +374,18 @@ export default function SchedulesPage() {
                   </div>
 
                   {pendingSchedules.length > 0 && (
-                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 space-y-2 animate-in fade-in slide-in-from-top-2">
-                      <p className="text-xs font-black text-blue-800 flex items-center gap-2 uppercase tracking-tighter">
-                        <CheckCircle2 className="h-4 w-4 text-blue-600" />
-                        {pendingSchedules.length} registros listos para subir
+                    <div className="bg-blue-600 p-4 rounded-xl border border-blue-500 space-y-2 animate-in fade-in slide-in-from-top-2 shadow-inner">
+                      <p className="text-xs font-black text-white flex items-center gap-2 uppercase tracking-tighter">
+                        <CheckCircle2 className="h-4 w-4 text-blue-100" />
+                        {pendingSchedules.length} registros localizados
                       </p>
                       <div className="max-h-32 overflow-y-auto pr-2">
                         {pendingSchedules.slice(0, 5).map((s, i) => (
-                          <div key={i} className="text-[10px] text-blue-600/70 border-b border-blue-100 py-1 last:border-0 italic">
+                          <div key={i} className="text-[10px] text-blue-50 border-b border-blue-400/30 py-1 last:border-0 italic">
                             • {s.courseTitle} ({s.dayOfWeek})
                           </div>
                         ))}
-                        {pendingSchedules.length > 5 && <p className="text-[10px] text-blue-400 mt-1">... y {pendingSchedules.length - 5} más</p>}
+                        {pendingSchedules.length > 5 && <p className="text-[10px] text-blue-200 mt-1">... y {pendingSchedules.length - 5} más</p>}
                       </div>
                     </div>
                   )}
@@ -370,7 +394,7 @@ export default function SchedulesPage() {
                     <div className="flex items-center justify-center p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
                       <div className="flex items-center gap-3 text-sm text-slate-600 font-medium">
                         <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                        Procesando...
+                        Trabajando...
                       </div>
                     </div>
                   )}
@@ -380,9 +404,9 @@ export default function SchedulesPage() {
                   <Button
                     onClick={executeImport}
                     disabled={importLoading || pendingSchedules.length === 0}
-                    className="sm:flex-1 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100"
+                    className="sm:flex-1 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 font-bold"
                   >
-                    {importLoading ? "Subiendo..." : "Ejecutar Subida"}
+                    {importLoading ? "Trabajando..." : "Ejecutar Subida"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
