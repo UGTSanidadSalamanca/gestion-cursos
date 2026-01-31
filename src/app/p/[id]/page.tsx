@@ -499,8 +499,8 @@ export default function PublicCoursePage() {
                                 Días y Horarios de Clase
                             </h3>
                             {course.schedules && course.schedules.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {course.schedules.map((schedule, i) => (
+                                <div className="grid grid-cols-1 gap-4">
+                                    {course.schedules.slice(0, 1).map((schedule, i) => (
                                         <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-red-200 transition-all">
                                             <div>
                                                 <p className="text-red-600 font-black uppercase text-xs tracking-widest mb-1">Horario de clase</p>

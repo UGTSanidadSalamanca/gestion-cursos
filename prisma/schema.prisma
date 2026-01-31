@@ -222,6 +222,7 @@ model Schedule {
   endTime     DateTime
   classroom   String?
   isRecurring Boolean   @default(true)
+  subject     String?
   notes       String?
   teacherId   String?
   createdAt   DateTime  @default(now())

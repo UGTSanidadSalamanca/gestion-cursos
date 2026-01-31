@@ -42,6 +42,9 @@ export async function GET(
                         startTime: true,
                         endTime: true,
                         classroom: true
+                    },
+                    orderBy: {
+                        startTime: 'asc'
                     }
                 }
             }

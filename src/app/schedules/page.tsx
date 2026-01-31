@@ -48,6 +48,7 @@ interface Schedule {
   endTime: string
   classroom?: string
   isRecurring: boolean
+  subject?: string
   notes?: string
   course: {
     title: string
@@ -146,6 +147,7 @@ export default function SchedulesPage() {
       startTime: parseTimeInput(formData.get('startTime')),
       endTime: parseTimeInput(formData.get('endTime')),
       classroom: formData.get('classroom'),
+      subject: formData.get('subject'),
       notes: formData.get('notes'),
       isRecurring: true
     }
@@ -263,6 +265,7 @@ export default function SchedulesPage() {
           const inicioVal = findVal(item, ['inicio', 'start', 'hora'])
           const finVal = findVal(item, ['fin', 'end'])
           const aulaVal = String(findVal(item, ['aula', 'clase', 'classroom', 'room']) || '').trim()
+          const subjectVal = String(findVal(item, ['asignatura', 'materia', 'subject', 'modulo']) || '').trim()
           const notasVal = String(findVal(item, ['notas', 'observaciones', 'notes']) || '').trim()
 
           // 1. Vincular Curso (por título o por código tipo CURSO002)
@@ -352,6 +355,7 @@ export default function SchedulesPage() {
             startTime: start,
             endTime: end,
             classroom: aulaVal || 'Online',
+            subject: subjectVal,
             notes: notasVal,
             isRecurring: isRecurringResult,
             courseTitle: course.title
@@ -620,6 +624,11 @@ export default function SchedulesPage() {
                               ) : (
                                 <Badge variant="secondary">Inactivo</Badge>
                               )}
+                              {schedule.subject && (
+                                <Badge variant="outline" className="text-slate-500 border-slate-200">
+                                  {schedule.subject}
+                                </Badge>
+                              )}
                             </div>
                             <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
                               <div className="flex items-center space-x-1">
@@ -706,6 +715,11 @@ export default function SchedulesPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Asignatura / Módulo</Label>
+              <Input name="subject" defaultValue={editingSchedule?.subject} placeholder="Ej: Introducción a la Sanidad" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">

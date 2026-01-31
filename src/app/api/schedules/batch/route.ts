@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
                         endTime: new Date(s.endTime),
                         classroom: s.classroom,
                         isRecurring: s.isRecurring !== undefined ? s.isRecurring : true,
+                        subject: s.subject,
                         notes: s.notes,
                     }
                 })

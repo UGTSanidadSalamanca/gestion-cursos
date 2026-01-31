@@ -29,6 +29,7 @@ interface Schedule {
     notes?: string
     isOwn?: boolean
     isRecurring?: boolean
+    subject?: string
     course: {
         title: string
         code: string
@@ -153,12 +154,24 @@ export default function TeacherSchedulePage() {
                                                         )}>
                                                             <CardContent className="p-4 space-y-3">
                                                                 <div className="flex justify-between items-start">
-                                                                    <h4 className={cn(
-                                                                        "font-bold text-sm leading-tight transition-colors",
-                                                                        s.isOwn ? "text-slate-800 group-hover:text-red-600" : "text-slate-500"
-                                                                    )}>
-                                                                        {s.course.title}
-                                                                    </h4>
+                                                                    <div className="flex flex-col">
+                                                                        <h4 className={cn(
+                                                                            "font-bold text-sm leading-tight transition-colors",
+                                                                            s.isOwn ? "text-slate-800 group-hover:text-red-600" : "text-slate-500"
+                                                                        )}>
+                                                                            {s.course.title}
+                                                                        </h4>
+                                                                        {s.subject && (
+                                                                            <p className="text-[10px] text-slate-400 font-medium truncate mt-0.5 italic">
+                                                                                {s.subject}
+                                                                            </p>
+                                                                        )}
+                                                                        {!s.isRecurring && (
+                                                                            <p className="text-[10px] text-red-600 font-bold mt-1">
+                                                                                {new Date(s.startTime).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', timeZone: 'UTC' })}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
                                                                     {!s.isOwn && (
                                                                         <Badge variant="outline" className="text-[9px] py-0 h-4 bg-slate-50 text-slate-400 border-slate-200">
                                                                             {s.teacher?.name || 'Compañero/a'}
@@ -296,6 +309,11 @@ const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTi
                                             <div className={cn("font-medium uppercase tracking-tighter truncate", s.isOwn ? "text-slate-800" : "text-slate-400")}>
                                                 {s.course?.title || "Curso sin título"}
                                             </div>
+                                            {s.subject && (
+                                                <div className="text-[7px] text-slate-400 truncate opacity-80 uppercase leading-none mt-0.5">
+                                                    {s.subject}
+                                                </div>
+                                            )}
                                             {!s.isOwn && (
                                                 <div className="mt-0.5 text-[8px] text-slate-400 italic truncate border-t border-slate-100 pt-0.5">
                                                     {s.teacher?.name || 'Compañero/a'}
