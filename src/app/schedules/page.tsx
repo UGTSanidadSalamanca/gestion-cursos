@@ -74,6 +74,8 @@ export default function SchedulesPage() {
   const [teachers, setTeachers] = useState<any[]>([])
   const [isImportOpen, setIsImportOpen] = useState(false)
   const [importLoading, setImportLoading] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null)
 
   useEffect(() => {
     fetchSchedules()
@@ -107,7 +109,60 @@ export default function SchedulesPage() {
       setLoading(false)
     }
   }
+  const handleDeleteSchedule = async (id: string) => {
+    if (!confirm('¿Estás seguro de que deseas eliminar este horario?')) return
 
+    const tid = toast.loading("Eliminando horario...")
+    try {
+      const res = await fetch(`/api/schedules/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success("Horario eliminado", { id: tid })
+        fetchSchedules()
+      } else {
+        toast.error("Error al eliminar", { id: tid })
+      }
+    } catch (e) {
+      toast.error("Error técnico", { id: tid })
+    }
+  }
+
+  const handleSaveSchedule = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const data = {
+      courseId: formData.get('courseId'),
+      teacherId: formData.get('teacherId') || null,
+      dayOfWeek: formData.get('dayOfWeek'),
+      startTime: `1970-01-01T${formData.get('startTime')}:00.000Z`,
+      endTime: `1970-01-01T${formData.get('endTime')}:00.000Z`,
+      classroom: formData.get('classroom'),
+      notes: formData.get('notes'),
+      isRecurring: true
+    }
+
+    const tid = toast.loading(editingSchedule ? "Actualizando..." : "Guardando...")
+    try {
+      const url = editingSchedule ? `/api/schedules/${editingSchedule.id}` : '/api/schedules'
+      const method = editingSchedule ? 'PUT' : 'POST'
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+
+      if (res.ok) {
+        toast.success(editingSchedule ? "Actualizado" : "Guardado", { id: tid })
+        setIsFormOpen(false)
+        setEditingSchedule(null)
+        fetchSchedules()
+      } else {
+        toast.error("Error al guardar", { id: tid })
+      }
+    } catch (e) {
+      toast.error("Error de conexión", { id: tid })
+    }
+  }
   const groupSchedulesByDay = (): ScheduleGroup[] => {
     const daysMap: Record<string, string> = {
       'MONDAY': 'Lunes', 'TUESDAY': 'Martes', 'WEDNESDAY': 'Miércoles',
@@ -341,6 +396,10 @@ export default function SchedulesPage() {
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex gap-2">
+            <Button onClick={() => { setEditingSchedule(null); setIsFormOpen(true); }} className="bg-red-600 hover:bg-red-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Horario
+            </Button>
             <Dialog open={isImportOpen} onOpenChange={(open) => {
               setIsImportOpen(open)
               if (!open) setPendingSchedules([])
@@ -566,10 +625,10 @@ export default function SchedulesPage() {
                           {getCapacityBadge(schedule.course._count?.enrollments || 0, schedule.course.maxStudents)}
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => { setEditingSchedule(schedule); setIsFormOpen(true); }}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="text-red-500 hover:bg-red-50" onClick={() => handleDeleteSchedule(schedule.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -582,6 +641,96 @@ export default function SchedulesPage() {
           </div>
         )}
       </div>
+      {/* Modal para Crear/Editar */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{editingSchedule ? 'Editar Horario' : 'Nuevo Horario'}</DialogTitle>
+            <DialogDescription>
+              Completa los datos del horario de clase.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSaveSchedule} className="space-y-4 py-4">
+            <div className="grid gap-2">
+              <Label>Curso</Label>
+              <Select name="courseId" defaultValue={editingSchedule?.courseId} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un curso" />
+                </SelectTrigger>
+                <SelectContent>
+                  {courses.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Profesor</Label>
+              <Select name="teacherId" defaultValue={editingSchedule?.teacherId || "none"}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un profesor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin asignar</SelectItem>
+                  {teachers.map(t => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Día</Label>
+                <Select name="dayOfWeek" defaultValue={editingSchedule?.dayOfWeek} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Día" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MONDAY">Lunes</SelectItem>
+                    <SelectItem value="TUESDAY">Martes</SelectItem>
+                    <SelectItem value="WEDNESDAY">Miércoles</SelectItem>
+                    <SelectItem value="THURSDAY">Jueves</SelectItem>
+                    <SelectItem value="FRIDAY">Viernes</SelectItem>
+                    <SelectItem value="SATURDAY">Sábado</SelectItem>
+                    <SelectItem value="SUNDAY">Domingo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Aula</Label>
+                <Input name="classroom" defaultValue={editingSchedule?.classroom} placeholder="Ej: Online, A1" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Hora Inicio</Label>
+                <Input name="startTime" type="time" defaultValue={editingSchedule ? new Date(editingSchedule.startTime).toISOString().substring(11, 16) : ""} required />
+              </div>
+              <div className="grid gap-2">
+                <Label>Hora Fin</Label>
+                <Input name="endTime" type="time" defaultValue={editingSchedule ? new Date(editingSchedule.endTime).toISOString().substring(11, 16) : ""} required />
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Notas</Label>
+              <Input name="notes" defaultValue={editingSchedule?.notes} placeholder="Opcional..." />
+            </div>
+
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
+              <Button type="submit" className="bg-red-600 hover:bg-red-700">
+                {editingSchedule ? 'Actualizar' : 'Guardar Horario'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+    </div>
     </MainLayout >
   )
 }
