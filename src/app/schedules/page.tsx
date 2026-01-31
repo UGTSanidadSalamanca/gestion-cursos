@@ -151,7 +151,7 @@ export default function SchedulesPage() {
     if (!file) return
 
     if (courses.length === 0) {
-      toast.error("Error: No se han cargado los cursos de la base de datos. Recarga la página.")
+      toast.error("No se han cargado los cursos. Recarga la página.")
       return
     }
 
@@ -161,25 +161,15 @@ export default function SchedulesPage() {
     reader.onload = async (evt) => {
       try {
         const dataBuffer = evt.target?.result
-        if (!dataBuffer) {
-          toast.error("No se pudo leer el contenido del archivo.");
-          return;
-        }
+        if (!dataBuffer) return
 
         const wb = XLSX.read(dataBuffer, { type: 'array' })
         const wsname = wb.SheetNames[0]
         const ws = wb.Sheets[wsname]
         const json = XLSX.utils.sheet_to_json(ws) as any[]
 
-        console.log("Excel Data Raw:", json);
+        console.log("Excel Raw:", json);
 
-        if (json.length === 0) {
-          toast.error("El archivo Excel parece estar vacío.")
-          setImportLoading(false)
-          return
-        }
-
-        // Helper para buscar columnas sin importar mayúsculas/acentos
         const findVal = (row: any, keywords: string[]) => {
           const key = Object.keys(row).find(k =>
             keywords.some(kw => k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(kw))
@@ -187,21 +177,13 @@ export default function SchedulesPage() {
           return key ? row[key] : null
         }
 
-        // Verificar si faltan columnas esenciales en la primera fila
-        const firstRow = json[0];
-        const hasCurso = findVal(firstRow, ['curso', 'nombre', 'asignatura', 'codigo', 'code']);
-        const hasDia = findVal(firstRow, ['dia', 'day', 'fecha']);
-        const hasInicio = findVal(firstRow, ['inicio', 'start', 'hora']);
-
-        if (!hasCurso || !hasDia || !hasInicio) {
-          toast.error("Columnas no detectadas. El Excel debe tener: Curso, Día e Inicio.");
-          setImportLoading(false);
-          return;
+        const monthsMap: Record<string, number> = {
+          'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,
+          'julio': 6, 'agosto': 7, 'septiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11
         }
 
         const processed = json.map((item, index) => {
-          const cursoVal = String(findVal(item, ['curso', 'nombre', 'asignatura']) || '').trim()
-          const codigoVal = String(findVal(item, ['codigo', 'code', 'id']) || '').trim()
+          const cursoVal = String(findVal(item, ['curso', 'nombre', 'codigo']) || '').trim()
           const profesorVal = String(findVal(item, ['profesor', 'docente', 'teacher']) || '').trim()
           const diaVal = String(findVal(item, ['dia', 'day', 'fecha']) || '').trim()
           const inicioVal = findVal(item, ['inicio', 'start', 'hora'])
@@ -209,43 +191,27 @@ export default function SchedulesPage() {
           const aulaVal = String(findVal(item, ['aula', 'clase', 'classroom', 'room']) || '').trim()
           const notasVal = String(findVal(item, ['notas', 'observaciones', 'notes']) || '').trim()
 
-          // Búsqueda de curso por título o código
+          // 1. Vincular Curso (por título o por código tipo CURSO002)
           const course = courses.find(c =>
-            (cursoVal && c.title.toLowerCase().trim() === cursoVal.toLowerCase()) ||
-            (codigoVal && c.code.toLowerCase().trim() === codigoVal.toLowerCase())
+            c.code.toLowerCase() === cursoVal.toLowerCase() ||
+            c.title.toLowerCase() === cursoVal.toLowerCase()
           )
 
+          if (!course) {
+            console.warn(`Fila ${index + 2}: No existe el curso ${cursoVal}`);
+            return null;
+          }
+
+          // 2. Vincular Profesor
           const teacher = teachers.find(t =>
             profesorVal && t.name?.toLowerCase().includes(profesorVal.toLowerCase())
           )
 
-          if (!course) {
-            console.warn(`Fila ${index + 2}: No se encontró el curso "${cursoVal || codigoVal}"`);
-            return null;
-          }
+          // 3. Obtener Día de la Semana desde el texto (ej: "04 de febrero")
+          const normalizeToDayOfWeek = (val: string) => {
+            const s = val.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 
-          const parseTime = (timeVal: any) => {
-            if (timeVal === null || timeVal === undefined) return null
-            const d = new Date()
-            if (typeof timeVal === 'number') {
-              const totalMinutes = Math.round(timeVal * 1440)
-              const hours = Math.floor(totalMinutes / 60)
-              const minutes = totalMinutes % 60
-              d.setHours(hours, minutes, 0, 0)
-            } else {
-              const timeStr = String(timeVal).replace('.', ':').trim()
-              const match = timeStr.match(/(\d{1,2})[:](\d{2})/)
-              if (match) {
-                d.setHours(parseInt(match[1]), parseInt(match[2]), 0, 0)
-              } else {
-                return null
-              }
-            }
-            return d.toISOString()
-          }
-
-          const normalizeDay = (val: any) => {
-            const s = String(val || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            // Si ya es un día de la semana
             if (s.includes('lun')) return 'MONDAY'
             if (s.includes('mar')) return 'TUESDAY'
             if (s.includes('mie')) return 'WEDNESDAY'
@@ -253,40 +219,77 @@ export default function SchedulesPage() {
             if (s.includes('vie')) return 'FRIDAY'
             if (s.includes('sab')) return 'SATURDAY'
             if (s.includes('dom')) return 'SUNDAY'
+
+            // Si es una fecha tipo "04 de febrero"
+            const dateMatch = val.match(/(\d{1,2})\s*(?:de)?\s*([a-z]+)/i)
+            if (dateMatch) {
+              const dayNum = parseInt(dateMatch[1])
+              const monthName = dateMatch[2].toLowerCase()
+              const monthNum = monthsMap[monthName]
+              if (monthNum !== undefined) {
+                const year = new Date().getFullYear() // O 2026 según tu calendario
+                const date = new Date(year, monthNum, dayNum)
+                const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
+                return days[date.getDay()]
+              }
+            }
             return 'MONDAY'
           }
 
-          const start = parseTime(inicioVal)
-          const end = parseTime(finVal)
-
-          if (!start || !end) {
-            console.warn(`Fila ${index + 2}: Horas inválidas para ${course.title}`);
-            return null;
+          // 4. Parsear Horas
+          const parseTime = (timeVal: any) => {
+            if (timeVal === null || timeVal === undefined) return null
+            const d = new Date()
+            d.setFullYear(1970, 0, 1) // Base fija para horas
+            if (typeof timeVal === 'number') {
+              const totalMinutes = Math.round(timeVal * 1440)
+              d.setHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0)
+            } else {
+              const match = String(timeVal).match(/(\d{1,2})[:.](\d{2})/)
+              if (match) d.setHours(parseInt(match[1]), parseInt(match[2]), 0, 0)
+              else return null
+            }
+            return d.toISOString()
           }
+
+          const start = parseTime(inicioVal)
+          const end = parseTime(finVal) || parseTime("20:00")
+
+          if (!start) return null
 
           return {
             courseId: course.id,
             teacherId: teacher?.id,
-            dayOfWeek: normalizeDay(diaVal),
+            dayOfWeek: normalizeToDayOfWeek(diaVal),
             startTime: start,
             endTime: end,
-            classroom: aulaVal,
+            classroom: aulaVal || 'Online',
             notes: notasVal,
             courseTitle: course.title
           }
         }).filter(s => s !== null)
 
-        console.log("Processed Schedules:", processed);
+        // Eliminar duplicados de horarios semanales (misma hora, mismo día, mismo curso)
+        const uniqueSchedules = processed.reduce((acc: any[], curr: any) => {
+          const isDuplicate = acc.some(item =>
+            item.courseId === curr.courseId &&
+            item.dayOfWeek === curr.dayOfWeek &&
+            item.startTime === curr.startTime &&
+            item.teacherId === curr.teacherId
+          )
+          if (!isDuplicate) acc.push(curr)
+          return acc
+        }, [])
 
-        if (processed.length === 0) {
-          toast.error("No se emparejó ninguna fila. ¿Los nombres de los cursos coinciden con los de la aplicación?")
+        if (uniqueSchedules.length === 0) {
+          toast.error("No se pudo procesar ninguna fila. Comprueba los nombres de los cursos.")
         } else {
-          setPendingSchedules(processed)
-          toast.success(`${processed.length} registros listos. Revisa y pulsa "Ejecutar Subida".`)
+          setPendingSchedules(uniqueSchedules)
+          toast.success(`${uniqueSchedules.length} clases configuradas correctamente.`)
         }
       } catch (error) {
-        console.error("Error processing Excel:", error)
-        toast.error("Error crítico al procesar el Excel.")
+        console.error(error)
+        toast.error("Error al leer el Excel.")
       } finally {
         setImportLoading(false)
       }
@@ -295,36 +298,25 @@ export default function SchedulesPage() {
   }
 
   const executeImport = async () => {
-    if (pendingSchedules.length === 0) {
-      toast.error("No hay registros para subir.");
-      return;
-    }
-
+    if (pendingSchedules.length === 0) return
     setImportLoading(true)
-    const toastId = toast.loading("Subiendo horarios a la base de datos...")
-
+    const tid = toast.loading("Guardando calendario...")
     try {
-      console.log("Sending to API:", pendingSchedules);
-      const response = await fetch('/api/schedules/batch', {
+      const res = await fetch('/api/schedules/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ schedules: pendingSchedules })
       })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        toast.success(`¡Éxito! ${result.count || pendingSchedules.length} horarios guardados.`, { id: toastId })
+      if (res.ok) {
+        toast.success("Calendario actualizado con éxito", { id: tid })
         fetchSchedules()
         setIsImportOpen(false)
         setPendingSchedules([])
       } else {
-        console.error("API Error:", result);
-        toast.error(result.error || "Error al guardar en la base de datos", { id: toastId })
+        toast.error("Error al guardar en base de datos", { id: tid })
       }
     } catch (e) {
-      console.error("Fetch Error:", e);
-      toast.error("Error de conexión con el servidor", { id: toastId })
+      toast.error("Error técnico", { id: tid })
     } finally {
       setImportLoading(false)
     }
@@ -356,8 +348,7 @@ export default function SchedulesPage() {
                 <DialogHeader>
                   <DialogTitle>Importar Horarios</DialogTitle>
                   <DialogDescription>
-                    Sube un archivo Excel (.xlsx) con columnas como: <br />
-                    <span className="font-mono text-[10px] bg-slate-100 p-1 rounded">Curso, Profesor, Día, Inicio, Fin</span>
+                    Sube tu Excel de calendario (soporta fechas como "04 de febrero")
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -377,7 +368,7 @@ export default function SchedulesPage() {
                     <div className="bg-blue-600 p-4 rounded-xl border border-blue-500 space-y-2 animate-in fade-in slide-in-from-top-2 shadow-inner">
                       <p className="text-xs font-black text-white flex items-center gap-2 uppercase tracking-tighter">
                         <CheckCircle2 className="h-4 w-4 text-blue-100" />
-                        {pendingSchedules.length} registros localizados
+                        {pendingSchedules.length} horarios listos
                       </p>
                       <div className="max-h-32 overflow-y-auto pr-2">
                         {pendingSchedules.slice(0, 5).map((s, i) => (
