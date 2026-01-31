@@ -10,12 +10,12 @@ datasource db {
 model User {
   id                      String                   @id @default(cuid())
   email                   String                   @unique
-  username                String?                  @unique
-  password                String?
   name                    String?
   role                    UserRole                 @default(ADMIN)
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
+  password                String?
+  username                String?                  @unique
   contacts                Contact[]
   notificationPreferences NotificationPreference[]
   notifications           Notification[]
@@ -62,10 +62,10 @@ model Teacher {
   status       TeacherStatus  @default(ACTIVE)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  userId       String?        @unique
   contacts     Contact[]
   modules      CourseModule[]
   schedules    Schedule[]
-  userId       String?        @unique
   user         User?          @relation(fields: [userId], references: [id])
 
   @@map("teachers")
@@ -222,11 +222,11 @@ model Schedule {
   endTime     DateTime
   classroom   String?
   isRecurring Boolean   @default(true)
-  subject     String?
   notes       String?
-  teacherId   String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  teacherId   String?
+  subject     String?
   course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   teacher     Teacher?  @relation(fields: [teacherId], references: [id])
 

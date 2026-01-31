@@ -58,20 +58,59 @@ export async function GET(request: NextRequest) {
             }
         })
 
-        // Pagos pendientes totales
-        const pendingRevenueData = await db.payment.aggregate({
-            where: { status: 'PENDING' },
-            _sum: { amount: true }
+        // 4. Ingresos y Morosidad (Cálculo corregido vinculado a matrículas)
+        const activeEnrollmentsDataForStats = await db.enrollment.findMany({
+            where: {
+                OR: [
+                    { status: 'ENROLLED' },
+                    { status: 'IN_PROGRESS' }
+                ]
+            },
+            include: {
+                course: {
+                    include: {
+                        payments: {
+                            where: { status: 'PAID' }
+                        }
+                    }
+                }
+            }
         })
 
-        // Pagos vencidos/morosidad
-        const overdueRevenueData = await db.payment.aggregate({
-            where: { status: 'OVERDUE' },
-            _sum: { amount: true }
-        })
+        let pendingRevenue = 0
+        let overdueRevenue = 0
 
-        const pendingRevenue = pendingRevenueData._sum.amount || 0
-        const overdueRevenue = overdueRevenueData._sum.amount || 0
+        activeEnrollmentsDataForStats.forEach(enrollment => {
+            const studentPayments = enrollment.course.payments.filter(p => p.studentId === enrollment.studentId)
+            const paidTotal = studentPayments.reduce((sum, p) => sum + p.amount, 0)
+
+            const price = enrollment.course.price || 0
+            const priceUnit = enrollment.course.priceUnit?.toUpperCase() || 'MONTH'
+
+            const startDate = enrollment.course.startDate || enrollment.enrollmentDate
+            const monthsDiff = (now.getFullYear() - startDate.getFullYear()) * 12 + (now.getMonth() - startDate.getMonth()) + 1
+
+            let expectedToDate = 0
+            if (priceUnit.includes('MONTH')) {
+                expectedToDate = price * monthsDiff
+            } else if (priceUnit.includes('TRIMESTR') || priceUnit.includes('QUARTER')) {
+                const trimesters = Math.ceil(monthsDiff / 3)
+                expectedToDate = price * trimesters
+            } else if (priceUnit.includes('YEAR') || priceUnit.includes('ANUAL')) {
+                const years = Math.ceil(monthsDiff / 12)
+                expectedToDate = price * years
+            } else {
+                expectedToDate = price
+            }
+
+            const pending = Math.max(0, expectedToDate - paidTotal)
+            pendingRevenue += pending
+
+            // Si debe más de un periodo, lo consideramos morosidad (overdue)
+            if (pending > (price * 1.5) && price > 0) {
+                overdueRevenue += pending
+            }
+        })
 
         // 5. Profesores y personal
         const totalTeachers = await db.teacher.count({ where: { status: 'ACTIVE' } })
