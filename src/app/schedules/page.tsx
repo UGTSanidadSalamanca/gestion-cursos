@@ -129,12 +129,22 @@ export default function SchedulesPage() {
   const handleSaveSchedule = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
+    const parseTimeInput = (timeStr: any) => {
+      if (!timeStr) return null
+      const match = String(timeStr).match(/(\d{1,2})[:.](\d{2})/)
+      if (!match) return null
+      const d = new Date()
+      d.setFullYear(1970, 0, 1)
+      d.setHours(parseInt(match[1]), parseInt(match[2]), 0, 0)
+      return d.toISOString()
+    }
+
     const data = {
       courseId: formData.get('courseId'),
-      teacherId: formData.get('teacherId') || null,
+      teacherId: formData.get('teacherId') === 'none' ? null : formData.get('teacherId'),
       dayOfWeek: formData.get('dayOfWeek'),
-      startTime: `1970-01-01T${formData.get('startTime')}:00.000Z`,
-      endTime: `1970-01-01T${formData.get('endTime')}:00.000Z`,
+      startTime: parseTimeInput(formData.get('startTime')),
+      endTime: parseTimeInput(formData.get('endTime')),
       classroom: formData.get('classroom'),
       notes: formData.get('notes'),
       isRecurring: true
@@ -163,6 +173,10 @@ export default function SchedulesPage() {
       toast.error("Error de conexión", { id: tid })
     }
   }
+  const formatTime = (dateStr: string) => {
+    return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
   const groupSchedulesByDay = (): ScheduleGroup[] => {
     const daysMap: Record<string, string> = {
       'MONDAY': 'Lunes', 'TUESDAY': 'Martes', 'WEDNESDAY': 'Miércoles',
@@ -600,7 +614,7 @@ export default function SchedulesPage() {
                               </div>
                               <div className="flex items-center space-x-1">
                                 <Clock className="h-4 w-4" />
-                                <span>{new Date(schedule.startTime).toISOString().substring(11, 16)} - {new Date(schedule.endTime).toISOString().substring(11, 16)}</span>
+                                <span>{formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}</span>
                               </div>
                               <div className="flex items-center space-x-1">
                                 <MapPin className="h-4 w-4" />
@@ -707,11 +721,11 @@ export default function SchedulesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label>Hora Inicio</Label>
-                <Input name="startTime" type="time" defaultValue={editingSchedule ? new Date(editingSchedule.startTime).toISOString().substring(11, 16) : ""} required />
+                <Input name="startTime" type="time" defaultValue={editingSchedule ? formatTime(editingSchedule.startTime) : ""} required />
               </div>
               <div className="grid gap-2">
                 <Label>Hora Fin</Label>
-                <Input name="endTime" type="time" defaultValue={editingSchedule ? new Date(editingSchedule.endTime).toISOString().substring(11, 16) : ""} required />
+                <Input name="endTime" type="time" defaultValue={editingSchedule ? formatTime(editingSchedule.endTime) : ""} required />
               </div>
             </div>
 
