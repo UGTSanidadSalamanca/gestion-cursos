@@ -384,59 +384,63 @@ export default function PublicCoursePage() {
       `}</style>
 
             {/* Header Visual */}
-            <div className="header-visual bg-gradient-to-br from-red-600 to-red-900 text-white h-72 flex items-end relative overflow-hidden print:h-32 print:rounded-b-none print:mb-6">
-                <div className="absolute top-6 left-6 z-30 print:top-4 print:left-4">
+            <div className="header-visual bg-gradient-to-br from-red-600 to-red-900 text-white h-[28rem] md:h-72 flex items-end relative overflow-hidden print:h-32 print:rounded-b-none print:mb-6">
+                <div className="absolute top-4 left-4 md:top-6 md:left-6 z-30 print:top-4 print:left-4">
                     <div className="flex items-center">
-                        <div className="bg-white p-2 rounded-xl shadow-2xl mr-4 print:shadow-none print:border print:p-1.5">
-                            <img src="/ugt-logo.png" alt="Logo UGT" className="h-12 w-auto object-contain print:h-10" />
+                        <div className="bg-white p-1.5 md:p-2 rounded-xl shadow-2xl mr-3 md:mr-4 print:shadow-none print:border print:p-1.5">
+                            <img src="/ugt-logo.png" alt="Logo UGT" className="h-8 md:h-12 w-auto object-contain print:h-10" />
                         </div>
                         <div className="flex flex-col drop-shadow-lg">
-                            <h2 className="text-xl font-black text-white leading-tight uppercase tracking-tighter">Servicios Públicos</h2>
-                            <span className="text-xs text-red-100 font-bold tracking-[0.3em] uppercase opacity-90">UGT Salamanca</span>
+                            <h2 className="text-base md:text-xl font-black text-white leading-tight uppercase tracking-tighter">Servicios Públicos</h2>
+                            <span className="text-[10px] md:text-xs text-red-100 font-bold tracking-[0.2em] md:tracking-[0.3em] uppercase opacity-90">UGT Salamanca</span>
                         </div>
                     </div>
                 </div>
-                <div className="absolute top-0 right-0 p-8 opacity-10 print:opacity-5 print:p-2">
+                <div className="absolute top-0 right-0 p-8 opacity-10 print:opacity-5 print:p-2 pointer-events-none">
                     <BookOpen className="h-80 w-80 print:h-40 print:w-40" />
                 </div>
                 {/* Botón Imprimir Flotante (no-print) */}
-                <div className="absolute top-6 right-6 no-print flex gap-3">
+                <div className="absolute top-4 right-4 md:top-6 md:right-6 no-print flex gap-2 md:gap-3">
                     <Button
                         variant="outline"
                         size="sm"
-                        className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md font-bold"
+                        className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md font-bold h-9 md:h-auto px-2 md:px-3"
                         onClick={() => window.print()}
+                        title="Imprimir Ficha"
                     >
-                        <Printer className="h-4 w-4 mr-2" /> Imprimir Ficha
+                        <Printer className="h-4 w-4 md:mr-2" />
+                        <span className="hidden md:inline">Imprimir Ficha</span>
                     </Button>
                     <Button
                         size="sm"
-                        className="bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg"
+                        className="bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg h-9 md:h-auto px-2 md:px-3"
                         onClick={handleExportPDF}
+                        title="Descargar PDF (A4)"
                     >
-                        <ExternalLink className="h-4 w-4 mr-2" /> Descargar PDF (A4)
+                        <ExternalLink className="h-4 w-4 md:mr-2" />
+                        <span className="hidden md:inline">Descargar PDF (A4)</span>
                     </Button>
                 </div>
                 <div className="container mx-auto px-4 pb-12 relative z-10 print:pb-6">
                     <Badge className="bg-white/20 text-white border-white/30 mb-3 px-3 py-1 text-xs print:bg-red-600/20 print:text-red-100 uppercase tracking-widest font-black">
                         Servicios Públicos UGT
                     </Badge>
-                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight max-w-4xl leading-tight print:text-3xl">
+                    <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight max-w-4xl leading-tight print:text-3xl">
                         {course.title}
                     </h1>
                     <div className="flex flex-wrap items-center gap-3 mt-4 print:mt-1">
-                        <Badge variant="outline" className="border-white/30 text-white font-bold px-3 py-1 print:text-red-100 print:border-red-300/30">
+                        <Badge variant="outline" className="border-white/30 text-white font-bold px-3 py-1 print:text-red-100 print:border-red-300/30 text-[10px] md:text-xs">
                             CODE: {course.code}
                         </Badge>
                         <span className="text-white/20 print:hidden">|</span>
-                        <Badge className="bg-white/10 hover:bg-white/20 text-white border-transparent backdrop-blur-sm print:bg-white/10 print:text-white">
+                        <Badge className="bg-white/10 hover:bg-white/20 text-white border-transparent backdrop-blur-sm print:bg-white/10 print:text-white text-[10px] md:text-xs">
                             NIVEL {getSpanishLevel(course.level)}
                         </Badge>
                         {course.startDate && (
                             <>
                                 <span className="text-white/20 print:hidden">|</span>
-                                <div className="flex items-center gap-2 text-white text-sm font-medium print:text-red-900 print:bg-red-50 print:px-2 print:py-0.5 print:rounded-full print:text-[9px]">
-                                    <Calendar className="h-4 w-4" />
+                                <div className="flex items-center gap-2 text-white text-xs md:text-sm font-medium print:text-red-900 print:bg-red-50 print:px-2 print:py-0.5 print:rounded-full print:text-[9px]">
+                                    <Calendar className="h-3 w-3 md:h-4 md:w-4" />
                                     <span>Inicio: {new Date(course.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                                 </div>
                             </>
