@@ -239,7 +239,16 @@ const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTi
                         const date = new Date(year, month, dayNum)
                         const dayOfWeekEnum = dayEnums[date.getDay() === 0 ? 6 : date.getDay() - 1]
 
-                        const daySchedules = schedules.filter(s => s.dayOfWeek === dayOfWeekEnum)
+                        const daySchedules = schedules.filter(s => {
+                            if (s.isRecurring) {
+                                return s.dayOfWeek === dayOfWeekEnum
+                            } else {
+                                const sDate = new Date(s.startTime)
+                                return sDate.getDate() === date.getDate() &&
+                                    sDate.getMonth() === date.getMonth() &&
+                                    sDate.getFullYear() === date.getFullYear()
+                            }
+                        })
                         const isToday = new Date().toDateString() === date.toDateString()
 
                         return (

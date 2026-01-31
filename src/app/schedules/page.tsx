@@ -283,18 +283,13 @@ export default function SchedulesPage() {
             profesorVal && t.name?.toLowerCase().includes(profesorVal.toLowerCase())
           )
 
-          // 3. Obtener Día de la Semana desde el texto (ej: "04 de febrero")
-          const normalizeToDayOfWeek = (val: string) => {
-            const s = val.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          // 3. Obtener Fecha Específica o Día de la Semana
+          let specificDate: Date | null = null
+          let dayOfWeekResult: string = 'MONDAY'
+          let isRecurringResult = true
 
-            // Si ya es un día de la semana
-            if (s.includes('lun')) return 'MONDAY'
-            if (s.includes('mar')) return 'TUESDAY'
-            if (s.includes('mie')) return 'WEDNESDAY'
-            if (s.includes('jue')) return 'THURSDAY'
-            if (s.includes('vie')) return 'FRIDAY'
-            if (s.includes('sab')) return 'SATURDAY'
-            if (s.includes('dom')) return 'SUNDAY'
+          const normalizeDayOrDate = (val: string) => {
+            const s = val.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 
             // Si es una fecha tipo "04 de febrero"
             const dateMatch = val.match(/(\d{1,2})\s*(?:de)?\s*([a-z]+)/i)
@@ -303,20 +298,33 @@ export default function SchedulesPage() {
               const monthName = dateMatch[2].toLowerCase()
               const monthNum = monthsMap[monthName]
               if (monthNum !== undefined) {
-                const year = new Date().getFullYear() // O 2026 según tu calendario
-                const date = new Date(year, monthNum, dayNum)
+                const year = new Date().getFullYear() // 2026
+                specificDate = new Date(year, monthNum, dayNum)
                 const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
-                return days[date.getDay()]
+                dayOfWeekResult = days[specificDate.getDay()]
+                isRecurringResult = false
+                return
               }
             }
-            return 'MONDAY'
+
+            // Si es un día de la semana
+            if (s.includes('lun')) dayOfWeekResult = 'MONDAY'
+            else if (s.includes('mar')) dayOfWeekResult = 'TUESDAY'
+            else if (s.includes('mie')) dayOfWeekResult = 'WEDNESDAY'
+            else if (s.includes('jue')) dayOfWeekResult = 'THURSDAY'
+            else if (s.includes('vie')) dayOfWeekResult = 'FRIDAY'
+            else if (s.includes('sab')) dayOfWeekResult = 'SATURDAY'
+            else if (s.includes('dom')) dayOfWeekResult = 'SUNDAY'
           }
 
+          normalizeDayOrDate(diaVal)
+
           // 4. Parsear Horas
-          const parseTime = (timeVal: any) => {
+          const parseTime = (timeVal: any, baseDate: Date | null) => {
             if (timeVal === null || timeVal === undefined) return null
-            const d = new Date()
-            d.setFullYear(1970, 0, 1) // Base fija para horas
+            const d = baseDate ? new Date(baseDate) : new Date()
+            if (!baseDate) d.setFullYear(1970, 0, 1)
+
             if (typeof timeVal === 'number') {
               const totalMinutes = Math.round(timeVal * 1440)
               d.setHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0)
@@ -328,30 +336,32 @@ export default function SchedulesPage() {
             return d.toISOString()
           }
 
-          const start = parseTime(inicioVal)
-          const end = parseTime(finVal) || parseTime("20:00")
+          const start = parseTime(inicioVal, specificDate)
+          const end = parseTime(finVal, specificDate) || parseTime("20:00", specificDate)
 
           if (!start) return null
 
           return {
             courseId: course.id,
             teacherId: teacher?.id,
-            dayOfWeek: normalizeToDayOfWeek(diaVal),
+            dayOfWeek: dayOfWeekResult,
             startTime: start,
             endTime: end,
             classroom: aulaVal || 'Online',
             notes: notasVal,
+            isRecurring: isRecurringResult,
             courseTitle: course.title
           }
         }).filter(s => s !== null)
 
-        // Eliminar duplicados de horarios semanales (misma hora, mismo día, mismo curso)
+        // Eliminar duplicados (misma hora, misma fecha/día, mismo curso)
         const uniqueSchedules = processed.reduce((acc: any[], curr: any) => {
           const isDuplicate = acc.some(item =>
             item.courseId === curr.courseId &&
             item.dayOfWeek === curr.dayOfWeek &&
             item.startTime === curr.startTime &&
-            item.teacherId === curr.teacherId
+            item.teacherId === curr.teacherId &&
+            item.isRecurring === curr.isRecurring
           )
           if (!isDuplicate) acc.push(curr)
           return acc

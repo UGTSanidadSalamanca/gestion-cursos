@@ -184,7 +184,12 @@ export default function TeacherPortalPage() {
                         {/* Weekly agenda content stays the same */}
                         <div className="grid grid-cols-1 gap-6">
                             {daysOrder.map(dayKey => {
-                                const daySchedules = schedules.filter(s => s.dayOfWeek === dayKey);
+                                const daySchedules = schedules.filter(s => {
+                                    if (s.isRecurring) return s.dayOfWeek === dayKey;
+                                    // Para no recurrentes en vista semanal, podríamos mostrar solo las de la semana actual
+                                    // Pero para simplificar y que vean "sus días", mostramos todas las que caigan en ese día de la semana
+                                    return s.dayOfWeek === dayKey;
+                                });
                                 if (daySchedules.length === 0) return null;
 
                                 return (
@@ -297,7 +302,16 @@ const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTi
                         const date = new Date(year, month, dayNum)
                         const dayOfWeekEnum = dayEnums[date.getDay() === 0 ? 6 : date.getDay() - 1]
 
-                        const daySchedules = schedules.filter(s => s.dayOfWeek === dayOfWeekEnum)
+                        const daySchedules = schedules.filter(s => {
+                            if (s.isRecurring) {
+                                return s.dayOfWeek === dayOfWeekEnum
+                            } else {
+                                const sDate = new Date(s.startTime)
+                                return sDate.getDate() === date.getDate() &&
+                                    sDate.getMonth() === date.getMonth() &&
+                                    sDate.getFullYear() === date.getFullYear()
+                            }
+                        })
                         const isToday = new Date().toDateString() === date.toDateString()
 
                         return (
