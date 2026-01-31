@@ -168,16 +168,18 @@ export default function TeacherSchedulePage() {
                 body: JSON.stringify(data)
             })
 
+            const result = await res.json()
+
             if (res.ok) {
                 toast.success("Horario actualizado correctamente")
                 setIsEditDialogOpen(false)
-                fetchSchedule(session.user.id)
+                if (session?.user?.id) fetchSchedule(session.user.id)
             } else {
-                const err = await res.json()
-                toast.error(err.error || "Error al actualizar el horario")
+                toast.error(result.error || "Error al actualizar el horario")
             }
         } catch (error) {
-            toast.error("Error de conexión")
+            console.error("Update error:", error)
+            toast.error("Error técnico al guardar los cambios")
         } finally {
             setIsSaving(false)
         }
@@ -326,7 +328,7 @@ export default function TeacherSchedulePage() {
                     </TabsContent>
 
                     <TabsContent value="monthly">
-                        <MonthlyCalendar schedules={schedules} formatTime={formatTime} />
+                        <MonthlyCalendar schedules={schedules} formatTime={formatTime} handleEditClick={handleEditClick} />
                     </TabsContent>
                 </Tabs>
             </div>
@@ -334,7 +336,7 @@ export default function TeacherSchedulePage() {
     )
 }
 
-const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTime: (s: string) => string }) => {
+const MonthlyCalendar = ({ schedules, formatTime, handleEditClick }: { schedules: any[], formatTime: (s: string) => string, handleEditClick: (s: any) => void }) => {
     const [currentDate, setCurrentDate] = useState<Date | null>(null)
 
     useEffect(() => {
@@ -416,10 +418,10 @@ const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTi
                                         <div
                                             key={s.id}
                                             className={cn(
-                                                "text-[9px] p-1.5 rounded-md border shadow-sm leading-tight transition-all cursor-default overflow-hidden",
+                                                "text-[9px] p-1.5 rounded-md border shadow-sm leading-tight transition-all cursor-pointer overflow-hidden hover:scale-[1.02] active:scale-[0.98]",
                                                 s.isOwn
                                                     ? "bg-white border-red-200 hover:border-red-400"
-                                                    : "bg-slate-50 border-slate-100 opacity-70 grayscale-[0.5]"
+                                                    : "bg-slate-50 border-slate-100 opacity-70 grayscale-[0.5] hover:opacity-100"
                                             )}
                                             title={s.isOwn ? "Tu clase" : `Clase de ${s.teacher?.name || 'compañero/a'}`}
                                             onClick={() => handleEditClick(s)}
@@ -492,7 +494,7 @@ const MonthlyCalendar = ({ schedules, formatTime }: { schedules: any[], formatTi
                                     className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     defaultValue={editingSchedule.teacherId || ""}
                                 >
-                                    <option value="" disabled>Selecciona un profesor</option>
+                                    <option value="">Sin asignar (Vacante)</option>
                                     {allTeachers.map(t => (
                                         <option key={t.id} value={t.id}>{t.name}</option>
                                     ))}
