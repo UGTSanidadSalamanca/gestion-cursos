@@ -25,6 +25,8 @@ interface Course {
 
 export default function TeacherPortalPage() {
     const { data: session } = useSession()
+    const [courses, setCourses] = useState<Course[]>([])
+    const [loading, setLoading] = useState(true)
     const [schedules, setSchedules] = useState<any[]>([])
     const [schedulesLoading, setSchedulesLoading] = useState(false)
 
