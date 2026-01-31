@@ -375,44 +375,52 @@ export default function PublicCoursePage() {
       `}</style>
 
             {/* Header Visual */}
-            <div className="header-visual bg-gradient-to-br from-red-600 to-red-900 text-white h-[28rem] md:h-72 flex items-end relative overflow-hidden print:h-32 print:rounded-b-none print:mb-6">
-                <div className="absolute top-4 left-4 md:top-6 md:left-6 z-30 print:top-4 print:left-4">
+            <div className="header-visual bg-gradient-to-br from-red-600 to-red-900 text-white min-h-[26rem] md:h-72 flex flex-col justify-between relative overflow-hidden print:h-32 print:rounded-b-none print:mb-6">
+                {/* Branding & Action Buttons Container */}
+                <div className="w-full p-4 md:p-6 z-30 flex flex-col sm:flex-row justify-between items-start gap-4">
                     <div className="flex items-center">
-                        <div className="bg-white p-1.5 md:p-2 rounded-xl shadow-2xl mr-3 md:mr-4 print:shadow-none print:border print:p-1.5">
-                            <img src="/ugt-logo.png" alt="Logo UGT" className="h-8 md:h-12 w-auto object-contain print:h-10" />
+                        <div className="bg-white p-2 rounded-xl shadow-2xl mr-3 md:mr-4 print:shadow-none print:border print:p-1.5 shrink-0">
+                            <img
+                                src="/ugt-logo.png"
+                                alt="Logo UGT"
+                                className="h-10 md:h-12 w-auto object-contain block"
+                                loading="eager"
+                            />
                         </div>
                         <div className="flex flex-col drop-shadow-lg">
-                            <h2 className="text-base md:text-xl font-black text-white leading-tight uppercase tracking-tighter">Servicios Públicos</h2>
+                            <h2 className="text-lg md:text-xl font-black text-white leading-tight uppercase tracking-tighter">Servicios Públicos</h2>
                             <span className="text-[10px] md:text-xs text-red-100 font-bold tracking-[0.2em] md:tracking-[0.3em] uppercase opacity-90">UGT Salamanca</span>
                         </div>
                     </div>
+
+                    <div className="flex gap-2 md:gap-3 no-print w-full sm:w-auto justify-end mt-2 sm:mt-0">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md font-bold h-10 md:h-auto px-3 md:px-4 rounded-xl"
+                            onClick={() => window.print()}
+                            title="Imprimir Ficha"
+                        >
+                            <Printer className="h-5 w-5 md:mr-2" />
+                            <span className="hidden md:inline">Imprimir Ficha</span>
+                        </Button>
+                        <Button
+                            size="sm"
+                            className="bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg h-10 md:h-auto px-3 md:px-4 rounded-xl"
+                            onClick={handleExportPDF}
+                            title="Descargar PDF (A4)"
+                        >
+                            <ExternalLink className="h-5 w-5 md:mr-2" />
+                            <span className="hidden md:inline">Descargar PDF (A4)</span>
+                        </Button>
+                    </div>
                 </div>
+
                 <div className="absolute top-0 right-0 p-8 opacity-10 print:opacity-5 print:p-2 pointer-events-none">
                     <BookOpen className="h-80 w-80 print:h-40 print:w-40" />
                 </div>
-                {/* Botón Imprimir Flotante (no-print) */}
-                <div className="absolute top-4 right-4 md:top-6 md:right-6 no-print flex gap-2 md:gap-3">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md font-bold h-9 md:h-auto px-2 md:px-3"
-                        onClick={() => window.print()}
-                        title="Imprimir Ficha"
-                    >
-                        <Printer className="h-4 w-4 md:mr-2" />
-                        <span className="hidden md:inline">Imprimir Ficha</span>
-                    </Button>
-                    <Button
-                        size="sm"
-                        className="bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg h-9 md:h-auto px-2 md:px-3"
-                        onClick={handleExportPDF}
-                        title="Descargar PDF (A4)"
-                    >
-                        <ExternalLink className="h-4 w-4 md:mr-2" />
-                        <span className="hidden md:inline">Descargar PDF (A4)</span>
-                    </Button>
-                </div>
-                <div className="container mx-auto px-4 pb-12 relative z-10 print:pb-6">
+
+                <div className="container mx-auto px-4 pb-12 pt-8 relative z-10 print:pb-6 print:pt-0">
                     <Badge className="bg-white/20 text-white border-white/30 mb-3 px-3 py-1 text-xs print:bg-red-600/20 print:text-red-100 uppercase tracking-widest font-black">
                         Servicios Públicos UGT
                     </Badge>
