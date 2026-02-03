@@ -1,14 +1,54 @@
 import { withAuth } from "next-auth/middleware"
+import { NextResponse } from "next/server"
 
-export default withAuth({
-    pages: {
-        signIn: "/login",
+export default withAuth(
+    function middleware(req) {
+        const token = req.nextauth.token
+        const isTeacher = token?.role === "TEACHER"
+        const pathname = req.nextUrl.pathname
+        const isTeacherPortal = pathname.startsWith("/teacher-portal")
+        const isApi = pathname.startsWith("/api")
+        const isPublicApi = pathname.startsWith("/api/public") || pathname.startsWith("/api/auth")
+        const isTeacherApi = pathname.startsWith("/api/teacher-portal")
+
+        // Si es profesor
+        if (isTeacher) {
+            // No permitir acceso fuera del portal docente (UI)
+            if (!isApi && !isTeacherPortal) {
+                return NextResponse.redirect(new URL("/teacher-portal", req.url))
+            }
+            // No permitir acceso a APIs que no sean del portal docente o públicas
+            if (isApi && !isPublicApi && !isTeacherApi) {
+                return new NextResponse(
+                    JSON.stringify({ error: "No autorizado" }),
+                    { status: 403, headers: { 'content-type': 'application/json' } }
+                )
+            }
+        }
+
+        // Si es admin/staff, permitimos todo por ahora
     },
-})
+    {
+        callbacks: {
+            authorized: ({ token }) => !!token,
+        },
+        pages: {
+            signIn: "/login",
+        },
+    }
+)
 
-// Protege todas las rutas excepto login, recursos estáticos y rutas públicas de información
+// Protege todas las rutas excepto login, recursos estáticos y rutas públicas
 export const config = {
     matcher: [
-        "/((?!api|_next/static|_next/image|favicon.ico|icon-192x192.png|icon-512x512.png|manifest.json|logo.svg|logo-ugt.png|ugt-logo.png|logo-servicios-publicos.png|sw.js|workbox-.*|p/|api/public).*)",
+        /*
+         * Match all request paths except for the ones starting with:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * - public folder files (logo, manifest, etc.)
+         * - p/ (public course pages)
+         */
+        "/((?!_next/static|_next/image|favicon.ico|icon-.*|manifest.json|logo.*|ugt-logo.*|sw.js|workbox-.*|p/|login).*)",
     ],
 }

@@ -50,11 +50,18 @@ interface SidebarProps {
   className?: string
 }
 
-import { signOut } from 'next-auth/react'
-import { LogOut } from 'lucide-react'
+import { signOut, useSession } from 'next-auth/react'
+import { LogOut, Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
+  const { data: session } = useSession()
+
+  // Si no hay sesión o no es admin/staff, no mostramos nada (la redirección se encarga)
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'STAFF')) {
+    return null
+  }
 
   return (
     <div className={cn('pb-12 w-64 flex flex-col h-full', className)}>
@@ -121,7 +128,7 @@ function Sidebar({ className }: SidebarProps) {
 
       <div className="px-3 py-4 border-t border-slate-800">
         <button
-          onClick={() => signOut()}
+          onClick={() => signOut({ callbackUrl: '/login' })}
           className="flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-red-900/20 hover:text-red-400 transition-colors"
         >
           <LogOut className="mr-2 h-4 w-4" />
@@ -138,6 +145,26 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'TEACHER') {
+      router.replace('/teacher-portal')
+    }
+  }, [session, status, router])
+
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-950">
+        <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+      </div>
+    )
+  }
+
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'STAFF')) {
+    return null
+  }
 
   return (
     <div className="flex h-screen">
