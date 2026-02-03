@@ -39,6 +39,8 @@ export default function TeacherCourseDetail() {
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
 
+    const [showAll, setShowAll] = useState(false)
+
     // Dialog states
     const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false)
     const [isIndividualEmailOpen, setIsIndividualEmailOpen] = useState(false)
@@ -66,20 +68,22 @@ export default function TeacherCourseDetail() {
     const handleExportExcel = () => {
         if (!course?.enrollments) return
 
-        const data = course.enrollments
-            .filter((e: any) => e.status !== 'PENDING')
-            .map((e: any) => ({
-                'Nombre Completo': e.student.name,
-                'DNI': e.student.dni || '',
-                'Email': e.student.email || '',
-                'Teléfono': e.student.phone || '',
-                'Dirección': e.student.address || '',
-                'Afiliado': e.student.isAffiliated ? 'SÍ' : 'NO',
-                'Nº Afiliado': e.student.affiliateNumber || '',
-                'Estado Alumno': e.student.status === 'ACTIVE' ? 'Activo' : e.student.status === 'INACTIVE' ? 'Inactivo' : e.student.status,
-                'Estado Matrícula': e.status === 'ENROLLED' ? 'Matriculado' : e.status === 'PENDING' ? 'Pendiente' : e.status,
-                'Fecha Inscripción': new Date(e.createdAt).toLocaleDateString('es-ES')
-            }))
+        const enrollmentsToExport = showAll
+            ? course.enrollments
+            : course.enrollments.filter((e: any) => e.status !== 'PENDING')
+
+        const data = enrollmentsToExport.map((e: any) => ({
+            'Nombre Completo': e.student.name,
+            'DNI': e.student.dni || '',
+            'Email': e.student.email || '',
+            'Teléfono': e.student.phone || '',
+            'Dirección': e.student.address || '',
+            'Afiliado': e.student.isAffiliated ? 'SÍ' : 'NO',
+            'Nº Afiliado': e.student.affiliateNumber || '',
+            'Estado Alumno': e.student.status === 'ACTIVE' ? 'Activo' : e.student.status === 'INACTIVE' ? 'Inactivo' : e.student.status,
+            'Estado Matrícula': e.status === 'ENROLLED' ? 'Matriculado' : e.status === 'PENDING' ? 'Pendiente' : e.status,
+            'Fecha Inscripción': new Date(e.createdAt).toLocaleDateString('es-ES')
+        }))
 
         const ws = XLSX.utils.json_to_sheet(data)
         const wb = XLSX.utils.book_new()
@@ -88,9 +92,12 @@ export default function TeacherCourseDetail() {
         toast.success("Excel generado correctamente")
     }
 
-    const confirmedEnrollments = course?.enrollments?.filter((enr: any) => enr.status !== 'PENDING') || []
+    const displayEnrollments = course?.enrollments?.filter((enr: any) => {
+        if (showAll) return true
+        return enr.status !== 'PENDING'
+    }) || []
 
-    const filteredEnrollments = confirmedEnrollments.filter((enr: any) =>
+    const filteredEnrollments = displayEnrollments.filter((enr: any) =>
         enr.student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enr.student.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enr.student.dni?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -132,7 +139,7 @@ export default function TeacherCourseDetail() {
                                 </span>
                                 <span className="flex items-center">
                                     <Users className="h-4 w-4 mr-2" />
-                                    {confirmedEnrollments.length} Alumnos
+                                    {displayEnrollments.length} Alumnos {showAll ? '(Total)' : '(Confirmados)'}
                                 </span>
                             </div>
                         </div>
@@ -160,9 +167,30 @@ export default function TeacherCourseDetail() {
                     <Card>
                         <CardHeader>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                <div className="flex items-center gap-2">
-                                    <Users className="h-5 w-5 text-slate-500" />
-                                    <CardTitle>Listado de Alumnos</CardTitle>
+                                <div className="flex items-center gap-4 flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <Users className="h-5 w-5 text-slate-500" />
+                                        <CardTitle>Listado de Alumnos</CardTitle>
+                                    </div>
+                                    <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+                                    <div className="flex bg-slate-100 p-1 rounded-lg">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setShowAll(false)}
+                                            className={!showAll ? "bg-white shadow-sm text-blue-600 hover:bg-white" : "text-slate-500"}
+                                        >
+                                            Confirmados
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setShowAll(true)}
+                                            className={showAll ? "bg-white shadow-sm text-blue-600 hover:bg-white" : "text-slate-500"}
+                                        >
+                                            Todos
+                                        </Button>
+                                    </div>
                                 </div>
                                 <div className="relative w-full sm:w-72">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -226,8 +254,10 @@ export default function TeacherCourseDetail() {
                                                 <TableCell>
                                                     {enr.status === 'ENROLLED' ? (
                                                         <Badge variant="outline" className="border-green-200 text-green-700 bg-green-50">Matriculado</Badge>
+                                                    ) : enr.status === 'PENDING' ? (
+                                                        <Badge variant="outline" className="border-amber-200 text-amber-700 bg-amber-50">Pendiente de Pago</Badge>
                                                     ) : (
-                                                        <Badge variant="secondary">{enr.status}</Badge>
+                                                        <Badge variant="secondary" className="capitalize">{enr.status.toLowerCase()}</Badge>
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="text-right">
