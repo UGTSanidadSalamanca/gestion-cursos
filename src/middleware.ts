@@ -9,7 +9,14 @@ export default withAuth(
         const isTeacherPortal = pathname.startsWith("/teacher-portal")
         const isApi = pathname.startsWith("/api")
         const isPublicApi = pathname.startsWith("/api/public") || pathname.startsWith("/api/auth")
-        const isTeacherApi = pathname.startsWith("/api/teacher-portal")
+
+        // Rutas de API permitidas para profesores
+        const isTeacherApi =
+            pathname.startsWith("/api/teacher") ||
+            (pathname.startsWith("/api/courses/") && req.method === "GET") ||
+            (pathname.startsWith("/api/courses/") && pathname.endsWith("/group-email") && req.method === "POST") ||
+            (pathname.startsWith("/api/students/") && pathname.endsWith("/email") && req.method === "POST") ||
+            pathname === "/api/notifications"
 
         // Si es profesor
         if (isTeacher) {
@@ -17,10 +24,10 @@ export default withAuth(
             if (!isApi && !isTeacherPortal) {
                 return NextResponse.redirect(new URL("/teacher-portal", req.url))
             }
-            // No permitir acceso a APIs que no sean del portal docente o públicas
+            // No permitir acceso a APIs que no estén en la lista blanca
             if (isApi && !isPublicApi && !isTeacherApi) {
                 return new NextResponse(
-                    JSON.stringify({ error: "No autorizado" }),
+                    JSON.stringify({ error: "No autorizado (API restringida para docentes)" }),
                     { status: 403, headers: { 'content-type': 'application/json' } }
                 )
             }
