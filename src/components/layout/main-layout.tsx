@@ -54,6 +54,50 @@ import { signOut, useSession } from 'next-auth/react'
 import { LogOut, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
+function NavItem({ item, pathname }: { item: any, pathname: string }) {
+  const isActive = pathname === item.href
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    if (item.name === 'Notificaciones') {
+      const checkNotifications = async () => {
+        try {
+          const res = await fetch('/api/notifications?unread=true&limit=1')
+          const data = await res.json()
+          setUnreadCount(data.pagination?.total || 0)
+        } catch (e) {
+          console.error('Error fetching unread count', e)
+        }
+      }
+      checkNotifications()
+      const interval = setInterval(checkNotifications, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [item.name])
+
+  return (
+    <Link
+      href={item.href}
+      className={cn(
+        'flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+        isActive
+          ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
+          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+      )}
+    >
+      <div className="flex items-center">
+        <item.icon className="mr-2 h-4 w-4" />
+        {item.name}
+      </div>
+      {item.name === 'Notificaciones' && unreadCount > 0 && (
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-slate-900 animate-pulse">
+          {unreadCount > 9 ? '+9' : unreadCount}
+        </span>
+      )}
+    </Link>
+  )
+}
+
 function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
   const { data: session } = useSession()
@@ -78,50 +122,9 @@ function Sidebar({ className }: SidebarProps) {
             </div>
           </div>
           <div className="space-y-1">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href
-              const [unreadCount, setUnreadCount] = useState(0)
-
-              useEffect(() => {
-                if (item.name === 'Notificaciones') {
-                  const checkNotifications = async () => {
-                    try {
-                      const res = await fetch('/api/notifications?unread=true&limit=1')
-                      const data = await res.json()
-                      setUnreadCount(data.pagination?.total || 0)
-                    } catch (e) {
-                      console.error('Error fetching unread count', e)
-                    }
-                  }
-                  checkNotifications()
-                  const interval = setInterval(checkNotifications, 30000)
-                  return () => clearInterval(interval)
-                }
-              }, [])
-
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  )}
-                >
-                  <div className="flex items-center">
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.name}
-                  </div>
-                  {item.name === 'Notificaciones' && unreadCount > 0 && (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-slate-900 animate-pulse">
-                      {unreadCount > 9 ? '+9' : unreadCount}
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
+            {navigation.map((item) => (
+              <NavItem key={item.name} item={item} pathname={pathname} />
+            ))}
           </div>
         </div>
       </div>
@@ -156,7 +159,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   if (status === 'loading') {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-950">
+      <div className="flex items-center justify-center h-screen bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-red-600" />
       </div>
     )
@@ -164,7 +167,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'STAFF')) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-950">
+      <div className="flex items-center justify-center h-screen bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-red-600" />
       </div>
     )
