@@ -56,6 +56,6 @@ export const config = {
          * - public folder files (logo, manifest, etc.)
          * - p/ (public course pages)
          */
-        "/((?!_next/static|_next/image|favicon.ico|icon-.*|apple-touch-icon.*|manifest.json|logo.*|ugt-logo.*|sw.js|workbox-.*|p/|login).*)",
+        "/((?!_next/static|_next/image|favicon.ico|icon-.*|apple-touch-icon.*|manifest.json|logo.*|ugt-logo.*|sw.js|workbox-.*|p/|login|api/auth|api/public).*)",
     ],
 }

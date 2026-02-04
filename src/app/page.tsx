@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,10 +16,19 @@ import {
 } from "@/components/modules"
 
 export default function Home() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'TEACHER') {
+      router.replace('/teacher-portal')
+    }
+  }, [session, status, router])
+
+  useEffect(() => {
+    if (status !== 'authenticated') return
     const fetchStats = async () => {
       try {
         const response = await fetch('/api/dashboard/stats')
@@ -30,7 +41,7 @@ export default function Home() {
       }
     }
     fetchStats()
-  }, [])
+  }, [status])
 
   return (
     <MainLayout>
