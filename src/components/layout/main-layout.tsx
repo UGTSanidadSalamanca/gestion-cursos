@@ -100,10 +100,37 @@ function NavItem({ item, pathname }: { item: any, pathname: string }) {
 
 function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
 
-  // Si no hay sesión o no es admin/staff, no mostramos nada (la redirección se encarga)
-  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'STAFF')) {
+  // Mientras carga la sesión, mostramos un estado sutil
+  if (status === 'loading') {
+    return (
+      <div className={cn('pb-12 w-64 flex flex-col items-center justify-center h-full', className)}>
+        <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+      </div>
+    )
+  }
+
+  const isTeacher = session?.user?.role === 'TEACHER'
+  const isAdminOrStaff = session?.user?.role === 'ADMIN' || session?.user?.role === 'STAFF'
+
+  // Si es profesor, le mostramos un botón para ir a su portal en lugar de un menú vacío
+  if (isTeacher) {
+    return (
+      <div className={cn('pb-12 w-64 flex flex-col h-full p-4 space-y-4', className)}>
+        <div className="bg-red-900/20 p-4 rounded-xl border border-red-500/20">
+          <p className="text-xs text-red-200 font-bold uppercase tracking-wider mb-2">Acceso Docente</p>
+          <p className="text-[10px] text-slate-400 mb-4">Estás en el área de administración. Pulsa abajo para ir a tu panel.</p>
+          <Button asChild className="w-full bg-red-600 hover:bg-red-700 text-[11px] h-9">
+            <Link href="/teacher-portal">Ir al Portal Docente</Link>
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Si no hay sesión o no tiene permisos, no mostramos el menú administrativo
+  if (!isAdminOrStaff) {
     return null
   }
 
