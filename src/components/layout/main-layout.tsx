@@ -150,6 +150,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { data: session, status } = useSession()
   const router = useRouter()
+  const pathname = usePathname()
 
   // Timeout to prevent infinite spinner on mobile if session fails to load
   const [showRetry, setShowRetry] = useState(false)
