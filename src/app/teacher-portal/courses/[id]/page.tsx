@@ -113,11 +113,9 @@ export default function TeacherCourseDetail({ params }: { params: Promise<{ id: 
     if (loading) {
         return (
             <TeacherLayout>
-                <div className="flex h-[50vh] items-center justify-center">
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="h-12 w-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" />
-                        <p className="text-slate-500 font-medium animate-pulse">Cargando datos del curso...</p>
-                    </div>
+                <div className="flex h-[50vh] flex-col items-center justify-center gap-4">
+                    <div className="h-12 w-12 rounded-full border-4 border-slate-100 border-t-red-600 animate-spin" />
+                    <p className="text-slate-500 font-medium animate-pulse text-sm uppercase tracking-widest">Cargando datos del curso...</p>
                 </div>
             </TeacherLayout>
         )

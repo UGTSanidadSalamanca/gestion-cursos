@@ -151,21 +151,56 @@ export function MainLayout({ children }: MainLayoutProps) {
   const { data: session, status } = useSession()
   const router = useRouter()
 
+  // Timeout to prevent infinite spinner on mobile if session fails to load
+  const [showRetry, setShowRetry] = useState(false)
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'TEACHER') {
+    if (status === 'loading') {
+      const timer = setTimeout(() => setShowRetry(true), 8000)
+      return () => clearTimeout(timer)
+    }
+  }, [status])
+
+  useEffect(() => {
+    // Solo redirigir si estamos seguros de que es profesor y estamos en una ruta de admin
+    if (status === 'authenticated' && session?.user?.role === 'TEACHER' && !pathname.startsWith('/teacher-portal')) {
       router.replace('/teacher-portal')
     }
-  }, [session, status, router])
+  }, [session, status, router, pathname])
 
+  // Si estamos cargando, mostramos spinner con opción de reintentar
   if (status === 'loading') {
     return (
-      <div className="flex items-center justify-center h-screen bg-white">
-        <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+      <div className="flex flex-col items-center justify-center h-screen bg-white gap-4">
+        <Loader2 className="h-10 w-10 animate-spin text-red-600" />
+        {showRetry && (
+          <div className="flex flex-col items-center gap-2 animate-in fade-in duration-500">
+            <p className="text-sm text-slate-500">La sesión está tardando más de lo habitual...</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.reload()}
+              className="mt-2"
+            >
+              Actualizar página
+            </Button>
+            <Button
+              variant="link"
+              size="sm"
+              onClick={() => router.push('/login')}
+              className="text-slate-400"
+            >
+              Ir al login
+            </Button>
+          </div>
+        )}
       </div>
     )
   }
 
-  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'STAFF')) {
+  // Si no hay sesión y no estamos cargando, permitimos que el middleware o la página manejen el estado.
+  // Pero si hay sesión y no es admin/staff (y no es profesor que ya estamos redirigiendo), 
+  // mostramos un spinner mientras la redirección del useEffect anterior hace su trabajo.
+  if (session && session.user.role !== 'ADMIN' && session.user.role !== 'STAFF') {
     return (
       <div className="flex items-center justify-center h-screen bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-red-600" />

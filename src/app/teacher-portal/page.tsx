@@ -200,14 +200,36 @@ export default function TeacherPortalPage() {
 
     const daysOrder = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
 
+    // Timeout to prevent infinite spinner on mobile if data fails to load
+    const [showRetry, setShowRetry] = useState(false)
+    useEffect(() => {
+        if (loading) {
+            const timer = setTimeout(() => setShowRetry(true), 8000)
+            return () => clearTimeout(timer)
+        }
+    }, [loading])
+
     if (loading) {
         return (
             <TeacherLayout>
-                <div className="flex h-[50vh] items-center justify-center">
+                <div className="flex h-[50vh] flex-col items-center justify-center gap-6">
                     <div className="flex flex-col items-center gap-4">
-                        <div className="h-12 w-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" />
-                        <p className="text-slate-500 font-medium animate-pulse">Cargando tus cursos...</p>
+                        <div className="h-12 w-12 rounded-full border-4 border-slate-100 border-t-red-600 animate-spin" />
+                        <p className="text-slate-500 font-medium animate-pulse text-sm uppercase tracking-widest">Cargando tus cursos...</p>
                     </div>
+                    {showRetry && (
+                        <div className="flex flex-col items-center gap-2 animate-in fade-in duration-700">
+                            <p className="text-xs text-slate-400">¿Tarda demasiado?</p>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.location.reload()}
+                                className="h-8 text-xs"
+                            >
+                                Actualizar página
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </TeacherLayout>
         )
