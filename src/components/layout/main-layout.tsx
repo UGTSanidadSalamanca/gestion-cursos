@@ -102,45 +102,46 @@ function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
   const { data: session, status } = useSession()
 
-  // Mientras carga la sesión, mostramos un estado sutil
+  // Si no hay sesión iniciada (y no estamos cargando), no mostramos nada
+  if (status === 'unauthenticated') {
+    return null
+  }
+
+  // Esqueleto de carga sutil si la sesión está tardando mucho
   if (status === 'loading') {
     return (
-      <div className={cn('pb-12 w-64 flex flex-col items-center justify-center h-full', className)}>
-        <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+      <div className={cn('flex flex-col h-full p-4 space-y-4', className)}>
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="h-8 bg-slate-800/50 animate-pulse rounded-lg w-full" />
+        ))}
       </div>
     )
   }
 
-  const isTeacher = session?.user?.role === 'TEACHER'
-  const isAdminOrStaff = session?.user?.role === 'ADMIN' || session?.user?.role === 'STAFF'
-
-  // Si es profesor, le mostramos un botón para ir a su portal en lugar de un menú vacío
-  if (isTeacher) {
+  // Caso especial: Profesor (le mostramos su acceso)
+  if (session?.user?.role === 'TEACHER') {
     return (
-      <div className={cn('pb-12 w-64 flex flex-col h-full p-4 space-y-4', className)}>
-        <div className="bg-red-900/20 p-4 rounded-xl border border-red-500/20">
-          <p className="text-xs text-red-200 font-bold uppercase tracking-wider mb-2">Acceso Docente</p>
-          <p className="text-[10px] text-slate-400 mb-4">Estás en el área de administración. Pulsa abajo para ir a tu panel.</p>
-          <Button asChild className="w-full bg-red-600 hover:bg-red-700 text-[11px] h-9">
-            <Link href="/teacher-portal">Ir al Portal Docente</Link>
+      <div className={cn('p-4 space-y-4', className)}>
+        <div className="bg-red-950/40 p-4 rounded-xl border border-red-500/20">
+          <p className="text-[10px] text-red-200 font-bold uppercase mb-2 tracking-widest">Portal Docente</p>
+          <p className="text-[10px] text-slate-400 mb-4 leading-relaxed">Para gestionar tus cursos y alumnos, entra en tu portal específico.</p>
+          <Button asChild size="sm" className="w-full bg-red-600 hover:bg-red-700 h-9 font-bold">
+            <Link href="/teacher-portal">Acceder al Portal</Link>
           </Button>
         </div>
       </div>
     )
   }
 
-  // Si no hay sesión o no tiene permisos, no mostramos el menú administrativo
-  if (!isAdminOrStaff) {
-    return null
-  }
-
+  // Vista Administrador / Staff (Predeterminada si estamos aquí)
   return (
     <div className={cn('pb-12 w-64 flex flex-col h-full', className)}>
       <div className="space-y-4 py-4 flex-1">
         <div className="px-3 py-2">
-          <div className="flex items-center mb-6 px-2">
+          {/* Logo solo visible en Desktop (en móvil ya está en el header) */}
+          <div className="hidden lg:flex items-center mb-8 px-2">
             <div className="bg-white p-1 rounded-lg mr-3 shadow-md flex items-center justify-center">
-              <img src="/ugt-logo.png" alt="Logo UGT Servicios Públicos" className="h-10 w-auto object-contain" />
+              <img src="/ugt-logo.png" alt="Logo UGT" className="h-10 w-auto object-contain" />
             </div>
             <div className="flex flex-col">
               <h2 className="text-sm font-black text-white leading-tight uppercase tracking-tighter">Servicios</h2>
@@ -148,6 +149,7 @@ function Sidebar({ className }: SidebarProps) {
               <span className="text-[10px] text-red-500 font-bold tracking-widest uppercase mt-0.5">UGT Salamanca</span>
             </div>
           </div>
+
           <div className="space-y-1">
             {navigation.map((item) => (
               <NavItem key={item.name} item={item} pathname={pathname} />
@@ -159,7 +161,7 @@ function Sidebar({ className }: SidebarProps) {
       <div className="px-3 py-4 border-t border-slate-800">
         <button
           onClick={() => signOut({ callbackUrl: '/login' })}
-          className="flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-red-900/20 hover:text-red-400 transition-colors"
+          className="flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-400 hover:bg-red-900/20 hover:text-red-400 transition-colors"
         >
           <LogOut className="mr-2 h-4 w-4" />
           Cerrar Sesión
