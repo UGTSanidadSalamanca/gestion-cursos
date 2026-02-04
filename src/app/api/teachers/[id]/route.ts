@@ -3,11 +3,12 @@ import { db } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const teacher = await db.teacher.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         contacts: true
       }
@@ -60,7 +61,7 @@ export async function PUT(
         where: {
           OR: orClauses,
           NOT: {
-            id: params.id
+            id: id
           }
         }
       })
@@ -110,13 +111,14 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     // First, check if teacher has active assignments in modules
     const activeModules = await db.courseModule.findMany({
       where: {
-        teacherId: params.id,
+        teacherId: id,
         course: {
           isActive: true
         }
@@ -133,18 +135,18 @@ export async function DELETE(
     // Delete related records (teacherContact if it exists, or contact)
     // Looking at schema.prisma, Teacher has contacts Contact[]
     await db.contact.deleteMany({
-      where: { teacherId: params.id }
+      where: { teacherId: id }
     })
 
     // Update modules to remove teacher reference
     await db.courseModule.updateMany({
-      where: { teacherId: params.id },
+      where: { teacherId: id },
       data: { teacherId: null }
     })
 
     // Then delete the teacher
     await db.teacher.delete({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     return NextResponse.json({ message: 'Teacher deleted successfully' })

@@ -3,11 +3,12 @@ import { db } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const student = await db.student.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         enrollments: {
           include: {
@@ -38,9 +39,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const {
       name,
@@ -66,7 +68,7 @@ export async function PUT(
         where: {
           OR: orClauses,
           NOT: {
-            id: params.id
+            id: id
           }
         }
       })
@@ -95,7 +97,7 @@ export async function PUT(
     }
 
     const student = await db.student.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...cleanData
       },
@@ -122,25 +124,26 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     // First, delete related records
     await db.contact.deleteMany({
-      where: { studentId: params.id }
+      where: { studentId: id }
     })
 
     await db.payment.deleteMany({
-      where: { studentId: params.id }
+      where: { studentId: id }
     })
 
     await db.enrollment.deleteMany({
-      where: { studentId: params.id }
+      where: { studentId: id }
     })
 
     // Then delete the student
     await db.student.delete({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     return NextResponse.json({ message: 'Student deleted successfully' })

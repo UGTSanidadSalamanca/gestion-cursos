@@ -3,11 +3,12 @@ import { db } from '@/lib/db'
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params
         const course = await db.course.findUnique({
-            where: { id: params.id },
+            where: { id },
             include: {
                 modules: {
                     include: {
@@ -66,9 +67,10 @@ function parseTime(timeStr: string | Date): Date {
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params
         const body = await request.json()
         const {
             title,
@@ -95,14 +97,16 @@ export async function PUT(
             callUrl,
             hasCertificate,
             hasMaterials,
+            // @ts-ignore
             modules = [],
+            // @ts-ignore
             schedules = []
         } = body
 
-        console.log('Updating course:', params.id);
+        console.log('Updating course:', id);
 
         const course = await db.course.update({
-            where: { id: params.id },
+            where: { id },
             data: {
                 title,
                 description,
@@ -183,11 +187,12 @@ export async function PUT(
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params
         await db.course.delete({
-            where: { id: params.id }
+            where: { id }
         })
         return NextResponse.json({ message: 'Course deleted successfully' })
     } catch (error) {

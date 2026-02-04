@@ -48,8 +48,8 @@ interface PublicCourse {
     }[]
 }
 
-export default function PublicCoursePage() {
-    const params = useParams()
+export default function PublicCoursePage({ params }: { params: Promise<{ id: string }> }) {
+    const [id, setId] = useState<string | null>(null)
     const [course, setCourse] = useState<PublicCourse | null>(null)
     const [loading, setLoading] = useState(true)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -64,9 +64,18 @@ export default function PublicCoursePage() {
     })
 
     useEffect(() => {
+        const resolveParams = async () => {
+            const resolvedParams = await params;
+            setId(resolvedParams.id);
+        };
+        resolveParams();
+    }, [params]);
+
+    useEffect(() => {
+        if (!id) return;
         const fetchCourse = async () => {
             try {
-                const response = await fetch(`/api/public/course/${params.id}`)
+                const response = await fetch(`/api/public/course/${id}`)
                 if (response.ok) {
                     const data = await response.json()
                     setCourse(data)
@@ -78,7 +87,7 @@ export default function PublicCoursePage() {
             }
         }
         fetchCourse()
-    }, [params.id])
+    }, [id])
 
     if (loading) {
         return (
@@ -133,7 +142,7 @@ export default function PublicCoursePage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...formData,
-                    courseId: params.id
+                    courseId: id
                 })
             })
 

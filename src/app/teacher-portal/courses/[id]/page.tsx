@@ -32,10 +32,17 @@ import * as XLSX from "xlsx"
 import { toast } from "sonner"
 import { useParams } from "next/navigation"
 
-export default function TeacherCourseDetail() {
-    const params = useParams()
-    const courseId = params.id as string
+export default function TeacherCourseDetail({ params }: { params: Promise<{ id: string }> }) {
+    const [courseId, setCourseId] = useState<string | null>(null)
     const [course, setCourse] = useState<any>(null)
+
+    useEffect(() => {
+        const resolveParams = async () => {
+            const resolvedParams = await params;
+            setCourseId(resolvedParams.id);
+        };
+        resolveParams();
+    }, [params]);
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
 

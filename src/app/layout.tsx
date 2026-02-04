@@ -14,13 +14,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport = {
+  themeColor: "#dc2626",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "Formación UGT Salamanca - Gestión de Cursos",
   description: "Sistema integral de gestión de cursos para UGT Sanidad Salamanca",
   keywords: ["Gestión de Cursos", "UGT", "Salamanca", "Formación", "Sanidad"],
   authors: [{ name: "Formación UGT Salamanca" }],
   manifest: "/manifest.json",
-  themeColor: "#2563eb",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

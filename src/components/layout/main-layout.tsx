@@ -163,7 +163,11 @@ export function MainLayout({ children }: MainLayoutProps) {
   }
 
   if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'STAFF')) {
-    return null
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-950">
+        <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+      </div>
+    )
   }
 
   return (
