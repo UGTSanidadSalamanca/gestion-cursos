@@ -30,6 +30,8 @@ interface PublicCourse {
     paymentFrequency?: string
     affiliatePrice?: number
     startDate?: string
+    endDate?: string
+    isActive?: boolean
     features?: string
     callUrl?: string
     hasCertificate?: boolean
@@ -652,36 +654,53 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                 </div>
 
                                 <div className="no-print space-y-4">
-                                    <Button className="w-full h-16 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98] group flex flex-col items-center justify-center leading-tight py-2" onClick={handleInterest}>
-                                        <div className="flex items-center gap-2">
-                                            <MessageSquare className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                                            Contacta y reserva por WhatsApp
-                                        </div>
-                                        <span className="text-[10px] font-medium opacity-80 uppercase tracking-widest mt-1">Dudas e información inicial</span>
-                                    </Button>
-
-                                    <div className="relative py-2 flex items-center">
-                                        <div className="flex-grow border-t border-slate-200"></div>
-                                        <span className="flex-shrink mx-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">O BIEN</span>
-                                        <div className="flex-grow border-t border-slate-200"></div>
-                                    </div>
-
-                                    <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                                        setIsDialogOpen(open)
-                                        if (!open) {
-                                            setShowSuccess(false)
-                                            setFormData({ name: '', email: '', phone: '', dni: '', isAffiliated: false })
-                                        }
-                                    }}>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" className="w-full h-14 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center">
-                                                <CheckCircle className="h-5 w-5 mr-2" />
-                                                Tengo la decisión tomada: Inscribirme
+                                    {course.isActive === false ? (
+                                        <div className="space-y-4">
+                                            <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-center">
+                                                <p className="text-xs font-black text-amber-800 uppercase tracking-wide flex items-center justify-center gap-1.5">
+                                                    <Info className="h-4 w-4" /> Inscripciones Cerradas
+                                                </p>
+                                                <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+                                                    Este curso ha finalizado o no admite nuevas inscripciones en este momento.
+                                                </p>
+                                            </div>
+                                            <Button className="w-full h-14 bg-green-600 hover:bg-green-700 text-white font-bold rounded-2xl shadow-md transition-all flex items-center justify-center gap-2" onClick={handleInterest}>
+                                                <MessageSquare className="h-5 w-5" />
+                                                Consultar próximas convocatorias por WhatsApp
                                             </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="sm:max-w-[500px] border-none shadow-2xl p-0 overflow-hidden bg-white">
-                                            {!showSuccess ? (
-                                                <form onSubmit={handleEnroll}>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <Button className="w-full h-16 mt-8 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-[0.98] group flex flex-col items-center justify-center leading-tight py-2" onClick={handleInterest}>
+                                                <div className="flex items-center gap-2">
+                                                    <MessageSquare className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                                                    Contacta y reserva por WhatsApp
+                                                </div>
+                                                <span className="text-[10px] font-medium opacity-80 uppercase tracking-widest mt-1">Dudas e información inicial</span>
+                                            </Button>
+
+                                            <div className="relative py-2 flex items-center">
+                                                <div className="flex-grow border-t border-slate-200"></div>
+                                                <span className="flex-shrink mx-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">O BIEN</span>
+                                                <div className="flex-grow border-t border-slate-200"></div>
+                                            </div>
+
+                                            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                                                setIsDialogOpen(open)
+                                                if (!open) {
+                                                    setShowSuccess(false)
+                                                    setFormData({ name: '', email: '', phone: '', dni: '', isAffiliated: false })
+                                                }
+                                            }}>
+                                                <DialogTrigger asChild>
+                                                    <Button variant="outline" className="w-full h-14 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold rounded-2xl transition-all shadow-sm flex items-center justify-center">
+                                                        <CheckCircle className="h-5 w-5 mr-2" />
+                                                        Tengo la decisión tomada: Inscribirme
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="sm:max-w-[500px] border-none shadow-2xl p-0 overflow-hidden bg-white">
+                                                    {!showSuccess ? (
+                                                        <form onSubmit={handleEnroll}>
                                                     <DialogHeader className="p-8 bg-slate-50 border-b">
                                                         <div className="bg-blue-100 text-blue-700 text-[9px] font-black px-2 py-0.5 rounded-full w-fit mb-3 tracking-widest uppercase">Paso 1 de 2: Mis datos</div>
                                                         <DialogTitle className="text-2xl font-black text-slate-900 leading-tight">Formulario de Inscripción</DialogTitle>
@@ -800,7 +819,9 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                             )}
                                         </DialogContent>
                                     </Dialog>
-                                </div>
+                                </>
+                            )}
+                        </div>
 
                                 {course.callUrl && (
                                     <Button

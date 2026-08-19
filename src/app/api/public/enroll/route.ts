@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { NotificationService } from '@/lib/notification-service'
 import { notifyNewEnrollment } from '@/lib/email-service'
+import { isCourseExpired } from '@/lib/course-utils'
 
 export async function POST(request: NextRequest) {
     let body;
@@ -16,6 +17,21 @@ export async function POST(request: NextRequest) {
     try {
         if (!name || !dni || !courseId) {
             return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
+        }
+
+        // 0. Verificar si el curso existe, está activo y no está vencido
+        const targetCourse = await db.course.findUnique({
+            where: { id: courseId }
+        })
+
+        if (!targetCourse) {
+            return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 })
+        }
+
+        if (!targetCourse.isActive || isCourseExpired(targetCourse.endDate)) {
+            return NextResponse.json({
+                error: 'El periodo de inscripción para este curso ha concluido o no está disponible actualmente.'
+            }, { status: 400 })
         }
 
         // 1. Buscar o crear el estudiante por DNI

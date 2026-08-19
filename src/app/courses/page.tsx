@@ -26,6 +26,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
 import {
   BookOpen,
   Plus,
@@ -44,7 +45,13 @@ import {
   UserCheck,
   Printer,
   Mail,
-  FileSpreadsheet
+  FileSpreadsheet,
+  CheckCircle2,
+  AlertCircle,
+  CalendarX,
+  RefreshCw,
+  SlidersHorizontal,
+  Check
 } from "lucide-react"
 import * as XLSX from "xlsx"
 import { GroupEmailDialog } from "@/components/courses/group-email-dialog"
@@ -53,6 +60,7 @@ import { toast } from "sonner"
 import { jsPDF } from "jspdf"
 import html2canvas from "html2canvas"
 import { QRCodeSVG } from "qrcode.react"
+import { isCourseExpired } from "@/lib/utils"
 
 interface Course {
   id: string
@@ -182,6 +190,13 @@ export default function CoursesPage() {
     }
   }
 
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [isTogglingId, setIsTogglingId] = useState<string | null>(null)
+  const [isSyncingExpired, setIsSyncingExpired] = useState(false)
+  const [reactivateDialogCourse, setReactivateDialogCourse] = useState<Course | null>(null)
+  const [reactivateEndDate, setReactivateEndDate] = useState("")
+  const [reactivateAction, setReactivateAction] = useState<'extend' | 'no-limit'>('extend')
+
   const fetchCourses = async () => {
     setLoading(true)
     try {
@@ -195,6 +210,119 @@ export default function CoursesPage() {
       toast.error("Error al cargar los cursos")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleToggleActive = async (course: Course, newChecked: boolean) => {
+    if (!newChecked) {
+      setIsTogglingId(course.id)
+      try {
+        const res = await fetch(`/api/courses/${course.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isActive: false })
+        })
+        if (res.ok) {
+          toast.success(`Curso "${course.title}" desactivado`)
+          setCourses(prev => prev.map(c => c.id === course.id ? { ...c, isActive: false } : c))
+        } else {
+          toast.error('Error al desactivar el curso')
+        }
+      } catch (e) {
+        toast.error('Error de conexión al desactivar el curso')
+      } finally {
+        setIsTogglingId(null)
+      }
+      return
+    }
+
+    // Comprobar si el curso está vencido al intentar activarlo
+    const isExpired = isCourseExpired(course.endDate)
+    if (isExpired) {
+      setReactivateDialogCourse(course)
+      const nextMonth = new Date()
+      nextMonth.setDate(nextMonth.getDate() + 30)
+      setReactivateEndDate(nextMonth.toISOString().split('T')[0])
+      setReactivateAction('extend')
+      return
+    }
+
+    setIsTogglingId(course.id)
+    try {
+      const res = await fetch(`/api/courses/${course.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: true })
+      })
+      if (res.ok) {
+        toast.success(`Curso "${course.title}" activado con éxito`)
+        setCourses(prev => prev.map(c => c.id === course.id ? { ...c, isActive: true } : c))
+      } else {
+        toast.error('Error al activar el curso')
+      }
+    } catch (e) {
+      toast.error('Error de conexión al activar el curso')
+    } finally {
+      setIsTogglingId(null)
+    }
+  }
+
+  const handleConfirmReactivation = async () => {
+    if (!reactivateDialogCourse) return
+    setIsTogglingId(reactivateDialogCourse.id)
+
+    try {
+      let bodyData: any = { isActive: true }
+      if (reactivateAction === 'extend') {
+        if (!reactivateEndDate) {
+          toast.error('Por favor, selecciona una fecha de finalización válida')
+          setIsTogglingId(null)
+          return
+        }
+        bodyData.endDate = reactivateEndDate
+      } else if (reactivateAction === 'no-limit') {
+        bodyData.endDate = null
+      }
+
+      const res = await fetch(`/api/courses/${reactivateDialogCourse.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyData)
+      })
+
+      if (res.ok) {
+        toast.success(
+          reactivateAction === 'extend'
+            ? `Curso "${reactivateDialogCourse.title}" reactivado hasta el ${new Date(reactivateEndDate).toLocaleDateString('es-ES')}`
+            : `Curso "${reactivateDialogCourse.title}" reactivado sin fecha límite`
+        )
+        setCourses(prev => prev.map(c => c.id === reactivateDialogCourse.id ? { ...c, isActive: true, endDate: bodyData.endDate } : c))
+        setReactivateDialogCourse(null)
+      } else {
+        toast.error('Error al reactivar el curso')
+      }
+    } catch (error) {
+      toast.error('Error técnico al reactivar el curso')
+    } finally {
+      setIsTogglingId(null)
+    }
+  }
+
+  const handleSyncExpired = async () => {
+    setIsSyncingExpired(true)
+    try {
+      const res = await fetch('/api/courses/sync-expired', { method: 'POST' })
+      if (res.ok) {
+        const data = await res.json()
+        toast.success(data.message)
+        await fetchCourses()
+      } else {
+        toast.error('Error al sincronizar cursos vencidos')
+      }
+    } catch (e) {
+      toast.error('Error de conexión')
+    } finally {
+      setIsSyncingExpired(false)
     }
   }
 
@@ -625,12 +753,28 @@ export default function CoursesPage() {
     }
   }
 
+  const totalCount = courses.length
+  const activeCount = courses.filter(c => c.isActive && !isCourseExpired(c.endDate)).length
+  const expiredCount = courses.filter(c => isCourseExpired(c.endDate)).length
+  const inactiveCount = courses.filter(c => !c.isActive && !isCourseExpired(c.endDate)).length
+
   const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       course.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       course.code.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesLevel = filterLevel === "all" || course.level === filterLevel
-    return matchesSearch && matchesLevel
+
+    const isExpired = isCourseExpired(course.endDate)
+    let matchesStatus = true
+    if (filterStatus === "active") {
+      matchesStatus = course.isActive && !isExpired
+    } else if (filterStatus === "expired") {
+      matchesStatus = isExpired
+    } else if (filterStatus === "inactive") {
+      matchesStatus = !course.isActive && !isExpired
+    }
+
+    return matchesSearch && matchesLevel && matchesStatus
   })
 
   return (
@@ -975,30 +1119,100 @@ export default function CoursesPage() {
           </div>
         </div>
 
-        {/* Courses Table */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+        {/* Summary Statistics Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card
+            className={`cursor-pointer transition-all border rounded-2xl shadow-sm ${filterStatus === 'all' ? 'ring-2 ring-blue-500 bg-blue-50/20 border-blue-200' : 'hover:border-slate-300 hover:shadow bg-white'}`}
+            onClick={() => setFilterStatus('all')}
+          >
+            <CardContent className="p-4 flex items-center justify-between">
               <div>
-                <CardTitle>Cursos Disponibles</CardTitle>
-                <CardDescription>Visualiza y gestiona todos los programas educativos.</CardDescription>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Cursos</p>
+                <p className="text-2xl font-black text-slate-900 mt-0.5">{totalCount}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Todos los programas</p>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="h-11 w-11 rounded-2xl bg-blue-100/80 flex items-center justify-center text-blue-600">
+                <BookOpen className="h-5 w-5" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card
+            className={`cursor-pointer transition-all border rounded-2xl shadow-sm ${filterStatus === 'active' ? 'ring-2 ring-green-500 bg-green-50/20 border-green-200' : 'hover:border-slate-300 hover:shadow bg-white'}`}
+            onClick={() => setFilterStatus('active')}
+          >
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-bold text-green-700 uppercase tracking-wider">Activos (Vigentes)</p>
+                <p className="text-2xl font-black text-green-700 mt-0.5">{activeCount}</p>
+                <p className="text-[10px] text-green-600/80 mt-0.5">Visibles e inscribibles</p>
+              </div>
+              <div className="h-11 w-11 rounded-2xl bg-green-100 flex items-center justify-center text-green-600">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card
+            className={`cursor-pointer transition-all border rounded-2xl shadow-sm ${filterStatus === 'expired' ? 'ring-2 ring-amber-500 bg-amber-50/20 border-amber-200' : 'hover:border-slate-300 hover:shadow bg-white'}`}
+            onClick={() => setFilterStatus('expired')}
+          >
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-bold text-amber-700 uppercase tracking-wider">Vencidos / Fin</p>
+                <p className="text-2xl font-black text-amber-700 mt-0.5">{expiredCount}</p>
+                <p className="text-[10px] text-amber-600/80 mt-0.5">Fecha fin superada</p>
+              </div>
+              <div className="h-11 w-11 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
+                <CalendarX className="h-5 w-5" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card
+            className={`cursor-pointer transition-all border rounded-2xl shadow-sm ${filterStatus === 'inactive' ? 'ring-2 ring-slate-500 bg-slate-50/50 border-slate-300' : 'hover:border-slate-300 hover:shadow bg-white'}`}
+            onClick={() => setFilterStatus('inactive')}
+          >
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Inactivos</p>
+                <p className="text-2xl font-black text-slate-700 mt-0.5">{inactiveCount}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Borradores o pausados</p>
+              </div>
+              <div className="h-11 w-11 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Courses Table */}
+        <Card className="shadow-sm rounded-2xl border-slate-200">
+          <CardHeader className="pb-4">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div>
+                <CardTitle className="text-xl font-bold text-slate-900">Cursos Disponibles</CardTitle>
+                <CardDescription className="text-xs text-slate-500 mt-0.5">
+                  Visualiza, activa, desactiva y gestiona todos los programas educativos.
+                </CardDescription>
+              </div>
+              <div className="flex flex-wrap items-center gap-2.5">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar curso..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8 w-64"
+                    className="pl-8 w-56 h-10 bg-white"
                   />
                 </div>
+
                 <Select value={filterLevel} onValueChange={setFilterLevel}>
-                  <SelectTrigger className="w-[150px]">
+                  <SelectTrigger className="w-[140px] h-10 bg-white">
                     <SelectValue placeholder="Nivel" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="all">Todos los niveles</SelectItem>
                     <SelectItem value="BEGINNER">Principiante</SelectItem>
                     <SelectItem value="INTERMEDIATE">Intermedio</SelectItem>
                     <SelectItem value="ADVANCED">Avanzado</SelectItem>
@@ -1006,13 +1220,37 @@ export default function CoursesPage() {
                     <SelectItem value="PREPARACION_OPOSICIONES">Oposiciones</SelectItem>
                   </SelectContent>
                 </Select>
+
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-[160px] h-10 bg-white">
+                    <SelectValue placeholder="Estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los estados</SelectItem>
+                    <SelectItem value="active">Activos (Vigentes)</SelectItem>
+                    <SelectItem value="expired">Vencidos / Fin</SelectItem>
+                    <SelectItem value="inactive">Inactivos</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSyncExpired}
+                  disabled={isSyncingExpired}
+                  className="h-10 px-3 text-xs font-bold text-slate-700 bg-white border-slate-200 hover:bg-slate-50"
+                  title="Comprobar y auto-desactivar cursos cuya fecha de fin ya haya pasado"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isSyncingExpired ? 'animate-spin text-blue-600' : 'text-slate-500'}`} />
+                  {isSyncingExpired ? 'Comprobando...' : 'Comprobar Vencidos'}
+                </Button>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border border-slate-200">
+            <div className="rounded-xl border border-slate-200 overflow-hidden">
               <Table>
-                <TableHeader className="bg-slate-50">
+                <TableHeader className="bg-slate-50/80">
                   <TableRow>
                     <TableHead className="font-bold">Curso</TableHead>
                     <TableHead className="font-bold">Nivel</TableHead>
@@ -1020,7 +1258,7 @@ export default function CoursesPage() {
                     <TableHead className="font-bold">Duración</TableHead>
                     <TableHead className="font-bold">Precio</TableHead>
                     <TableHead className="font-bold text-center">Inscritos</TableHead>
-                    <TableHead className="font-bold">Estado</TableHead>
+                    <TableHead className="font-bold">Estado / Visibilidad</TableHead>
                     <TableHead className="font-bold text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1034,108 +1272,239 @@ export default function CoursesPage() {
                   ) : filteredCourses.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="h-24 text-center text-slate-500">
-                        No se encontraron cursos.
+                        No se encontraron cursos con los filtros seleccionados.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredCourses.map((course) => (
-                      <TableRow key={course.id} className="hover:bg-slate-50/50 transition-colors">
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-slate-900">{course.title}</span>
-                            <span className="text-xs text-slate-500">{course.code}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getLevelBadge(course.level)}</TableCell>
-                        <TableCell className="text-slate-600">
-                          {(() => {
-                            const uniqueTeachers = Array.from(new Set((course.modules || []).map(m => m.teacher?.name).filter(Boolean)))
-                            if (uniqueTeachers.length === 0) return '---'
-                            if (uniqueTeachers.length === 1) return uniqueTeachers[0]
-                            return `${uniqueTeachers[0]} (+${uniqueTeachers.length - 1})`
-                          })()}
-                        </TableCell>
-                        <TableCell>
-                          <span className="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs font-medium">
-                            <Clock className="w-3 h-3 mr-1" />
-                            {course.duration}h
-                          </span>
-                        </TableCell>
-                        <TableCell className="font-medium text-slate-900 leading-tight">
-                          <div className="flex flex-col gap-1">
-                            {course.price && course.price > 0 ? (
-                              <span className="text-sm font-bold">{`€${course.price.toFixed(2)}`}</span>
-                            ) : (
-                              <span className="text-[10px] text-slate-400 italic">Gral: Consultar</span>
-                            )}
-                            {course.affiliatePrice && course.affiliatePrice > 0 ? (
-                              <span className="text-[10px] font-black text-green-600 bg-green-50 px-1.5 py-0.5 rounded w-fit">
-                                Afi: €{course.affiliatePrice.toFixed(2)}
-                              </span>
-                            ) : (
-                              <span className="text-[10px] text-slate-400 italic">Afi: Consultar</span>
-                            )}
-                            {(course.price || course.affiliatePrice) && course.priceUnit && (
-                              <span className="text-[9px] text-slate-500 font-normal uppercase tracking-tighter">
-                                {course.priceUnit === 'MONTH' ? 'p/ Mes' :
-                                  course.priceUnit === 'SESSION' ? 'p/ Sesión' :
-                                    course.priceUnit === 'TRIMESTER' ? 'p/ Trimestre' :
-                                      course.priceUnit === 'YEAR' ? 'p/ Año' : ''}
-                                {course.paymentFrequency === 'TRIMESTER' && ' (Trim.)'}
-                                {course.paymentFrequency === 'MONTHLY' && ' (Mens.)'}
-                                {course.paymentFrequency === 'SINGLE' && ' (P. Único)'}
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="font-bold text-blue-600">{course._count?.enrollments || 0}</span>
-                          <span className="text-slate-400"> / {course.maxStudents}</span>
-                        </TableCell>
-                        <TableCell>
-                          {course.isActive ? (
-                            <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100 shadow-none">Activo</Badge>
-                          ) : (
-                            <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-slate-200 shadow-none">Inactivo</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600" onClick={() => handleViewClick(course)}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-orange-600" onClick={() => handleEditClick(course)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-slate-500 hover:text-red-500"
-                              title="Enviar email grupal"
-                              onClick={() => handleEmailClick(course)}
-                            >
-                              <Mail className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-slate-500 hover:text-green-600"
-                              title="Exportar Alumnos (Excel)"
-                              onClick={() => handleExportStudents(course)}
-                            >
-                              <FileSpreadsheet className="h-4 w-4" />
-                            </Button>
-                            <EnrollmentForm courseId={course.id} onSuccess={fetchCourses} />
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    filteredCourses.map((course) => {
+                      const isExpired = isCourseExpired(course.endDate)
+
+                      return (
+                        <TableRow key={course.id} className="hover:bg-slate-50/50 transition-colors">
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-slate-900">{course.title}</span>
+                              <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                <span className="text-[11px] text-slate-500 font-mono font-medium">{course.code}</span>
+                                {course.endDate && (
+                                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-medium ${isExpired ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-600'}`}>
+                                    Fin: {new Date(course.endDate).toLocaleDateString('es-ES')}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{getLevelBadge(course.level)}</TableCell>
+                          <TableCell className="text-slate-600 text-xs">
+                            {(() => {
+                              const uniqueTeachers = Array.from(new Set((course.modules || []).map(m => m.teacher?.name).filter(Boolean)))
+                              if (uniqueTeachers.length === 0) return '---'
+                              if (uniqueTeachers.length === 1) return uniqueTeachers[0]
+                              return `${uniqueTeachers[0]} (+${uniqueTeachers.length - 1})`
+                            })()}
+                          </TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs font-medium">
+                              <Clock className="w-3 h-3 mr-1" />
+                              {course.duration}h
+                            </span>
+                          </TableCell>
+                          <TableCell className="font-medium text-slate-900 leading-tight">
+                            <div className="flex flex-col gap-1">
+                              {course.price && course.price > 0 ? (
+                                <span className="text-sm font-bold">{`€${course.price.toFixed(2)}`}</span>
+                              ) : (
+                                <span className="text-[10px] text-slate-400 italic">Gral: Consultar</span>
+                              )}
+                              {course.affiliatePrice && course.affiliatePrice > 0 ? (
+                                <span className="text-[10px] font-black text-green-600 bg-green-50 px-1.5 py-0.5 rounded w-fit">
+                                  Afi: €{course.affiliatePrice.toFixed(2)}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-slate-400 italic">Afi: Consultar</span>
+                              )}
+                              {(course.price || course.affiliatePrice) && course.priceUnit && (
+                                <span className="text-[9px] text-slate-500 font-normal uppercase tracking-tighter">
+                                  {course.priceUnit === 'MONTH' ? 'p/ Mes' :
+                                    course.priceUnit === 'SESSION' ? 'p/ Sesión' :
+                                      course.priceUnit === 'TRIMESTER' ? 'p/ Trimestre' :
+                                        course.priceUnit === 'YEAR' ? 'p/ Año' : ''}
+                                  {course.paymentFrequency === 'TRIMESTER' && ' (Trim.)'}
+                                  {course.paymentFrequency === 'MONTHLY' && ' (Mens.)'}
+                                  {course.paymentFrequency === 'SINGLE' && ' (P. Único)'}
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="font-bold text-blue-600">{course._count?.enrollments || 0}</span>
+                            <span className="text-slate-400"> / {course.maxStudents}</span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2.5">
+                              <div className="min-w-[85px]">
+                                {isExpired ? (
+                                  <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-300 shadow-none font-bold text-[10px] py-0.5">
+                                    <CalendarX className="w-2.5 h-2.5 mr-1" />
+                                    Vencido
+                                  </Badge>
+                                ) : course.isActive ? (
+                                  <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100 shadow-none font-bold text-[10px] py-0.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse" />
+                                    Activo
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-slate-200 shadow-none font-bold text-[10px] py-0.5">
+                                    Inactivo
+                                  </Badge>
+                                )}
+                              </div>
+
+                              <div className="flex items-center" title={course.isActive ? "Desactivar curso" : (isExpired ? "Reactivar curso vencido" : "Activar curso")}>
+                                {isTogglingId === course.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                                ) : (
+                                  <Switch
+                                    checked={course.isActive}
+                                    onCheckedChange={(checked) => handleToggleActive(course, checked)}
+                                    className="data-[state=checked]:bg-green-600 scale-90"
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600" onClick={() => handleViewClick(course)}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-orange-600" onClick={() => handleEditClick(course)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-slate-500 hover:text-red-500"
+                                title="Enviar email grupal"
+                                onClick={() => handleEmailClick(course)}
+                              >
+                                <Mail className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-slate-500 hover:text-green-600"
+                                title="Exportar Alumnos (Excel)"
+                                onClick={() => handleExportStudents(course)}
+                              >
+                                <FileSpreadsheet className="h-4 w-4" />
+                              </Button>
+                              <EnrollmentForm courseId={course.id} onSuccess={fetchCourses} />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
                   )}
                 </TableBody>
               </Table>
             </div>
           </CardContent>
         </Card>
+
+        {/* Dialog for Reactivating Expired Course */}
+        <Dialog open={!!reactivateDialogCourse} onOpenChange={(open) => { if (!open) setReactivateDialogCourse(null) }}>
+          <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-none shadow-2xl">
+            <DialogHeader className="p-6 bg-amber-50/60 border-b border-amber-100">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-700">
+                  <CalendarX className="h-5 w-5" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold text-slate-900">Reactivar Curso Vencido</DialogTitle>
+                  <DialogDescription className="text-slate-600 text-xs mt-0.5">
+                    {reactivateDialogCourse?.title} ({reactivateDialogCourse?.code})
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="p-6 space-y-5 bg-white">
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 leading-relaxed">
+                Este curso finalizó el <b>{reactivateDialogCourse?.endDate ? new Date(reactivateDialogCourse.endDate).toLocaleDateString('es-ES') : ''}</b>. Para mantenerlo activo y visible sin que vuelva a auto-desactivarse, selecciona una opción:
+              </div>
+
+              <div className="space-y-3">
+                <div
+                  className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${reactivateAction === 'extend' ? 'border-blue-600 bg-blue-50/40 ring-1 ring-blue-600' : 'border-slate-200 hover:bg-slate-50'}`}
+                  onClick={() => setReactivateAction('extend')}
+                >
+                  <input
+                    type="radio"
+                    name="reactivateAction"
+                    checked={reactivateAction === 'extend'}
+                    onChange={() => setReactivateAction('extend')}
+                    className="mt-1 text-blue-600"
+                  />
+                  <div className="flex-1 space-y-2">
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">Ampliar Fecha de Finalización</p>
+                      <p className="text-xs text-slate-500">Establece una nueva fecha límite en el futuro para este curso.</p>
+                    </div>
+                    {reactivateAction === 'extend' && (
+                      <div className="pt-2">
+                        <Label className="text-[10px] font-bold text-slate-500 uppercase">Nueva Fecha Fin</Label>
+                        <Input
+                          type="date"
+                          value={reactivateEndDate}
+                          onChange={(e) => setReactivateEndDate(e.target.value)}
+                          className="mt-1 bg-white border-slate-200 h-10 text-sm font-medium"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div
+                  className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${reactivateAction === 'no-limit' ? 'border-blue-600 bg-blue-50/40 ring-1 ring-blue-600' : 'border-slate-200 hover:bg-slate-50'}`}
+                  onClick={() => setReactivateAction('no-limit')}
+                >
+                  <input
+                    type="radio"
+                    name="reactivateAction"
+                    checked={reactivateAction === 'no-limit'}
+                    onChange={() => setReactivateAction('no-limit')}
+                    className="mt-1 text-blue-600"
+                  />
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">Activar Sin Fecha Límite</p>
+                    <p className="text-xs text-slate-500">Elimina la fecha de fin. El curso permanecerá activo indefinidamente hasta que lo desactives de forma manual.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="p-4 bg-slate-50 border-t flex items-center justify-end gap-2 shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setReactivateDialogCourse(null)}
+                className="h-10 text-xs font-bold"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleConfirmReactivation}
+                disabled={isTogglingId !== null}
+                className="h-10 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md"
+              >
+                {isTogglingId ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Check className="h-4 w-4 mr-1.5" />}
+                Reactivar Curso
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Dialogs */}
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>

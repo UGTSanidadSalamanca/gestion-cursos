@@ -185,6 +185,55 @@ export async function PUT(
     }
 }
 
+export async function PATCH(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params
+        const body = await request.json()
+
+        const updateData: any = {}
+
+        if (body.isActive !== undefined) {
+            updateData.isActive = Boolean(body.isActive)
+        }
+
+        if (body.endDate !== undefined) {
+            updateData.endDate = body.endDate ? new Date(body.endDate) : null
+        }
+
+        if (body.startDate !== undefined) {
+            updateData.startDate = body.startDate ? new Date(body.startDate) : null
+        }
+
+        if (body.title !== undefined) updateData.title = body.title
+        if (body.description !== undefined) updateData.description = body.description
+        if (body.code !== undefined) updateData.code = body.code
+        if (body.level !== undefined) updateData.level = body.level
+
+        const updatedCourse = await db.course.update({
+            where: { id },
+            data: updateData,
+            include: {
+                modules: {
+                    include: {
+                        teacher: true
+                    }
+                },
+                _count: {
+                    select: { enrollments: true }
+                }
+            }
+        })
+
+        return NextResponse.json(updatedCourse)
+    } catch (error) {
+        console.error('Error patching course:', error)
+        return NextResponse.json({ error: 'Error updating course' }, { status: 500 })
+    }
+}
+
 export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -199,3 +248,4 @@ export async function DELETE(
         return NextResponse.json({ error: 'Error deleting course' }, { status: 500 })
     }
 }
+

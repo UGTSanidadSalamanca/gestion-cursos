@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { deactivateExpiredCourses } from '@/lib/course-utils'
 
 export async function GET(request: NextRequest) {
   try {
+    // Auto-desactivar cursos cuya fecha de finalización ya haya vencido
+    await deactivateExpiredCourses()
+
     const { searchParams } = new URL(request.url)
     const level = searchParams.get('level')
     const isActive = searchParams.get('isActive')

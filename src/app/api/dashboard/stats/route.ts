@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { deactivateExpiredCourses } from '@/lib/course-utils'
 
 export async function GET(request: NextRequest) {
     try {
+        // Auto-desactivar cursos cuya fecha de finalización ya haya vencido
+        await deactivateExpiredCourses()
+
         // 1. Estudiantes totales y alumnos inscritos
         const totalStudents = await db.student.count({
             where: { status: 'ACTIVE' }
