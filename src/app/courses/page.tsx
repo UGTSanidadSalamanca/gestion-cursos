@@ -51,7 +51,8 @@ import {
   CalendarX,
   RefreshCw,
   SlidersHorizontal,
-  Check
+  Check,
+  Copy
 } from "lucide-react"
 import * as XLSX from "xlsx"
 import { GroupEmailDialog } from "@/components/courses/group-email-dialog"
@@ -196,6 +197,8 @@ export default function CoursesPage() {
   const [reactivateDialogCourse, setReactivateDialogCourse] = useState<Course | null>(null)
   const [reactivateEndDate, setReactivateEndDate] = useState("")
   const [reactivateAction, setReactivateAction] = useState<'extend' | 'no-limit'>('extend')
+  const [duplicateDialogCourse, setDuplicateDialogCourse] = useState<Course | null>(null)
+  const [isDuplicating, setIsDuplicating] = useState(false)
 
   const fetchCourses = async () => {
     setLoading(true)
@@ -325,6 +328,31 @@ export default function CoursesPage() {
       setIsSyncingExpired(false)
     }
   }
+
+  const handleDuplicateCourse = async () => {
+    if (!duplicateDialogCourse) return
+    setIsDuplicating(true)
+    try {
+      const res = await fetch(`/api/courses/${duplicateDialogCourse.id}/duplicate`, { method: 'POST' })
+      if (res.ok) {
+        const newCourse: Course = await res.json()
+        toast.success(`Copia de "${duplicateDialogCourse.title}" creada como borrador. Ahora puedes editarla.`)
+        setDuplicateDialogCourse(null)
+        await fetchCourses()
+        // Abrir directamente el formulario de edición del curso duplicado
+        handleEditClick(newCourse)
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Error al duplicar el curso')
+      }
+    } catch (e) {
+      toast.error('Error de conexión al duplicar el curso')
+    } finally {
+      setIsDuplicating(false)
+    }
+  }
+
+
 
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1384,6 +1412,15 @@ export default function CoursesPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                className="h-8 w-8 text-slate-500 hover:text-violet-600"
+                                title="Duplicar curso como plantilla"
+                                onClick={() => setDuplicateDialogCourse(course)}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 className="h-8 w-8 text-slate-500 hover:text-red-500"
                                 title="Enviar email grupal"
                                 onClick={() => handleEmailClick(course)}
@@ -1507,7 +1544,80 @@ export default function CoursesPage() {
         </Dialog>
 
         {/* Dialogs */}
+
+        {/* Dialog: Confirmar Duplicado de Curso */}
+        <Dialog open={!!duplicateDialogCourse} onOpenChange={(open) => { if (!open) setDuplicateDialogCourse(null) }}>
+          <DialogContent className="sm:max-w-[460px] p-0 overflow-hidden border-none shadow-2xl">
+            <DialogHeader className="p-6 bg-violet-50/60 border-b border-violet-100">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-violet-100 border border-violet-200 flex items-center justify-center text-violet-700">
+                  <Copy className="h-5 w-5" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold text-slate-900">Duplicar Curso</DialogTitle>
+                  <DialogDescription className="text-slate-600 text-xs mt-0.5">
+                    Crear una copia como borrador para usar de plantilla
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="p-6 space-y-4 bg-white">
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+                <div className="flex items-start gap-2.5">
+                  <BookOpen className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Curso original</p>
+                    <p className="text-sm font-bold text-slate-900 leading-snug">{duplicateDialogCourse?.title}</p>
+                    <p className="text-[11px] font-mono text-slate-500 mt-0.5">{duplicateDialogCourse?.code}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-violet-50/50 border border-violet-200 rounded-xl space-y-2 text-xs text-slate-700 leading-relaxed">
+                <p className="font-bold text-violet-800 text-sm">¿Qué incluye la copia?</p>
+                <ul className="space-y-1 text-slate-600">
+                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" /> Título, descripción, nivel y módulos</li>
+                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" /> Precios, duración y parámetros de pago</li>
+                  <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-600 shrink-0" /> Descripción pública, beneficios y características</li>
+                  <li className="flex items-center gap-1.5 text-slate-400"><span className="text-slate-400 font-bold text-[13px] leading-none mr-0.5">—</span> Sin fechas de inicio / fin (para configurar)</li>
+                  <li className="flex items-center gap-1.5 text-slate-400"><span className="text-slate-400 font-bold text-[13px] leading-none mr-0.5">—</span> Sin alumnos ni matrículas</li>
+                  <li className="flex items-center gap-1.5 text-slate-400"><span className="text-slate-400 font-bold text-[13px] leading-none mr-0.5">—</span> Se crea como <b className="text-slate-600">borrador (inactivo)</b></li>
+                </ul>
+              </div>
+
+              <p className="text-xs text-slate-500 text-center">
+                Al confirmar, se abrirá el formulario de edición del nuevo curso para que puedas ajustarlo antes de publicarlo.
+              </p>
+            </div>
+
+            <DialogFooter className="p-4 bg-slate-50 border-t flex items-center justify-end gap-2 shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDuplicateDialogCourse(null)}
+                className="h-10 text-xs font-bold"
+                disabled={isDuplicating}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleDuplicateCourse}
+                disabled={isDuplicating}
+                className="h-10 px-5 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md"
+              >
+                {isDuplicating
+                  ? <><Loader2 className="h-4 w-4 animate-spin mr-1.5" />Duplicando...</>
+                  : <><Copy className="h-4 w-4 mr-1.5" />Crear Copia</>
+                }
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+
           <DialogContent className="sm:max-w-[700px] border-none shadow-2xl overflow-hidden p-0 max-h-[95vh] flex flex-col">
             {selectedCourse && (
               <>
