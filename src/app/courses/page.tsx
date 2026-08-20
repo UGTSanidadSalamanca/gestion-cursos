@@ -200,6 +200,24 @@ export default function CoursesPage() {
   const [duplicateDialogCourse, setDuplicateDialogCourse] = useState<Course | null>(null)
   const [isDuplicating, setIsDuplicating] = useState(false)
 
+  const getPaymentFrequencyLabel = (freq?: string, short = false) => {
+    if (!freq) return ''
+    switch (freq) {
+      case 'SINGLE': return short ? 'P. Único' : 'Pago Único'
+      case '2_PAYMENTS': return short ? '2 Pagos' : '2 Pagos (Fraccionado)'
+      case '3_PAYMENTS': return short ? '3 Pagos' : '3 Pagos (Fraccionado)'
+      case '4_PAYMENTS': return short ? '4 Pagos' : '4 Pagos (Fraccionado)'
+      case '5_PAYMENTS': return short ? '5 Pagos' : '5 Pagos (Fraccionado)'
+      case '6_PAYMENTS': return short ? '6 Pagos' : '6 Pagos (Fraccionado)'
+      case 'MONTHLY': return short ? 'Mensual' : 'Mensual'
+      case 'BIMONTHLY': return short ? 'Bimestral' : 'Bimestral'
+      case 'TRIMESTER': return short ? 'Trimestral' : 'Trimestral'
+      case 'SEMESTER': return short ? 'Semestral' : 'Semestral'
+      case 'ANNUAL': return short ? 'Anual' : 'Anual'
+      default: return freq
+    }
+  }
+
   const fetchCourses = async () => {
     setLoading(true)
     try {
@@ -946,13 +964,21 @@ export default function CoursesPage() {
                               </SelectContent>
                             </Select>
                             <Select value={courseFormData.paymentFrequency} onValueChange={(value) => setCourseFormData({ ...courseFormData, paymentFrequency: value })}>
-                              <SelectTrigger className="w-[120px] bg-slate-50 border-slate-200 h-11">
-                                <SelectValue placeholder="Frecuencia" />
+                              <SelectTrigger className="w-[130px] bg-slate-50 border-slate-200 h-11">
+                                <SelectValue placeholder="Forma / Plazos" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="MONTHLY">Mensual</SelectItem>
-                                <SelectItem value="TRIMESTER">Trimestral</SelectItem>
                                 <SelectItem value="SINGLE">Pago Único</SelectItem>
+                                <SelectItem value="2_PAYMENTS">2 Pagos</SelectItem>
+                                <SelectItem value="3_PAYMENTS">3 Pagos</SelectItem>
+                                <SelectItem value="4_PAYMENTS">4 Pagos</SelectItem>
+                                <SelectItem value="5_PAYMENTS">5 Pagos</SelectItem>
+                                <SelectItem value="6_PAYMENTS">6 Pagos</SelectItem>
+                                <SelectItem value="MONTHLY">Mensual</SelectItem>
+                                <SelectItem value="BIMONTHLY">Bimestral</SelectItem>
+                                <SelectItem value="TRIMESTER">Trimestral</SelectItem>
+                                <SelectItem value="SEMESTER">Semestral</SelectItem>
+                                <SelectItem value="ANNUAL">Anual</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1351,15 +1377,13 @@ export default function CoursesPage() {
                               ) : (
                                 <span className="text-[10px] text-slate-400 italic">Afi: Consultar</span>
                               )}
-                              {(course.price || course.affiliatePrice) && course.priceUnit && (
+                              {(course.price || course.affiliatePrice) && (
                                 <span className="text-[9px] text-slate-500 font-normal uppercase tracking-tighter">
                                   {course.priceUnit === 'MONTH' ? 'p/ Mes' :
                                     course.priceUnit === 'SESSION' ? 'p/ Sesión' :
                                       course.priceUnit === 'TRIMESTER' ? 'p/ Trimestre' :
                                         course.priceUnit === 'YEAR' ? 'p/ Año' : ''}
-                                  {course.paymentFrequency === 'TRIMESTER' && ' (Trim.)'}
-                                  {course.paymentFrequency === 'MONTHLY' && ' (Mens.)'}
-                                  {course.paymentFrequency === 'SINGLE' && ' (P. Único)'}
+                                  {course.paymentFrequency && ` (${getPaymentFrequencyLabel(course.paymentFrequency, true)})`}
                                 </span>
                               )}
                             </div>
@@ -1668,9 +1692,7 @@ export default function CoursesPage() {
                                     selectedCourse.priceUnit === 'MONTH' ? '/ Mes' :
                                       selectedCourse.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
                                         selectedCourse.priceUnit === 'YEAR' ? '/ Año' : ''}
-                                {selectedCourse.paymentFrequency === 'TRIMESTER' && ' (Trimestral)'}
-                                {selectedCourse.paymentFrequency === 'MONTHLY' && ' (Mensual)'}
-                                {selectedCourse.paymentFrequency === 'SINGLE' && ' (Pago Único)'}
+                                {selectedCourse.paymentFrequency && ` (${getPaymentFrequencyLabel(selectedCourse.paymentFrequency)})`}
                               </span>
                             )}
                           </span>
@@ -1689,9 +1711,7 @@ export default function CoursesPage() {
                                     selectedCourse.priceUnit === 'MONTH' ? '/ Mes' :
                                       selectedCourse.priceUnit === 'TRIMESTER' ? '/ Trimestre' :
                                         selectedCourse.priceUnit === 'YEAR' ? '/ Año' : ''}
-                                {selectedCourse.paymentFrequency === 'TRIMESTER' && ' (Trimestral)'}
-                                {selectedCourse.paymentFrequency === 'MONTHLY' && ' (Mensual)'}
-                                {selectedCourse.paymentFrequency === 'SINGLE' && ' (Pago Único)'}
+                                {selectedCourse.paymentFrequency && ` (${getPaymentFrequencyLabel(selectedCourse.paymentFrequency)})`}
                               </span>
                             )}
                           </span>
@@ -2020,13 +2040,21 @@ export default function CoursesPage() {
                           </SelectContent>
                         </Select>
                         <Select value={courseFormData.paymentFrequency} onValueChange={(value) => setCourseFormData({ ...courseFormData, paymentFrequency: value })}>
-                          <SelectTrigger className="w-[120px] bg-slate-50 border-slate-200 h-11">
-                            <SelectValue placeholder="Frecuencia" />
+                          <SelectTrigger className="w-[130px] bg-slate-50 border-slate-200 h-11">
+                            <SelectValue placeholder="Forma / Plazos" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="MONTHLY">Mensual</SelectItem>
-                            <SelectItem value="TRIMESTER">Trimestral</SelectItem>
                             <SelectItem value="SINGLE">Pago Único</SelectItem>
+                            <SelectItem value="2_PAYMENTS">2 Pagos</SelectItem>
+                            <SelectItem value="3_PAYMENTS">3 Pagos</SelectItem>
+                            <SelectItem value="4_PAYMENTS">4 Pagos</SelectItem>
+                            <SelectItem value="5_PAYMENTS">5 Pagos</SelectItem>
+                            <SelectItem value="6_PAYMENTS">6 Pagos</SelectItem>
+                            <SelectItem value="MONTHLY">Mensual</SelectItem>
+                            <SelectItem value="BIMONTHLY">Bimestral</SelectItem>
+                            <SelectItem value="TRIMESTER">Trimestral</SelectItem>
+                            <SelectItem value="SEMESTER">Semestral</SelectItem>
+                            <SelectItem value="ANNUAL">Anual</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

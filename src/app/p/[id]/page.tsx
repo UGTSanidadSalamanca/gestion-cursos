@@ -217,10 +217,20 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
 
     const getFrequencyLabel = (frequency?: string) => {
         if (!frequency) return '';
-        if (frequency === 'TRIMESTER') return 'Pago trimestral';
-        if (frequency === 'MONTHLY') return 'Pago mensual';
-        if (frequency === 'SINGLE') return 'Pago único';
-        return frequency;
+        switch (frequency) {
+            case 'SINGLE': return 'Pago único';
+            case '2_PAYMENTS': return 'En 2 pagos (fraccionado)';
+            case '3_PAYMENTS': return 'En 3 pagos (fraccionado)';
+            case '4_PAYMENTS': return 'En 4 pagos (fraccionado)';
+            case '5_PAYMENTS': return 'En 5 pagos (fraccionado)';
+            case '6_PAYMENTS': return 'En 6 pagos (fraccionado)';
+            case 'MONTHLY': return 'Pago mensual';
+            case 'BIMONTHLY': return 'Pago bimestral';
+            case 'TRIMESTER': return 'Pago trimestral';
+            case 'SEMESTER': return 'Pago semestral';
+            case 'ANNUAL': return 'Pago anual';
+            default: return frequency;
+        }
     }
 
     const getSpanishSchedule = (schedule: any, startDate?: string) => {
