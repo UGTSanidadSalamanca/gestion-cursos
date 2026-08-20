@@ -233,6 +233,30 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
         }
     }
 
+    const getFractionInfo = (price?: number | null, frequency?: string) => {
+        if (!price || price <= 0) return null;
+        let count = 0;
+        if (frequency === '2_PAYMENTS') count = 2;
+        else if (frequency === '3_PAYMENTS') count = 3;
+        else if (frequency === '4_PAYMENTS') count = 4;
+        else if (frequency === '5_PAYMENTS') count = 5;
+        else if (frequency === '6_PAYMENTS') count = 6;
+
+        if (count > 0) {
+            const installmentPrice = price / count;
+            return {
+                isFractioned: true,
+                count,
+                installmentPrice,
+                totalPrice: price,
+                mainDisplay: `€${installmentPrice.toFixed(2)}`,
+                perInstallmentText: `por cuota (${count} pagos)`,
+                totalText: `Total del curso: €${price.toFixed(2)} (${count} plazos de €${installmentPrice.toFixed(2)})`
+            };
+        }
+        return null;
+    }
+
     const getSpanishSchedule = (schedule: any, startDate?: string) => {
         const dayMap: Record<string, string> = {
             'MONDAY': 'Lunes',
@@ -614,14 +638,34 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                             <Award className="h-3 w-3" /> Tarifa Afiliados UGT
                                         </div>
                                         {course.affiliatePrice && course.affiliatePrice > 0 ? (
-                                            <div className="space-y-0.5">
-                                                <p className="text-3xl sm:text-4xl font-black text-emerald-700 tracking-tight">
-                                                    €{course.affiliatePrice.toFixed(2)}
-                                                </p>
-                                                <p className="text-xs font-semibold text-emerald-800/80">
-                                                    {[getPriceUnitLabel(course.priceUnit), getFrequencyLabel(course.paymentFrequency)].filter(Boolean).join(' · ') || 'Precio total'}
-                                                </p>
-                                            </div>
+                                            (() => {
+                                                const frac = getFractionInfo(course.affiliatePrice, course.paymentFrequency);
+                                                if (frac) {
+                                                    return (
+                                                        <div className="space-y-1">
+                                                            <p className="text-3xl sm:text-4xl font-black text-emerald-700 tracking-tight">
+                                                                {frac.mainDisplay} <span className="text-xs font-bold text-emerald-800">/ plazo</span>
+                                                            </p>
+                                                            <div className="inline-block px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-900 text-[11px] font-bold">
+                                                                {frac.count} plazos de {frac.mainDisplay}
+                                                            </div>
+                                                            <p className="text-[11px] font-semibold text-emerald-800/80 pt-0.5">
+                                                                Total del curso: €{frac.totalPrice.toFixed(2)}
+                                                            </p>
+                                                        </div>
+                                                    );
+                                                }
+                                                return (
+                                                    <div className="space-y-0.5">
+                                                        <p className="text-3xl sm:text-4xl font-black text-emerald-700 tracking-tight">
+                                                            €{course.affiliatePrice.toFixed(2)}
+                                                        </p>
+                                                        <p className="text-xs font-semibold text-emerald-800/80">
+                                                            {[getPriceUnitLabel(course.priceUnit), getFrequencyLabel(course.paymentFrequency)].filter(Boolean).join(' · ') || 'Precio total'}
+                                                        </p>
+                                                    </div>
+                                                );
+                                            })()
                                         ) : (
                                             <p className="text-base font-bold text-slate-500 py-1 italic">Consultar precio</p>
                                         )}
@@ -633,14 +677,31 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                             Precio General (No Afiliados)
                                         </p>
                                         {course.price && course.price > 0 ? (
-                                            <div className="space-y-0.5">
-                                                <p className="text-2xl font-black text-slate-900 tracking-tight">
-                                                    €{course.price.toFixed(2)}
-                                                </p>
-                                                <p className="text-xs font-medium text-slate-500">
-                                                    {[getPriceUnitLabel(course.priceUnit), getFrequencyLabel(course.paymentFrequency)].filter(Boolean).join(' · ') || 'Precio total'}
-                                                </p>
-                                            </div>
+                                            (() => {
+                                                const frac = getFractionInfo(course.price, course.paymentFrequency);
+                                                if (frac) {
+                                                    return (
+                                                        <div className="space-y-1">
+                                                            <p className="text-2xl font-black text-slate-900 tracking-tight">
+                                                                {frac.mainDisplay} <span className="text-xs font-medium text-slate-500">/ plazo</span>
+                                                            </p>
+                                                            <p className="text-xs font-medium text-slate-600">
+                                                                Total: €{frac.totalPrice.toFixed(2)} ({frac.count} plazos de {frac.mainDisplay})
+                                                            </p>
+                                                        </div>
+                                                    );
+                                                }
+                                                return (
+                                                    <div className="space-y-0.5">
+                                                        <p className="text-2xl font-black text-slate-900 tracking-tight">
+                                                            €{course.price.toFixed(2)}
+                                                        </p>
+                                                        <p className="text-xs font-medium text-slate-500">
+                                                            {[getPriceUnitLabel(course.priceUnit), getFrequencyLabel(course.paymentFrequency)].filter(Boolean).join(' · ') || 'Precio total'}
+                                                        </p>
+                                                    </div>
+                                                );
+                                            })()
                                         ) : (
                                             <p className="text-sm font-bold text-slate-400 py-0.5 italic">Consultar</p>
                                         )}
@@ -809,14 +870,35 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                         <Euro className="h-3 w-3" /> Importe a transferir
                                                                     </p>
                                                                     <div className="bg-red-50 rounded-xl border border-red-100 p-2.5 text-center">
-                                                                        <p className="text-xl font-black text-red-700">
-                                                                            {formData.isAffiliated
-                                                                                ? (course.affiliatePrice ? `${course.affiliatePrice.toFixed(2)}€` : 'Por consultar')
-                                                                                : (course.price ? `${course.price.toFixed(2)}€` : 'Por consultar')}
-                                                                        </p>
-                                                                        <p className="text-[10px] font-semibold text-red-600 mt-0.5">
-                                                                            Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}
-                                                                        </p>
+                                                                        {(() => {
+                                                                            const activePrice = formData.isAffiliated ? course.affiliatePrice : course.price;
+                                                                            const frac = getFractionInfo(activePrice, course.paymentFrequency);
+                                                                            if (frac) {
+                                                                                return (
+                                                                                    <>
+                                                                                        <p className="text-2xl font-black text-red-700">
+                                                                                            {frac.mainDisplay}
+                                                                                            <span className="text-xs font-bold text-red-500 ml-1">
+                                                                                                (1.er Plazo de {frac.count})
+                                                                                            </span>
+                                                                                        </p>
+                                                                                        <p className="text-[10px] font-semibold text-red-600 mt-0.5">
+                                                                                            Total: €{frac.totalPrice.toFixed(2)} en {frac.count} cuotas · Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}
+                                                                                        </p>
+                                                                                    </>
+                                                                                );
+                                                                            }
+                                                                            return (
+                                                                                <>
+                                                                                    <p className="text-xl font-black text-red-700">
+                                                                                        {activePrice ? `€${activePrice.toFixed(2)}` : 'Por consultar'}
+                                                                                    </p>
+                                                                                    <p className="text-[10px] font-semibold text-red-600 mt-0.5">
+                                                                                        Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}
+                                                                                    </p>
+                                                                                </>
+                                                                            );
+                                                                        })()}
                                                                     </div>
                                                                 </div>
                                                                 <div className="space-y-1">

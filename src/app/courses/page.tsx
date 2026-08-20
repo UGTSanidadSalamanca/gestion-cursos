@@ -990,6 +990,28 @@ export default function CoursesPage() {
                         <div className="space-y-2 col-span-1 md:col-span-1">
                           {/* Campo teacherId eliminado para favorecer docentes por módulo */}
                         </div>
+                        {(() => {
+                          const count = courseFormData.paymentFrequency === '2_PAYMENTS' ? 2 :
+                            courseFormData.paymentFrequency === '3_PAYMENTS' ? 3 :
+                              courseFormData.paymentFrequency === '4_PAYMENTS' ? 4 :
+                                courseFormData.paymentFrequency === '5_PAYMENTS' ? 5 :
+                                  courseFormData.paymentFrequency === '6_PAYMENTS' ? 6 : 0;
+                          if (count > 0) {
+                            const genPrice = parseFloat(courseFormData.price) || 0;
+                            const afiPrice = parseFloat(courseFormData.affiliatePrice) || 0;
+                            return (
+                              <div className="col-span-1 md:col-span-4 p-3 bg-violet-50/70 border border-violet-200/80 rounded-xl text-xs text-violet-900 flex items-center gap-2">
+                                <span className="font-bold">ℹ️ Desglose automático de cuotas:</span>
+                                <span>
+                                  {count} plazos de {afiPrice > 0 ? `€${(afiPrice / count).toFixed(2)} (Afiliados)` : ''}
+                                  {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
+                                  {genPrice > 0 ? `€${(genPrice / count).toFixed(2)} (General)` : ''}
+                                </span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
 
@@ -2069,6 +2091,28 @@ export default function CoursesPage() {
                     </div>
                     <div className="space-y-2">
                     </div>
+                    {(() => {
+                      const count = courseFormData.paymentFrequency === '2_PAYMENTS' ? 2 :
+                        courseFormData.paymentFrequency === '3_PAYMENTS' ? 3 :
+                          courseFormData.paymentFrequency === '4_PAYMENTS' ? 4 :
+                            courseFormData.paymentFrequency === '5_PAYMENTS' ? 5 :
+                              courseFormData.paymentFrequency === '6_PAYMENTS' ? 6 : 0;
+                      if (count > 0) {
+                        const genPrice = parseFloat(courseFormData.price) || 0;
+                        const afiPrice = parseFloat(courseFormData.affiliatePrice) || 0;
+                        return (
+                          <div className="col-span-1 md:col-span-4 p-3 bg-violet-50/70 border border-violet-200/80 rounded-xl text-xs text-violet-900 flex items-center gap-2">
+                            <span className="font-bold">ℹ️ Desglose automático de cuotas:</span>
+                            <span>
+                              {count} plazos de {afiPrice > 0 ? `€${(afiPrice / count).toFixed(2)} (Afiliados)` : ''}
+                              {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
+                              {genPrice > 0 ? `€${(genPrice / count).toFixed(2)} (General)` : ''}
+                            </span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                 </div>
 
