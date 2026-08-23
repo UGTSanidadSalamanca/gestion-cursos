@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
       callUrl,
       hasCertificate,
       hasMaterials,
+      availableForNonMembers = true,
       modules = [],
       schedules = []
     } = body
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
         callUrl,
         hasCertificate: hasCertificate !== undefined ? hasCertificate : true,
         hasMaterials: hasMaterials !== undefined ? hasMaterials : true,
+        availableForNonMembers: availableForNonMembers !== undefined ? availableForNonMembers : true,
         modules: {
           deleteMany: {},
           create: modules.map((m: any) => ({
@@ -155,6 +157,7 @@ export async function POST(request: NextRequest) {
         callUrl,
         hasCertificate: hasCertificate !== undefined ? hasCertificate : true,
         hasMaterials: hasMaterials !== undefined ? hasMaterials : true,
+        availableForNonMembers: availableForNonMembers !== undefined ? availableForNonMembers : true,
         modules: {
           create: modules.map((m: any) => ({
             title: m.title,

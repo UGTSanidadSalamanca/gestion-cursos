@@ -32,7 +32,7 @@ export async function GET(
                 callUrl: true,
                 hasCertificate: true,
                 hasMaterials: true,
-                hasMaterials: true,
+                availableForNonMembers: true,
                 modules: {
                     select: {
                         title: true,

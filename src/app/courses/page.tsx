@@ -89,6 +89,7 @@ interface Course {
   callUrl?: string
   hasCertificate: boolean
   hasMaterials: boolean
+  availableForNonMembers: boolean
   modules?: CourseModule[]
   enrollments?: {
     id: string
@@ -169,6 +170,7 @@ export default function CoursesPage() {
     isActive: true,
     hasCertificate: true,
     hasMaterials: true,
+    availableForNonMembers: true,
     maxStudents: '30',
     modules: [] as { title: string; description: string; teacherId: string }[],
     schedules: [] as { dayOfWeek: string; startTime: string; endTime: string; classroom: string; teacherId: string }[]
@@ -520,6 +522,7 @@ export default function CoursesPage() {
       isActive: true,
       hasCertificate: true,
       hasMaterials: true,
+      availableForNonMembers: true,
       maxStudents: '30',
       modules: [],
       schedules: []
@@ -571,6 +574,7 @@ export default function CoursesPage() {
       isActive: course.isActive,
       hasCertificate: course.hasCertificate ?? true,
       hasMaterials: course.hasMaterials ?? true,
+      availableForNonMembers: course.availableForNonMembers ?? true,
       maxStudents: (course.maxStudents || 0).toString(),
       modules: (course.modules || []).map(m => ({
         title: m.title || '',
@@ -987,8 +991,25 @@ export default function CoursesPage() {
                           <Label htmlFor="affiliatePrice" className="text-xs font-bold text-green-600 uppercase">Precio Afiliado (€)</Label>
                           <Input id="affiliatePrice" type="number" step="0.01" value={courseFormData.affiliatePrice} onChange={(e) => setCourseFormData({ ...courseFormData, affiliatePrice: e.target.value })} className="bg-green-50/30 border-green-100 h-11 font-bold text-green-700" />
                         </div>
-                        <div className="space-y-2 col-span-1 md:col-span-1">
-                          {/* Campo teacherId eliminado para favorecer docentes por módulo */}
+                        {/* Toggle: Disponible para no afiliados */}
+                        <div className="col-span-1 md:col-span-4">
+                          <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div>
+                              <Label className="text-xs font-bold text-slate-700 uppercase">Disponible para no afiliados</Label>
+                              <p className="text-[11px] text-slate-500 mt-0.5">Si se desactiva, la landing mostrará información de afiliación en lugar del precio general.</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setCourseFormData({ ...courseFormData, availableForNonMembers: !courseFormData.availableForNonMembers })}
+                              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+                                courseFormData.availableForNonMembers ? 'bg-emerald-500' : 'bg-slate-300'
+                              }`}
+                            >
+                              <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                                courseFormData.availableForNonMembers ? 'translate-x-5' : 'translate-x-0'
+                              }`} />
+                            </button>
+                          </div>
                         </div>
                         {(() => {
                           const count = courseFormData.paymentFrequency === '2_PAYMENTS' ? 2 :
@@ -2084,6 +2105,26 @@ export default function CoursesPage() {
                     <div className="space-y-2">
                       <Label htmlFor="edit-affiliatePrice" className="text-xs font-bold text-green-600 uppercase">Precio Afiliado (€)</Label>
                       <Input id="edit-affiliatePrice" type="number" step="0.01" value={courseFormData.affiliatePrice} onChange={(e) => setCourseFormData({ ...courseFormData, affiliatePrice: e.target.value })} className="bg-green-50/30 border-green-100 h-11 font-bold text-green-700" />
+                    </div>
+                    {/* Toggle: Disponible para no afiliados (edit) */}
+                    <div className="col-span-1 md:col-span-4">
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <div>
+                          <Label className="text-xs font-bold text-slate-700 uppercase">Disponible para no afiliados</Label>
+                          <p className="text-[11px] text-slate-500 mt-0.5">Si se desactiva, la landing mostrará información de afiliación en lugar del precio general.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setCourseFormData({ ...courseFormData, availableForNonMembers: !courseFormData.availableForNonMembers })}
+                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+                            courseFormData.availableForNonMembers ? 'bg-emerald-500' : 'bg-slate-300'
+                          }`}
+                        >
+                          <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                            courseFormData.availableForNonMembers ? 'translate-x-5' : 'translate-x-0'
+                          }`} />
+                        </button>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="edit-maxStudents" className="text-xs font-bold text-slate-500 uppercase">Cupo Máximo</Label>

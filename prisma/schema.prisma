@@ -116,8 +116,9 @@ model Course {
   durationSessions  Int?
   sessionDuration   Float?
   syllabusUrl       String?
-  priceUnit         String?
-  paymentFrequency  String?
+  priceUnit                String?
+  paymentFrequency         String?
+  availableForNonMembers   Boolean          @default(true)
   materials         CourseMaterial[]
   modules           CourseModule[]
   enrollments       Enrollment[]

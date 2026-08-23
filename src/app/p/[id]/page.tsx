@@ -58,6 +58,7 @@ interface PublicCourse {
     callUrl?: string
     hasCertificate?: boolean
     hasMaterials?: boolean
+    availableForNonMembers?: boolean
     modules?: {
         title: string
         description?: string
@@ -684,11 +685,13 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                     </div>
 
                                     {/* Precio General (solo si existe o si no hay precio de afiliados) */}
-                                    <div className={`p-3.5 rounded-2xl border text-center ${course.price && course.price > 0 ? 'bg-slate-50 border-slate-200/70' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
+                                    <div className={`p-3.5 rounded-2xl border text-center ${course.price && course.price > 0 && course.availableForNonMembers !== false ? 'bg-slate-50 border-slate-200/70' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
                                         <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
                                             Precio General (No Afiliados)
                                         </p>
-                                        {course.price && course.price > 0 ? (
+                                        {course.availableForNonMembers === false ? (
+                                            <p className="text-sm font-bold text-slate-400 py-0.5 italic">Consultar</p>
+                                        ) : course.price && course.price > 0 ? (
                                             (() => {
                                                 const frac = getFractionInfo(course.price, course.paymentFrequency);
                                                 if (frac) {
@@ -718,7 +721,47 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                             <p className="text-sm font-bold text-slate-400 py-0.5 italic">Consultar</p>
                                         )}
                                     </div>
-                                </div>
+
+                                    {/* Panel de afiliación — solo si el curso no está disponible para no afiliados */}
+                                    {course.availableForNonMembers === false && (
+                                        <div className="p-4 rounded-2xl border border-red-100 bg-red-50/60 space-y-3">
+                                            <div className="flex items-start gap-2.5">
+                                                <div className="h-8 w-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                                                    <Award className="h-4 w-4" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black text-red-900 leading-snug">
+                                                        Programa orientado a afiliados UGT
+                                                    </p>
+                                                    <p className="text-[11px] text-red-700 mt-0.5 leading-snug">
+                                                        Para acceder a las tarifas especiales y participar en este programa, necesitas estar afiliado/a a UGT.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <a
+                                                href="https://ugt-sp.es/afiliate/"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-colors"
+                                            >
+                                                <ExternalLink className="h-3.5 w-3.5" />
+                                                Afíliate a UGT
+                                            </a>
+                                            <div className="pt-1 border-t border-red-100 space-y-1.5">
+                                                <p className="text-[10px] font-black text-red-800 uppercase tracking-wider">¿Tienes dudas? Contacta con nosotros</p>
+                                                <a href="tel:923271947" className="flex items-center gap-1.5 text-[11px] font-semibold text-red-700 hover:text-red-900 transition-colors">
+                                                    <Phone className="h-3.5 w-3.5 shrink-0" />
+                                                    923 271 947
+                                                </a>
+                                                <a href="mailto:ugt@salamanca.ugt.org" className="flex items-center gap-1.5 text-[11px] font-semibold text-red-700 hover:text-red-900 transition-colors">
+                                                    <Mail className="h-3.5 w-3.5 shrink-0" />
+                                                    ugt@salamanca.ugt.org
+                                                </a>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                </div>{/* end space-y-3 precios */}
 
                                 {/* Características / Incluye */}
                                 <div className="space-y-2.5 pt-2 border-t border-slate-100 text-xs text-slate-600 font-medium">
