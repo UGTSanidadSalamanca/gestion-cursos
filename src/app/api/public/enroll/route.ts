@@ -15,8 +15,13 @@ export async function POST(request: NextRequest) {
     const { name, email, phone, dni, isAffiliated, courseId } = body
 
     try {
-        if (!name || !dni || !courseId) {
-            return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
+        if (!name || !dni || !email || !courseId) {
+            return NextResponse.json({ error: 'Faltan campos obligatorios: Nombre, DNI y Correo Electrónico son requeridos' }, { status: 400 })
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(email.trim())) {
+            return NextResponse.json({ error: 'El formato del correo electrónico no es válido' }, { status: 400 })
         }
 
         // 0. Verificar si el curso existe, está activo y no está vencido

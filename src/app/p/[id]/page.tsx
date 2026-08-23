@@ -158,6 +158,11 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
         e.preventDefault()
         if (!course) return
 
+        if (!formData.email || !formData.email.trim()) {
+            toast.error("Por favor, introduce tu correo electrónico.")
+            return
+        }
+
         if (!formData.acceptedPrivacy) {
             toast.error("Debes aceptar la política de privacidad y protección de datos para continuar.")
             return
@@ -824,22 +829,47 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                         <Input required className="pl-10 h-11 bg-slate-50 border-slate-200 rounded-xl" placeholder="12345678X" value={formData.dni} onChange={e => setFormData({ ...formData, dni: e.target.value })} />
                                                                     </div>
                                                                 </div>
-                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                                    <div className="space-y-1.5">
-                                                                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Teléfono</Label>
-                                                                        <div className="relative">
-                                                                            <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                                                                            <Input className="pl-10 h-11 bg-slate-50 border-slate-200 rounded-xl" placeholder="600000000" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
-                                                                        </div>
+                                                                <div className="space-y-1.5">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                                                                            Correo Electrónico *
+                                                                        </Label>
+                                                                        <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100 flex items-center gap-1">
+                                                                            <Sparkles className="h-2.5 w-2.5 text-red-500" /> Preferiblemente @gmail.com
+                                                                        </span>
                                                                     </div>
-                                                                    <div className="space-y-1.5">
-                                                                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Email</Label>
-                                                                        <div className="relative">
-                                                                            <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                                                                            <Input className="pl-10 h-11 bg-slate-50 border-slate-200 rounded-xl" type="email" placeholder="email@ejemplo.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                                                                    <div className="relative">
+                                                                        <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                                                        <Input
+                                                                            required
+                                                                            className="pl-10 h-11 bg-slate-50 border-slate-200 rounded-xl"
+                                                                            type="email"
+                                                                            placeholder="ejemplo@gmail.com"
+                                                                            value={formData.email}
+                                                                            onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                                                        />
+                                                                    </div>
+                                                                    <p className="text-[11px] text-slate-500 leading-tight">
+                                                                        Te aconsejamos indicar una cuenta de <strong className="text-slate-700">Gmail</strong> para facilitarte el acceso directo al aula virtual (Google Classroom / Meet) y los materiales docentes.
+                                                                    </p>
+                                                                    {formData.email && formData.email.includes('@') && !formData.email.toLowerCase().includes('@gmail.com') && (
+                                                                        <div className="p-2.5 bg-amber-50/90 border border-amber-200/90 rounded-xl flex items-start gap-2 text-[11px] text-amber-900">
+                                                                            <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                                                                            <p className="leading-snug">
+                                                                                <strong>Nota informativa:</strong> Si dispones de cuenta <span className="underline font-semibold">@gmail.com</span>, te recomendamos utilizarla para que tu alta en Google Classroom sea inmediata y sin incompatibilidades.
+                                                                            </p>
                                                                         </div>
+                                                                    )}
+                                                                </div>
+
+                                                                <div className="space-y-1.5">
+                                                                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Teléfono de Contacto (Móvil / WhatsApp)</Label>
+                                                                    <div className="relative">
+                                                                        <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                                                        <Input className="pl-10 h-11 bg-slate-50 border-slate-200 rounded-xl" placeholder="600000000" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                                                                     </div>
                                                                 </div>
+
                                                                 <div className="p-3.5 bg-red-50/50 rounded-xl border border-red-100 flex items-center space-x-3 select-none">
                                                                     <Checkbox
                                                                         id="is-affiliated"
