@@ -25,7 +25,8 @@ import {
     Layers,
     FileText,
     Sparkles,
-    AlertCircle
+    AlertCircle,
+    Lock
 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -83,7 +84,8 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
         email: '',
         phone: '',
         dni: '',
-        isAffiliated: false
+        isAffiliated: false,
+        acceptedPrivacy: false
     })
 
     useEffect(() => {
@@ -155,6 +157,11 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
     const handleEnroll = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!course) return
+
+        if (!formData.acceptedPrivacy) {
+            toast.error("Debes aceptar la política de privacidad y protección de datos para continuar.")
+            return
+        }
 
         setIsSubmitting(true)
         try {
@@ -775,7 +782,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                 setIsDialogOpen(open)
                                                 if (!open) {
                                                     setShowSuccess(false)
-                                                    setFormData({ name: '', email: '', phone: '', dni: '', isAffiliated: false })
+                                                    setFormData({ name: '', email: '', phone: '', dni: '', isAffiliated: false, acceptedPrivacy: false })
                                                 }
                                             }}>
                                                 <DialogTrigger asChild>
@@ -844,6 +851,53 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                             Soy afiliado/a a UGT
                                                                         </Label>
                                                                         <p className="text-[10px] text-red-600 font-medium">Se aplicará la tarifa bonificada de afiliación.</p>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Cláusula Informativa RGPD / Capa 1 y Consentimiento */}
+                                                                <div className="space-y-2.5 pt-1">
+                                                                    <div className="p-3 bg-slate-50 border border-slate-200/90 rounded-xl text-[11px] text-slate-600 leading-relaxed space-y-1">
+                                                                        <div className="flex items-center gap-1.5 font-bold text-slate-800 text-[11px] mb-0.5">
+                                                                            <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                                                                            <span>Información básica de Protección de Datos (RGPD)</span>
+                                                                        </div>
+                                                                        <p>
+                                                                            <strong className="text-slate-700">Responsable:</strong> Unión General de Trabajadores de Castilla y León (CIF G47317615).
+                                                                        </p>
+                                                                        <p>
+                                                                            <strong className="text-slate-700">Finalidad:</strong> Tramitar y gestionar tu solicitud de pre-inscripción y reserva de plaza en el curso, así como la posterior comunicación formativa.
+                                                                        </p>
+                                                                        <p>
+                                                                            <strong className="text-slate-700">Legitimación:</strong> Tu consentimiento explícito al formalizar este formulario y ejecución de la solicitud.
+                                                                        </p>
+                                                                        <p>
+                                                                            <strong className="text-slate-700">Derechos y DPD:</strong> Tienes derecho a acceder, rectificar y suprimir tus datos en <a href="mailto:dpd@castyleon.ugt.org" className="text-red-600 font-semibold hover:underline">dpd@castyleon.ugt.org</a>.
+                                                                        </p>
+                                                                    </div>
+
+                                                                    <div className="p-3 rounded-xl border border-slate-200 bg-white flex items-start space-x-3 select-none">
+                                                                        <Checkbox
+                                                                            id="accepted-privacy"
+                                                                            required
+                                                                            checked={formData.acceptedPrivacy}
+                                                                            onCheckedChange={(checked) => setFormData({ ...formData, acceptedPrivacy: !!checked })}
+                                                                            className="mt-0.5"
+                                                                        />
+                                                                        <div className="flex-1 text-xs text-slate-700 leading-snug">
+                                                                            <Label htmlFor="accepted-privacy" className="cursor-pointer font-medium text-slate-800">
+                                                                                He leído y acepto la{" "}
+                                                                                <a
+                                                                                    href="https://ugtcyl.es/web/politica-de-privacidad"
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferrer"
+                                                                                    className="text-red-600 font-bold hover:underline inline-flex items-center gap-0.5"
+                                                                                >
+                                                                                    Política de Privacidad y Protección de Datos
+                                                                                    <ExternalLink className="h-3 w-3 inline ml-0.5" />
+                                                                                </a>{" "}
+                                                                                *
+                                                                            </Label>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -919,6 +973,14 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                 </div>
                                                             </div>
 
+                                                            <div className="p-3 bg-emerald-50/80 border border-emerald-150 rounded-xl flex items-start gap-2.5 text-left mb-5">
+                                                                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                                                                <p className="text-[11px] text-emerald-950/85 leading-relaxed">
+                                                                    <strong className="text-emerald-900 font-bold block mb-0.5">Garantía de Confidencialidad y Custodia RGPD</strong>
+                                                                    Los datos de tu reserva están custodiados de forma segura por UGT Castilla y León conforme al RGPD. Puedes consultar la <a href="https://ugtcyl.es/web/politica-de-privacidad" target="_blank" rel="noopener noreferrer" className="text-emerald-800 font-bold underline hover:text-emerald-950">política de privacidad oficial</a>.
+                                                                </p>
+                                                            </div>
+
                                                             <Button onClick={() => setIsDialogOpen(false)} className="w-full h-11 bg-slate-900 hover:bg-black text-white font-bold rounded-xl text-xs">
                                                                 Cerrar y guardar justificante
                                                             </Button>
@@ -965,6 +1027,70 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
 
                 </div>
             </div>
+
+            {/* Footer Institucional con Enlaces y Protección de Datos */}
+            <footer className="mt-16 border-t border-slate-200/80 bg-slate-100/70 py-8 no-print text-slate-600 text-xs">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-slate-200">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-200 shrink-0">
+                                <img
+                                    src="/ugt-logo.png"
+                                    alt="Logo UGT"
+                                    className="h-8 w-auto object-contain"
+                                />
+                            </div>
+                            <div>
+                                <p className="font-extrabold text-slate-800 text-sm uppercase tracking-tight">
+                                    Servicios Públicos UGT Salamanca
+                                </p>
+                                <p className="text-[11px] text-slate-500 font-medium">
+                                    Portal Oficial de Formación y Oposiciones · UGT Castilla y León
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold">
+                            <a
+                                href="https://ugtcyl.es/web/politica-de-privacidad"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-slate-700 hover:text-red-600 flex items-center gap-1.5 transition-colors"
+                            >
+                                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                                Política de Privacidad
+                                <ExternalLink className="h-3 w-3 text-slate-400" />
+                            </a>
+                            <span className="text-slate-300">·</span>
+                            <a
+                                href="https://ugtcyl.es/web/aviso-legal"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-slate-700 hover:text-red-600 flex items-center gap-1.5 transition-colors"
+                            >
+                                Aviso Legal
+                                <ExternalLink className="h-3 w-3 text-slate-400" />
+                            </a>
+                            <span className="text-slate-300">·</span>
+                            <a
+                                href="mailto:dpd@castyleon.ugt.org"
+                                className="text-slate-700 hover:text-red-600 flex items-center gap-1 transition-colors"
+                            >
+                                Contacto DPD: dpd@castyleon.ugt.org
+                            </a>
+                        </div>
+                    </div>
+
+                    <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500 text-center sm:text-left">
+                        <p>
+                            © {currentYear} Unión General de Trabajadores de Castilla y León (UGT-CyL). C/ Gamazo, 13 - 47004 Valladolid (CIF: G47317615).
+                        </p>
+                        <p className="flex items-center justify-center gap-1 text-slate-500 font-medium">
+                            <Lock className="h-3 w-3 text-emerald-600" /> Tratamiento de datos conforme a RGPD y LOPDGDD
+                        </p>
+                    </div>
+                </div>
+            </footer>
         </div>
     )
 }
