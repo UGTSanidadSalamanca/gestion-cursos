@@ -70,6 +70,21 @@ export async function POST(request: NextRequest) {
         })
 
         if (existingEnrollment) {
+            // Si ya existe la matrícula, nos aseguramos de que el contacto esté sincronizado en Google Contacts
+            try {
+                await syncStudentToGoogleContacts({
+                    name,
+                    email,
+                    phone,
+                    dni,
+                    isAffiliated: !!isAffiliated,
+                    courseTitle: existingEnrollment.course.title,
+                    courseCode: existingEnrollment.course.code
+                })
+            } catch (e) {
+                console.error("Error sincronizando alumno existente con Google Contacts:", e)
+            }
+
             return NextResponse.json({
                 message: 'Ya existe una pre-inscripción para este alumno',
                 enrollment: existingEnrollment
