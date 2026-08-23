@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
             }
         })
 
-        // 4. Notificaciones (Interna, Email y Google Contacts) - AWAIT para asegurar envío en Vercel
+        // 4. Notificaciones y Automatizaciones (Ejecución independiente y segura)
         try {
             await NotificationService.create({
                 title: 'Nueva Pre-inscripción Web',
@@ -114,7 +114,11 @@ export async function POST(request: NextRequest) {
                 category: 'STUDENT',
                 actionUrl: '/enrollments'
             })
+        } catch (notifErr) {
+            console.error('Error creando notificación interna:', notifErr)
+        }
 
+        try {
             await notifyNewEnrollment({
                 studentName: name,
                 studentDni: dni,
@@ -125,7 +129,11 @@ export async function POST(request: NextRequest) {
                 price: !!isAffiliated ? enrollment.course.affiliatePrice : enrollment.course.price,
                 priceUnit: enrollment.course.priceUnit
             })
+        } catch (emailErr) {
+            console.error('Error enviando email de nueva inscripción:', emailErr)
+        }
 
+        try {
             // Sincronizar contacto en Google Contacts con etiqueta del curso
             await syncStudentToGoogleContacts({
                 name,
@@ -136,9 +144,8 @@ export async function POST(request: NextRequest) {
                 courseTitle: enrollment.course.title,
                 courseCode: enrollment.course.code
             })
-        } catch (notifyError) {
-            console.error('Error disparando notificaciones o sincronización:', notifyError)
-            // No bloqueamos la respuesta al usuario si fallan las notificaciones
+        } catch (contactsErr) {
+            console.error('Error sincronizando con Google Contacts:', contactsErr)
         }
 
         return NextResponse.json({
