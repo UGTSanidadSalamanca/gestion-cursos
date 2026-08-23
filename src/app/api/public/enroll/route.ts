@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { NotificationService } from '@/lib/notification-service'
 import { notifyNewEnrollment } from '@/lib/email-service'
+import { syncStudentToGoogleContacts } from '@/lib/google-contacts-service'
 import { isCourseExpired } from '@/lib/course-utils'
 
 export async function POST(request: NextRequest) {
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
             }
         })
 
-        // 4. Notificaciones (Interna y Email) - AHORA AWAIT para asegurar envío en Vercel
+        // 4. Notificaciones (Interna, Email y Google Contacts) - AWAIT para asegurar envío en Vercel
         try {
             await NotificationService.create({
                 title: 'Nueva Pre-inscripción Web',
@@ -109,8 +110,19 @@ export async function POST(request: NextRequest) {
                 price: !!isAffiliated ? enrollment.course.affiliatePrice : enrollment.course.price,
                 priceUnit: enrollment.course.priceUnit
             })
+
+            // Sincronizar contacto en Google Contacts con etiqueta del curso
+            await syncStudentToGoogleContacts({
+                name,
+                email,
+                phone,
+                dni,
+                isAffiliated: !!isAffiliated,
+                courseTitle: enrollment.course.title,
+                courseCode: enrollment.course.code
+            })
         } catch (notifyError) {
-            console.error('Error disparando notificaciones:', notifyError)
+            console.error('Error disparando notificaciones o sincronización:', notifyError)
             // No bloqueamos la respuesta al usuario si fallan las notificaciones
         }
 
