@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MainLayout } from "@/components/layout/main-layout"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toast } from "sonner"
 import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
 import { CertificateGenerator } from "@/components/certificates/certificate-generator"
 import {
@@ -32,6 +34,8 @@ interface Enrollment {
   progress: number
   grade?: number
   certificate?: string
+  discountPercentage?: number
+  discountReason?: string
   student: { name: string }
   course: {
     title: string
@@ -289,6 +293,97 @@ export default function EnrollmentsPage() {
                     <Label className="text-sm font-medium text-muted-foreground">Fecha de Matrícula</Label>
                     <p className="font-medium">{new Date(selectedEnrollment.enrollmentDate).toLocaleDateString()}</p>
                   </div>
+                  {selectedEnrollment.discountPercentage && (
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Descuento Aplicado</Label>
+                      <p className="font-medium text-emerald-600">
+                        {selectedEnrollment.discountPercentage}% ({selectedEnrollment.discountReason || 'Sin especificar'})
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Descuentos aplicados */}
+                <div className="p-4 bg-emerald-50/30 rounded-2xl border border-emerald-100/80 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Award className="h-4 w-4 text-emerald-600" />
+                    <Label className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">Descuento Aplicado</Label>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-600">Porcentaje de Descuento</Label>
+                      <Select
+                        value={selectedEnrollment.discountPercentage?.toString() || 'none'}
+                        onValueChange={(val) => {
+                          const percentage = val === 'none' ? undefined : parseInt(val);
+                          setSelectedEnrollment({ ...selectedEnrollment, discountPercentage: percentage });
+                        }}
+                      >
+                        <SelectTrigger className="bg-white border-slate-200">
+                          <SelectValue placeholder="Sin descuento" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Sin descuento (0%)</SelectItem>
+                          {Array.from({ length: 10 }, (_, i) => (i + 1) * 5).map(pct => (
+                            <SelectItem key={pct} value={pct.toString()}>{pct}%</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-600">Motivo del Descuento</Label>
+                      <Select
+                        value={selectedEnrollment.discountReason || 'none'}
+                        onValueChange={(val) => {
+                          const reason = val === 'none' ? undefined : val;
+                          setSelectedEnrollment({ ...selectedEnrollment, discountReason: reason });
+                        }}
+                      >
+                        <SelectTrigger className="bg-white border-slate-200">
+                          <SelectValue placeholder="Selecciona motivo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Sin especificar</SelectItem>
+                          <SelectItem value="Alumno repetidor">Alumno repetidor</SelectItem>
+                          <SelectItem value="Antigüedad de afiliación">Antigüedad de afiliación</SelectItem>
+                          <SelectItem value="Otros conceptos">Otros conceptos</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                      onClick={async () => {
+                        const pct = selectedEnrollment.discountPercentage;
+                        const reason = selectedEnrollment.discountReason;
+                        try {
+                          const res = await fetch(`/api/enrollments/${selectedEnrollment.id}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              discountPercentage: pct === undefined ? null : pct,
+                              discountReason: reason || null
+                            })
+                          })
+                          if (res.ok) {
+                            alert('Descuento actualizado con éxito')
+                            fetchEnrollments()
+                          } else {
+                            alert('Error al actualizar el descuento')
+                          }
+                        } catch (e) {
+                          console.error(e)
+                          alert('Error al actualizar el descuento')
+                        }
+                      }}
+                    >
+                      Guardar Descuento
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Acciones de gestión */}
@@ -408,6 +503,11 @@ export default function EnrollmentsPage() {
                         <div className="flex items-center space-x-2">
                           <h3 className="font-medium">{enrollment.studentName}</h3>
                           {getStatusBadge(enrollment.status)}
+                          {enrollment.discountPercentage && (
+                            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">
+                              -{enrollment.discountPercentage}%
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground">{enrollment.courseName}</p>
                         <p className="text-xs text-muted-foreground">

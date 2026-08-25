@@ -33,6 +33,8 @@ export async function GET(
                 hasCertificate: true,
                 hasMaterials: true,
                 availableForNonMembers: true,
+                hasDiscounts: true,
+                discountDescription: true,
                 modules: {
                     select: {
                         title: true,

@@ -90,6 +90,8 @@ interface Course {
   hasCertificate: boolean
   hasMaterials: boolean
   availableForNonMembers: boolean
+  hasDiscounts?: boolean
+  discountDescription?: string
   modules?: CourseModule[]
   enrollments?: {
     id: string
@@ -171,6 +173,8 @@ export default function CoursesPage() {
     hasCertificate: true,
     hasMaterials: true,
     availableForNonMembers: true,
+    hasDiscounts: false,
+    discountDescription: '',
     maxStudents: '30',
     modules: [] as { title: string; description: string; teacherId: string }[],
     schedules: [] as { dayOfWeek: string; startTime: string; endTime: string; classroom: string; teacherId: string }[]
@@ -523,6 +527,8 @@ export default function CoursesPage() {
       hasCertificate: true,
       hasMaterials: true,
       availableForNonMembers: true,
+      hasDiscounts: false,
+      discountDescription: '',
       maxStudents: '30',
       modules: [],
       schedules: []
@@ -575,6 +581,8 @@ export default function CoursesPage() {
       hasCertificate: course.hasCertificate ?? true,
       hasMaterials: course.hasMaterials ?? true,
       availableForNonMembers: course.availableForNonMembers ?? true,
+      hasDiscounts: course.hasDiscounts ?? false,
+      discountDescription: course.discountDescription || '',
       maxStudents: (course.maxStudents || 0).toString(),
       modules: (course.modules || []).map(m => ({
         title: m.title || '',
@@ -991,6 +999,42 @@ export default function CoursesPage() {
                           <Label htmlFor="affiliatePrice" className="text-xs font-bold text-green-600 uppercase">Precio Afiliado (€)</Label>
                           <Input id="affiliatePrice" type="number" step="0.01" value={courseFormData.affiliatePrice} onChange={(e) => setCourseFormData({ ...courseFormData, affiliatePrice: e.target.value })} className="bg-green-50/30 border-green-100 h-11 font-bold text-green-700" />
                         </div>
+                        {/* Toggle: Activar descuentos */}
+                        <div className="col-span-1 md:col-span-4">
+                          <div className="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-xs font-bold text-slate-700 uppercase">Ofrecer descuentos en este curso</Label>
+                                <p className="text-[11px] text-slate-500 mt-0.5">Si se activa, se anunciará en la landing y se podrá aplicar descuento individual del 5% al 50% por alumno.</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setCourseFormData({ ...courseFormData, hasDiscounts: !courseFormData.hasDiscounts })}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+                                  courseFormData.hasDiscounts ? 'bg-emerald-500' : 'bg-slate-300'
+                                }`}
+                              >
+                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                                  courseFormData.hasDiscounts ? 'translate-x-5' : 'translate-x-0'
+                                }`} />
+                              </button>
+                            </div>
+                            {courseFormData.hasDiscounts && (
+                              <div className="mt-2 space-y-1">
+                                <Label htmlFor="discountDescription" className="text-[10px] font-bold text-slate-500 uppercase">Condiciones / Motivos del Descuento</Label>
+                                <textarea
+                                  id="discountDescription"
+                                  rows={2}
+                                  placeholder="Ej: Descuento para alumnos repetidores, antigüedad de afiliación, etc."
+                                  value={courseFormData.discountDescription}
+                                  onChange={(e) => setCourseFormData({ ...courseFormData, discountDescription: e.target.value })}
+                                  className="w-full text-xs p-2 border border-slate-200 rounded-lg focus:outline-none bg-white"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
                         {/* Toggle: Disponible para no afiliados */}
                         <div className="col-span-1 md:col-span-4">
                           <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
@@ -2106,6 +2150,42 @@ export default function CoursesPage() {
                       <Label htmlFor="edit-affiliatePrice" className="text-xs font-bold text-green-600 uppercase">Precio Afiliado (€)</Label>
                       <Input id="edit-affiliatePrice" type="number" step="0.01" value={courseFormData.affiliatePrice} onChange={(e) => setCourseFormData({ ...courseFormData, affiliatePrice: e.target.value })} className="bg-green-50/30 border-green-100 h-11 font-bold text-green-700" />
                     </div>
+                    {/* Toggle: Activar descuentos (edit) */}
+                    <div className="col-span-1 md:col-span-4">
+                      <div className="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-xs font-bold text-slate-700 uppercase">Ofrecer descuentos en este curso</Label>
+                            <p className="text-[11px] text-slate-500 mt-0.5">Si se activa, se anunciará en la landing y se podrá aplicar descuento individual del 5% al 50% por alumno.</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setCourseFormData({ ...courseFormData, hasDiscounts: !courseFormData.hasDiscounts })}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+                              courseFormData.hasDiscounts ? 'bg-emerald-500' : 'bg-slate-300'
+                            }`}
+                          >
+                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                              courseFormData.hasDiscounts ? 'translate-x-5' : 'translate-x-0'
+                            }`} />
+                          </button>
+                        </div>
+                        {courseFormData.hasDiscounts && (
+                          <div className="mt-2 space-y-1">
+                            <Label htmlFor="edit-discountDescription" className="text-[10px] font-bold text-slate-500 uppercase">Condiciones / Motivos del Descuento</Label>
+                            <textarea
+                              id="edit-discountDescription"
+                              rows={2}
+                              placeholder="Ej: Descuento para alumnos repetidores, antigüedad de afiliación, etc."
+                              value={courseFormData.discountDescription}
+                              onChange={(e) => setCourseFormData({ ...courseFormData, discountDescription: e.target.value })}
+                              className="w-full text-xs p-2 border border-slate-200 rounded-lg focus:outline-none bg-white"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     {/* Toggle: Disponible para no afiliados (edit) */}
                     <div className="col-span-1 md:col-span-4">
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">

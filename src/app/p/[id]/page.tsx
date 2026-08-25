@@ -26,7 +26,9 @@ import {
     FileText,
     Sparkles,
     AlertCircle,
-    Lock
+    Lock,
+    Tag,
+    Percent
 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -59,6 +61,8 @@ interface PublicCourse {
     hasCertificate?: boolean
     hasMaterials?: boolean
     availableForNonMembers?: boolean
+    hasDiscounts?: boolean
+    discountDescription?: string
     modules?: {
         title: string
         description?: string
@@ -86,7 +90,9 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
         phone: '',
         dni: '',
         isAffiliated: false,
-        acceptedPrivacy: false
+        acceptedPrivacy: false,
+        wantsDiscount: false,
+        discountDetails: ''
     })
 
     useEffect(() => {
@@ -761,6 +767,25 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                         </div>
                                     )}
 
+                                    {/* Panel de descuentos aplicables */}
+                                    {course.hasDiscounts && (
+                                        <div className="p-4 rounded-2xl border border-emerald-100 bg-emerald-50/50 space-y-2">
+                                            <div className="flex items-start gap-2.5">
+                                                <div className="h-8 w-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                                    <Percent className="h-4 w-4" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black text-emerald-900 leading-snug">
+                                                        Descuentos especiales disponibles (5% - 50%)
+                                                    </p>
+                                                    <p className="text-[11px] text-emerald-700 mt-0.5 leading-snug">
+                                                        {course.discountDescription || "Descuentos disponibles por haber cursado previamente este programa, antigüedad de afiliación u otros conceptos. Solicítalo al preinscribirte."}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                 </div>{/* end space-y-3 precios */}
 
                                 {/* Características / Incluye */}
@@ -830,7 +855,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                 setIsDialogOpen(open)
                                                 if (!open) {
                                                     setShowSuccess(false)
-                                                    setFormData({ name: '', email: '', phone: '', dni: '', isAffiliated: false, acceptedPrivacy: false })
+                                                    setFormData({ name: '', email: '', phone: '', dni: '', isAffiliated: false, acceptedPrivacy: false, wantsDiscount: false, discountDetails: '' })
                                                 }
                                             }}>
                                                 <DialogTrigger asChild>
@@ -926,6 +951,36 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                         <p className="text-[10px] text-red-600 font-medium">Se aplicará la tarifa bonificada de afiliación.</p>
                                                                     </div>
                                                                 </div>
+
+                                                                {course.hasDiscounts && (
+                                                                    <div className="space-y-3">
+                                                                        <div className="p-3.5 bg-emerald-50/40 rounded-xl border border-emerald-100 flex items-center space-x-3 select-none">
+                                                                            <Checkbox
+                                                                                id="wants-discount"
+                                                                                checked={formData.wantsDiscount}
+                                                                                onCheckedChange={(checked) => setFormData({ ...formData, wantsDiscount: !!checked })}
+                                                                            />
+                                                                            <div className="flex-1 cursor-pointer">
+                                                                                <Label htmlFor="wants-discount" className="text-xs font-bold text-emerald-900 cursor-pointer block">
+                                                                                    Solicitar descuento aplicable (5% - 50%)
+                                                                                </Label>
+                                                                                <p className="text-[10px] text-emerald-700 font-medium">Por ej. haber realizado este curso previamente, antigüedad de afiliación, etc.</p>
+                                                                            </div>
+                                                                        </div>
+                                                                        {formData.wantsDiscount && (
+                                                                            <div className="space-y-1.5">
+                                                                                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Detalles de la solicitud de descuento *</Label>
+                                                                                <Input
+                                                                                    required
+                                                                                    className="h-11 bg-slate-50 border-slate-200 rounded-xl"
+                                                                                    placeholder="Detalla tu caso (ej: Ya cursé el nivel básico, 10 años afiliado...)"
+                                                                                    value={formData.discountDetails}
+                                                                                    onChange={e => setFormData({ ...formData, discountDetails: e.target.value })}
+                                                                                />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                )}
 
                                                                 {/* Cláusula Informativa RGPD / Capa 1 y Consentimiento */}
                                                                 <div className="space-y-2.5 pt-1">

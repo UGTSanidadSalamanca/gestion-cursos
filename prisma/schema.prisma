@@ -119,6 +119,8 @@ model Course {
   priceUnit                String?
   paymentFrequency         String?
   availableForNonMembers   Boolean          @default(true)
+  hasDiscounts             Boolean          @default(false)
+  discountDescription      String?
   materials         CourseMaterial[]
   modules           CourseModule[]
   enrollments       Enrollment[]
@@ -152,6 +154,8 @@ model Enrollment {
   grade          Float?
   certificate    String?
   notes          String?
+  discountPercentage Int?
+  discountReason     String?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)

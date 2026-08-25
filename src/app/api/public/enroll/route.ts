@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Formato de datos inválido' }, { status: 400 })
     }
 
-    const { name, email, phone, dni, isAffiliated, courseId } = body
+    const { name, email, phone, dni, isAffiliated, courseId, wantsDiscount, discountDetails } = body
 
     try {
         if (!name || !dni || !email || !courseId) {
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
                 studentId: student.id,
                 courseId: courseId,
                 status: 'PENDING',
-                notes: `Auto-inscripción web. Afiliado: ${isAffiliated ? 'SÍ' : 'NO'}`
+                notes: `Auto-inscripción web. Afiliado: ${isAffiliated ? 'SÍ' : 'NO'}${wantsDiscount ? ` | SOLICITA DESCUENTO: ${discountDetails || 'Sin especificar'}` : ''}`
             },
             include: {
                 course: true

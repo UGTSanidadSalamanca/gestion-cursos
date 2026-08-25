@@ -98,6 +98,8 @@ export async function PUT(
             hasCertificate,
             hasMaterials,
             availableForNonMembers,
+            hasDiscounts,
+            discountDescription,
             // @ts-ignore
             modules = [],
             // @ts-ignore
@@ -134,6 +136,8 @@ export async function PUT(
                 hasCertificate,
                 hasMaterials,
                 availableForNonMembers: availableForNonMembers !== undefined ? availableForNonMembers : true,
+                hasDiscounts: hasDiscounts !== undefined ? hasDiscounts : false,
+                discountDescription,
                 modules: {
                     deleteMany: {},
                     create: modules.map((m: any) => ({

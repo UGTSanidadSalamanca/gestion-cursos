@@ -28,7 +28,12 @@ export async function GET(request: NextRequest) {
             const studentPayments = enrollment.course.payments.filter(p => p.studentId === enrollment.studentId)
             const paidTotal = studentPayments.reduce((sum, p) => sum + p.amount, 0)
 
-            const price = enrollment.course.price || 0
+            const isAffiliated = enrollment.student.isAffiliated
+            const basePrice = isAffiliated 
+                ? (enrollment.course.affiliatePrice || enrollment.course.price || 0)
+                : (enrollment.course.price || 0)
+            const discountPercentage = enrollment.discountPercentage || 0
+            const price = basePrice * (1 - discountPercentage / 100)
             const priceUnit = enrollment.course.priceUnit?.toUpperCase() || 'MONTH'
             const paymentFrequency = enrollment.course.paymentFrequency?.toUpperCase() || 'MONTHLY'
 

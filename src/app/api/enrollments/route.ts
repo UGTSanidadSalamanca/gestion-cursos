@@ -52,7 +52,9 @@ export async function POST(request: NextRequest) {
       studentId,
       courseId,
       status: body.status || 'ENROLLED',
-      enrollmentDate: body.enrollmentDate ? new Date(body.enrollmentDate) : new Date()
+      enrollmentDate: body.enrollmentDate ? new Date(body.enrollmentDate) : new Date(),
+      discountPercentage: body.discountPercentage !== undefined ? (body.discountPercentage === null ? null : parseInt(body.discountPercentage)) : undefined,
+      discountReason: body.discountReason !== undefined ? body.discountReason : undefined
     }
 
     const enrollment = body.id
