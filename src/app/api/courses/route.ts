@@ -79,9 +79,12 @@ export async function POST(request: NextRequest) {
       availableForNonMembers = true,
       hasDiscounts = false,
       discountDescription,
+      discountRules,
       modules = [],
       schedules = []
     } = body
+
+    const discountRulesStr = discountRules ? (typeof discountRules === 'string' ? discountRules : JSON.stringify(discountRules)) : null
 
     const course = await db.course.upsert({
       where: {
@@ -114,6 +117,7 @@ export async function POST(request: NextRequest) {
         availableForNonMembers: availableForNonMembers !== undefined ? availableForNonMembers : true,
         hasDiscounts: hasDiscounts !== undefined ? hasDiscounts : false,
         discountDescription,
+        discountRules: discountRulesStr,
         modules: {
           deleteMany: {},
           create: modules.map((m: any) => ({
@@ -164,6 +168,7 @@ export async function POST(request: NextRequest) {
         availableForNonMembers: availableForNonMembers !== undefined ? availableForNonMembers : true,
         hasDiscounts: hasDiscounts !== undefined ? hasDiscounts : false,
         discountDescription,
+        discountRules: discountRulesStr,
         modules: {
           create: modules.map((m: any) => ({
             title: m.title,

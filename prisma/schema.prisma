@@ -121,6 +121,7 @@ model Course {
   availableForNonMembers   Boolean          @default(true)
   hasDiscounts             Boolean          @default(false)
   discountDescription      String?
+  discountRules            String?
   materials         CourseMaterial[]
   modules           CourseModule[]
   enrollments       Enrollment[]

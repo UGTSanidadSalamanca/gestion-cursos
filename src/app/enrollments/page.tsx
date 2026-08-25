@@ -340,14 +340,26 @@ export default function EnrollmentsPage() {
                           setSelectedEnrollment({ ...selectedEnrollment, discountReason: reason });
                         }}
                       >
-                        <SelectTrigger className="bg-white border-slate-200">
+                        <SelectTrigger className="bg-white border-slate-200 text-xs">
                           <SelectValue placeholder="Selecciona motivo" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-60">
                           <SelectItem value="none">Sin especificar</SelectItem>
-                          <SelectItem value="Alumno repetidor">Alumno repetidor</SelectItem>
-                          <SelectItem value="Antigüedad de afiliación">Antigüedad de afiliación</SelectItem>
+                          <SelectItem value="Haber cursado previamente este curso (Alumno repetidor)">Haber cursado previamente este curso (Alumno repetidor)</SelectItem>
+                          <SelectItem value="Antigüedad de afiliación a UGT (+ 2 años)">Antigüedad de afiliación a UGT (+ 2 años)</SelectItem>
+                          <SelectItem value="Antigüedad de afiliación a UGT (+ 5 años)">Antigüedad de afiliación a UGT (+ 5 años)</SelectItem>
+                          <SelectItem value="Situación de desempleo / Demanda de empleo">Situación de desempleo / Demanda de empleo</SelectItem>
+                          <SelectItem value="Matriculación en 2 o más cursos simultáneos">Matriculación en 2 o más cursos simultáneos</SelectItem>
+                          <SelectItem value="Jubilado / Pensionista afiliado">Jubilado / Pensionista afiliado</SelectItem>
+                          <SelectItem value="Fidelidad formativa (3 o más cursos completados)">Fidelidad formativa (3 o más cursos completados)</SelectItem>
+                          <SelectItem value="Delegado/a o representante sindical">Delegado/a o representante sindical</SelectItem>
+                          <SelectItem value="Personal sanitario / sociosanitario en formación continua">Personal sanitario / sociosanitario en formación continua</SelectItem>
+                          <SelectItem value="Personal de refuerzo / Interino">Personal de refuerzo / Interino</SelectItem>
                           <SelectItem value="Otros conceptos">Otros conceptos</SelectItem>
+                          {selectedEnrollment.discountReason && 
+                            !['Haber cursado previamente este curso (Alumno repetidor)', 'Antigüedad de afiliación a UGT (+ 2 años)', 'Antigüedad de afiliación a UGT (+ 5 años)', 'Situación de desempleo / Demanda de empleo', 'Matriculación en 2 o más cursos simultáneos', 'Jubilado / Pensionista afiliado', 'Fidelidad formativa (3 o más cursos completados)', 'Delegado/a o representante sindical', 'Personal sanitario / sociosanitario en formación continua', 'Personal de refuerzo / Interino', 'Otros conceptos'].includes(selectedEnrollment.discountReason) && (
+                              <SelectItem value={selectedEnrollment.discountReason}>{selectedEnrollment.discountReason}</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>

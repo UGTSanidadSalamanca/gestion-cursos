@@ -35,6 +35,7 @@ export async function GET(
                 availableForNonMembers: true,
                 hasDiscounts: true,
                 discountDescription: true,
+                discountRules: true,
                 modules: {
                     select: {
                         title: true,

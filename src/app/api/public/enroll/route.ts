@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Formato de datos inválido' }, { status: 400 })
     }
 
-    const { name, email, phone, dni, isAffiliated, courseId, wantsDiscount, discountDetails } = body
+    const { name, email, phone, dni, isAffiliated, courseId, wantsDiscount, requestedDiscountPercentage, requestedDiscountConcept, discountDetails } = body
 
     try {
         if (!name || !dni || !email || !courseId) {
@@ -91,13 +91,21 @@ export async function POST(request: NextRequest) {
             }, { status: 200 })
         }
 
-        // 3. Crear la matricula en estado PENDING
+        // 3. Crear la matricula en estado PENDING con el descuento solicitado
+        const discountSummary = wantsDiscount
+            ? (requestedDiscountPercentage
+                ? `${requestedDiscountPercentage}% - ${requestedDiscountConcept || 'Motivo general'}${discountDetails ? ` (Obs: ${discountDetails})` : ''}`
+                : (discountDetails || 'Solicitud de descuento'))
+            : null
+
         const enrollment = await db.enrollment.create({
             data: {
                 studentId: student.id,
                 courseId: courseId,
                 status: 'PENDING',
-                notes: `Auto-inscripción web. Afiliado: ${isAffiliated ? 'SÍ' : 'NO'}${wantsDiscount ? ` | SOLICITA DESCUENTO: ${discountDetails || 'Sin especificar'}` : ''}`
+                discountPercentage: wantsDiscount && requestedDiscountPercentage ? parseInt(requestedDiscountPercentage) : null,
+                discountReason: wantsDiscount && requestedDiscountConcept ? requestedDiscountConcept : null,
+                notes: `Auto-inscripción web. Afiliado: ${isAffiliated ? 'SÍ' : 'NO'}${discountSummary ? ` | SOLICITA DESCUENTO: ${discountSummary}` : ''}`
             },
             include: {
                 course: true

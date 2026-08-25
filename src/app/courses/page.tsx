@@ -43,6 +43,7 @@ import {
   ExternalLink,
   MessageSquare,
   UserCheck,
+  Trash2,
   Printer,
   Mail,
   FileSpreadsheet,
@@ -62,6 +63,26 @@ import { jsPDF } from "jspdf"
 import html2canvas from "html2canvas"
 import { QRCodeSVG } from "qrcode.react"
 import { isCourseExpired } from "@/lib/utils"
+
+interface DiscountRule {
+  id: string
+  percentage: number
+  concept: string
+}
+
+const DEFAULT_DISCOUNT_CONCEPTS = [
+  'Haber cursado previamente este curso (Alumno repetidor)',
+  'Antigüedad de afiliación a UGT (+ 2 años)',
+  'Antigüedad de afiliación a UGT (+ 5 años)',
+  'Situación de desempleo / Demanda de empleo',
+  'Matriculación en 2 o más cursos simultáneos',
+  'Jubilado / Pensionista afiliado',
+  'Fidelidad formativa (3 o más cursos completados)',
+  'Delegado/a o representante sindical',
+  'Personal sanitario / sociosanitario en formación continua',
+  'Personal de refuerzo / Interino',
+  'Otro concepto personalizado'
+]
 
 interface Course {
   id: string
@@ -92,6 +113,7 @@ interface Course {
   availableForNonMembers: boolean
   hasDiscounts?: boolean
   discountDescription?: string
+  discountRules?: string | DiscountRule[]
   modules?: CourseModule[]
   enrollments?: {
     id: string
@@ -175,6 +197,7 @@ export default function CoursesPage() {
     availableForNonMembers: true,
     hasDiscounts: false,
     discountDescription: '',
+    discountRules: [] as DiscountRule[],
     maxStudents: '30',
     modules: [] as { title: string; description: string; teacherId: string }[],
     schedules: [] as { dayOfWeek: string; startTime: string; endTime: string; classroom: string; teacherId: string }[]
@@ -529,6 +552,7 @@ export default function CoursesPage() {
       availableForNonMembers: true,
       hasDiscounts: false,
       discountDescription: '',
+      discountRules: [] as DiscountRule[],
       maxStudents: '30',
       modules: [],
       schedules: []
@@ -583,6 +607,14 @@ export default function CoursesPage() {
       availableForNonMembers: course.availableForNonMembers ?? true,
       hasDiscounts: course.hasDiscounts ?? false,
       discountDescription: course.discountDescription || '',
+      discountRules: (() => {
+        if (!course.discountRules) return []
+        try {
+          return typeof course.discountRules === 'string' ? JSON.parse(course.discountRules) : course.discountRules
+        } catch (e) {
+          return []
+        }
+      })(),
       maxStudents: (course.maxStudents || 0).toString(),
       modules: (course.modules || []).map(m => ({
         title: m.title || '',
@@ -1001,17 +1033,26 @@ export default function CoursesPage() {
                         </div>
                         {/* Toggle: Activar descuentos */}
                         <div className="col-span-1 md:col-span-4">
-                          <div className="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                          <div className="flex flex-col gap-3 p-4 bg-emerald-50/40 border border-emerald-200/70 rounded-xl">
                             <div className="flex items-center justify-between">
                               <div>
-                                <Label className="text-xs font-bold text-slate-700 uppercase">Ofrecer descuentos en este curso</Label>
-                                <p className="text-[11px] text-slate-500 mt-0.5">Si se activa, se anunciará en la landing y se podrá aplicar descuento individual del 5% al 50% por alumno.</p>
+                                <Label className="text-xs font-bold text-emerald-900 uppercase">Ofrecer descuentos en este curso</Label>
+                                <p className="text-[11px] text-emerald-700 mt-0.5">Define los porcentajes y las circunstancias que los alumnos podrán elegir en la landing page.</p>
                               </div>
                               <button
                                 type="button"
-                                onClick={() => setCourseFormData({ ...courseFormData, hasDiscounts: !courseFormData.hasDiscounts })}
+                                onClick={() => {
+                                  const nextState = !courseFormData.hasDiscounts
+                                  setCourseFormData({
+                                    ...courseFormData,
+                                    hasDiscounts: nextState,
+                                    discountRules: nextState && courseFormData.discountRules.length === 0
+                                      ? [{ id: Date.now().toString(), percentage: 20, concept: DEFAULT_DISCOUNT_CONCEPTS[0] }]
+                                      : courseFormData.discountRules
+                                  })
+                                }}
                                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
-                                  courseFormData.hasDiscounts ? 'bg-emerald-500' : 'bg-slate-300'
+                                  courseFormData.hasDiscounts ? 'bg-emerald-600' : 'bg-slate-300'
                                 }`}
                               >
                                 <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
@@ -1019,17 +1060,106 @@ export default function CoursesPage() {
                                 }`} />
                               </button>
                             </div>
+
                             {courseFormData.hasDiscounts && (
-                              <div className="mt-2 space-y-1">
-                                <Label htmlFor="discountDescription" className="text-[10px] font-bold text-slate-500 uppercase">Condiciones / Motivos del Descuento</Label>
-                                <textarea
-                                  id="discountDescription"
-                                  rows={2}
-                                  placeholder="Ej: Descuento para alumnos repetidores, antigüedad de afiliación, etc."
-                                  value={courseFormData.discountDescription}
-                                  onChange={(e) => setCourseFormData({ ...courseFormData, discountDescription: e.target.value })}
-                                  className="w-full text-xs p-2 border border-slate-200 rounded-lg focus:outline-none bg-white"
-                                />
+                              <div className="space-y-3 pt-2 border-t border-emerald-200/60">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-[11px] font-bold text-emerald-900 uppercase">Circunstancias y Porcentajes de Descuento</Label>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      const newRule: DiscountRule = {
+                                        id: Date.now().toString(),
+                                        percentage: 15,
+                                        concept: DEFAULT_DISCOUNT_CONCEPTS[0]
+                                      }
+                                      setCourseFormData({ ...courseFormData, discountRules: [...courseFormData.discountRules, newRule] })
+                                    }}
+                                    className="h-8 text-xs bg-white text-emerald-800 border-emerald-300 hover:bg-emerald-100/50 font-bold"
+                                  >
+                                    + Añadir otro descuento
+                                  </Button>
+                                </div>
+
+                                <div className="space-y-2">
+                                  {courseFormData.discountRules.map((rule, idx) => (
+                                    <div key={rule.id || idx} className="p-3 bg-white border border-emerald-100 rounded-xl flex flex-col md:flex-row gap-2.5 items-start md:items-center">
+                                      <div className="w-full md:w-32 shrink-0">
+                                        <Label className="text-[10px] font-bold text-slate-400 uppercase md:hidden mb-1 block">Porcentaje</Label>
+                                        <Select
+                                          value={rule.percentage?.toString() || '10'}
+                                          onValueChange={(val) => {
+                                            const updated = courseFormData.discountRules.map((r, i) => i === idx ? { ...r, percentage: parseInt(val) } : r)
+                                            setCourseFormData({ ...courseFormData, discountRules: updated })
+                                          }}
+                                        >
+                                          <SelectTrigger className="h-9 bg-slate-50 border-slate-200 font-bold text-emerald-800">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {Array.from({ length: 10 }, (_, i) => (i + 1) * 5).map(pct => (
+                                              <SelectItem key={pct} value={pct.toString()}>{pct}% dto.</SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+
+                                      <div className="flex-1 w-full space-y-1.5">
+                                        <div className="flex gap-1.5">
+                                          <Select
+                                            value={DEFAULT_DISCOUNT_CONCEPTS.includes(rule.concept) ? rule.concept : 'custom'}
+                                            onValueChange={(val) => {
+                                              const newConcept = val === 'custom' ? '' : val
+                                              const updated = courseFormData.discountRules.map((r, i) => i === idx ? { ...r, concept: newConcept } : r)
+                                              setCourseFormData({ ...courseFormData, discountRules: updated })
+                                            }}
+                                          >
+                                            <SelectTrigger className="h-9 bg-slate-50 border-slate-200 text-xs">
+                                              <SelectValue placeholder="Elegir concepto sugerido..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {DEFAULT_DISCOUNT_CONCEPTS.map((c) => (
+                                                <SelectItem key={c} value={c}>{c}</SelectItem>
+                                              ))}
+                                              <SelectItem value="custom">✏️ Personalizar texto...</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                        <Input
+                                          placeholder="Descripción o circunstancia del descuento..."
+                                          value={rule.concept}
+                                          onChange={(e) => {
+                                            const updated = courseFormData.discountRules.map((r, i) => i === idx ? { ...r, concept: e.target.value } : r)
+                                            setCourseFormData({ ...courseFormData, discountRules: updated })
+                                          }}
+                                          className="h-8 text-xs bg-white border-slate-200"
+                                        />
+                                      </div>
+
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                          const updated = courseFormData.discountRules.filter((_, i) => i !== idx)
+                                          setCourseFormData({ ...courseFormData, discountRules: updated })
+                                        }}
+                                        className="h-9 w-9 p-0 text-red-500 hover:bg-red-50 hover:text-red-700 shrink-0 self-end md:self-center"
+                                        title="Eliminar este descuento"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  ))}
+
+                                  {courseFormData.discountRules.length === 0 && (
+                                    <p className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                                      ⚠️ No has añadido ningún descuento. Pulsa "+ Añadir otro descuento" para crear las opciones disponibles.
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -2152,17 +2282,26 @@ export default function CoursesPage() {
                     </div>
                     {/* Toggle: Activar descuentos (edit) */}
                     <div className="col-span-1 md:col-span-4">
-                      <div className="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                      <div className="flex flex-col gap-3 p-4 bg-emerald-50/40 border border-emerald-200/70 rounded-xl">
                         <div className="flex items-center justify-between">
                           <div>
-                            <Label className="text-xs font-bold text-slate-700 uppercase">Ofrecer descuentos en este curso</Label>
-                            <p className="text-[11px] text-slate-500 mt-0.5">Si se activa, se anunciará en la landing y se podrá aplicar descuento individual del 5% al 50% por alumno.</p>
+                            <Label className="text-xs font-bold text-emerald-900 uppercase">Ofrecer descuentos en este curso</Label>
+                            <p className="text-[11px] text-emerald-700 mt-0.5">Define los porcentajes y las circunstancias que los alumnos podrán elegir en la landing page.</p>
                           </div>
                           <button
                             type="button"
-                            onClick={() => setCourseFormData({ ...courseFormData, hasDiscounts: !courseFormData.hasDiscounts })}
+                            onClick={() => {
+                              const nextState = !courseFormData.hasDiscounts
+                              setCourseFormData({
+                                ...courseFormData,
+                                hasDiscounts: nextState,
+                                discountRules: nextState && courseFormData.discountRules.length === 0
+                                  ? [{ id: Date.now().toString(), percentage: 20, concept: DEFAULT_DISCOUNT_CONCEPTS[0] }]
+                                  : courseFormData.discountRules
+                              })
+                            }}
                             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
-                              courseFormData.hasDiscounts ? 'bg-emerald-500' : 'bg-slate-300'
+                              courseFormData.hasDiscounts ? 'bg-emerald-600' : 'bg-slate-300'
                             }`}
                           >
                             <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
@@ -2170,17 +2309,106 @@ export default function CoursesPage() {
                             }`} />
                           </button>
                         </div>
+
                         {courseFormData.hasDiscounts && (
-                          <div className="mt-2 space-y-1">
-                            <Label htmlFor="edit-discountDescription" className="text-[10px] font-bold text-slate-500 uppercase">Condiciones / Motivos del Descuento</Label>
-                            <textarea
-                              id="edit-discountDescription"
-                              rows={2}
-                              placeholder="Ej: Descuento para alumnos repetidores, antigüedad de afiliación, etc."
-                              value={courseFormData.discountDescription}
-                              onChange={(e) => setCourseFormData({ ...courseFormData, discountDescription: e.target.value })}
-                              className="w-full text-xs p-2 border border-slate-200 rounded-lg focus:outline-none bg-white"
-                            />
+                          <div className="space-y-3 pt-2 border-t border-emerald-200/60">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-[11px] font-bold text-emerald-900 uppercase">Circunstancias y Porcentajes de Descuento</Label>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const newRule: DiscountRule = {
+                                    id: Date.now().toString(),
+                                    percentage: 15,
+                                    concept: DEFAULT_DISCOUNT_CONCEPTS[0]
+                                  }
+                                  setCourseFormData({ ...courseFormData, discountRules: [...courseFormData.discountRules, newRule] })
+                                }}
+                                className="h-8 text-xs bg-white text-emerald-800 border-emerald-300 hover:bg-emerald-100/50 font-bold"
+                              >
+                                + Añadir otro descuento
+                              </Button>
+                            </div>
+
+                            <div className="space-y-2">
+                              {courseFormData.discountRules.map((rule, idx) => (
+                                <div key={rule.id || idx} className="p-3 bg-white border border-emerald-100 rounded-xl flex flex-col md:flex-row gap-2.5 items-start md:items-center">
+                                  <div className="w-full md:w-32 shrink-0">
+                                    <Label className="text-[10px] font-bold text-slate-400 uppercase md:hidden mb-1 block">Porcentaje</Label>
+                                    <Select
+                                      value={rule.percentage?.toString() || '10'}
+                                      onValueChange={(val) => {
+                                        const updated = courseFormData.discountRules.map((r, i) => i === idx ? { ...r, percentage: parseInt(val) } : r)
+                                        setCourseFormData({ ...courseFormData, discountRules: updated })
+                                      }}
+                                    >
+                                      <SelectTrigger className="h-9 bg-slate-50 border-slate-200 font-bold text-emerald-800">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {Array.from({ length: 10 }, (_, i) => (i + 1) * 5).map(pct => (
+                                          <SelectItem key={pct} value={pct.toString()}>{pct}% dto.</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+
+                                  <div className="flex-1 w-full space-y-1.5">
+                                    <div className="flex gap-1.5">
+                                      <Select
+                                        value={DEFAULT_DISCOUNT_CONCEPTS.includes(rule.concept) ? rule.concept : 'custom'}
+                                        onValueChange={(val) => {
+                                          const newConcept = val === 'custom' ? '' : val
+                                          const updated = courseFormData.discountRules.map((r, i) => i === idx ? { ...r, concept: newConcept } : r)
+                                          setCourseFormData({ ...courseFormData, discountRules: updated })
+                                        }}
+                                      >
+                                        <SelectTrigger className="h-9 bg-slate-50 border-slate-200 text-xs">
+                                          <SelectValue placeholder="Elegir concepto sugerido..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {DEFAULT_DISCOUNT_CONCEPTS.map((c) => (
+                                                <SelectItem key={c} value={c}>{c}</SelectItem>
+                                          ))}
+                                          <SelectItem value="custom">✏️ Personalizar texto...</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <Input
+                                      placeholder="Descripción o circunstancia del descuento..."
+                                      value={rule.concept}
+                                      onChange={(e) => {
+                                        const updated = courseFormData.discountRules.map((r, i) => i === idx ? { ...r, concept: e.target.value } : r)
+                                        setCourseFormData({ ...courseFormData, discountRules: updated })
+                                      }}
+                                      className="h-8 text-xs bg-white border-slate-200"
+                                    />
+                                  </div>
+
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      const updated = courseFormData.discountRules.filter((_, i) => i !== idx)
+                                      setCourseFormData({ ...courseFormData, discountRules: updated })
+                                    }}
+                                    className="h-9 w-9 p-0 text-red-500 hover:bg-red-50 hover:text-red-700 shrink-0 self-end md:self-center"
+                                    title="Eliminar este descuento"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+
+                              {courseFormData.discountRules.length === 0 && (
+                                <p className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                                  ⚠️ No has añadido ningún descuento. Pulsa "+ Añadir otro descuento" para crear las opciones disponibles.
+                                </p>
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>

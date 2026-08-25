@@ -100,6 +100,7 @@ export async function PUT(
             availableForNonMembers,
             hasDiscounts,
             discountDescription,
+            discountRules,
             // @ts-ignore
             modules = [],
             // @ts-ignore
@@ -107,6 +108,8 @@ export async function PUT(
         } = body
 
         console.log('Updating course:', id);
+
+        const discountRulesStr = discountRules ? (typeof discountRules === 'string' ? discountRules : JSON.stringify(discountRules)) : null
 
         const course = await db.course.update({
             where: { id },
@@ -138,6 +141,7 @@ export async function PUT(
                 availableForNonMembers: availableForNonMembers !== undefined ? availableForNonMembers : true,
                 hasDiscounts: hasDiscounts !== undefined ? hasDiscounts : false,
                 discountDescription,
+                discountRules: discountRulesStr,
                 modules: {
                     deleteMany: {},
                     create: modules.map((m: any) => ({
