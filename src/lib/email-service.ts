@@ -99,6 +99,9 @@ export async function notifyNewEnrollment(data: {
   phone?: string
   email?: string
   price?: number | null
+  basePrice?: number | null
+  discountPercentage?: number | null
+  discountReason?: string | null
   priceUnit?: string | null
 }) {
   const adminEmail = 'fespugtsalamanca@gmail.com'
@@ -114,9 +117,14 @@ export async function notifyNewEnrollment(data: {
     return `/ ${unit}`;
   }
 
+  const hasDiscount = data.discountPercentage && data.discountPercentage > 0;
   const priceText = data.price !== undefined && data.price !== null
-    ? `${data.price}€${formatPriceUnit(data.priceUnit)}`
+    ? `${data.price.toFixed(2)}€${formatPriceUnit(data.priceUnit)}`
     : 'Pendiente de definir';
+
+  const basePriceText = data.basePrice !== undefined && data.basePrice !== null
+    ? `${data.basePrice.toFixed(2)}€${formatPriceUnit(data.priceUnit)}`
+    : '';
 
   const text = `
     Se ha recibido una nueva pre-inscripción a través de la web.
@@ -130,7 +138,8 @@ export async function notifyNewEnrollment(data: {
     
     CURSO Y PAGO:
     - Curso: ${data.courseName}
-    - Importe indicado al alumno: ${priceText}
+    - Tarifa base: ${basePriceText || priceText} (${data.isAffiliated ? 'Afiliado UGT' : 'General'})
+    ${hasDiscount ? `- Descuento solicitado: -${data.discountPercentage}% (${data.discountReason || 'Motivo general'})\n    - Importe final neto: ${priceText}` : `- Importe indicado: ${priceText}`}
     - Estado: PENDIENTE DE PAGO
     
     Puedes ver más detalles en el panel de administración:
@@ -157,7 +166,16 @@ export async function notifyNewEnrollment(data: {
         <div style="background-color: #eff6ff; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #dbeafe;">
           <h2 style="margin-top: 0; font-size: 16px; color: #1e40af;">Curso y Pago</h2>
           <p style="margin: 8px 0; font-size: 16px; font-weight: bold; color: #1e3a8a;">${data.courseName}</p>
-          <p style="margin: 8px 0; color: #3b82f6;"><strong>Importe mostrado:</strong> <span style="font-size: 18px; font-weight: bold;">${priceText}</span></p>
+          <p style="margin: 8px 0; color: #64748b;"><strong>Tarifa base:</strong> ${basePriceText || priceText} (${data.isAffiliated ? 'Afiliado UGT' : 'General'})</p>
+          ${hasDiscount ? `
+            <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 10px; margin: 10px 0;">
+              <p style="margin: 0; color: #065f46; font-size: 13px;"><strong>🏷️ Descuento acumulado:</strong> -${data.discountPercentage}%</p>
+              <p style="margin: 4px 0 0 0; color: #047857; font-size: 12px;"><strong>Circunstancias:</strong> ${data.discountReason}</p>
+            </div>
+            <p style="margin: 8px 0; color: #16a34a;"><strong>Importe final a transferir:</strong> <span style="font-size: 20px; font-weight: bold;">${priceText}</span></p>
+          ` : `
+            <p style="margin: 8px 0; color: #3b82f6;"><strong>Importe mostrado:</strong> <span style="font-size: 18px; font-weight: bold;">${priceText}</span></p>
+          `}
         </div>
         
         <div style="text-align: center; margin-top: 30px;">

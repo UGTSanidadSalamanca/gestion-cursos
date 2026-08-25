@@ -127,6 +127,11 @@ export async function POST(request: NextRequest) {
         }
 
         try {
+            const basePrice = !!isAffiliated ? enrollment.course.affiliatePrice : enrollment.course.price;
+            const finalPrice = basePrice !== null && basePrice !== undefined && wantsDiscount && requestedDiscountPercentage
+                ? Math.round(basePrice * (1 - (requestedDiscountPercentage / 100)) * 100) / 100
+                : basePrice;
+
             await notifyNewEnrollment({
                 studentName: name,
                 studentDni: dni,
@@ -134,7 +139,10 @@ export async function POST(request: NextRequest) {
                 isAffiliated: !!isAffiliated,
                 phone: phone,
                 email: email,
-                price: !!isAffiliated ? enrollment.course.affiliatePrice : enrollment.course.price,
+                basePrice: basePrice,
+                price: finalPrice,
+                discountPercentage: wantsDiscount ? requestedDiscountPercentage : null,
+                discountReason: wantsDiscount ? requestedDiscountConcept : null,
                 priceUnit: enrollment.course.priceUnit
             })
         } catch (emailErr) {

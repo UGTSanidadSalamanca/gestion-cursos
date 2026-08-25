@@ -100,9 +100,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
         isAffiliated: false,
         acceptedPrivacy: false,
         wantsDiscount: false,
-        selectedDiscountRuleId: '',
-        requestedDiscountPercentage: 0,
-        requestedDiscountConcept: '',
+        selectedDiscountConcepts: [] as string[],
         discountDetails: ''
     })
 
@@ -114,6 +112,11 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
             return []
         }
     }
+
+    const availableRules = getDiscountRules()
+    const selectedRules = availableRules.filter(r => formData.selectedDiscountConcepts.includes(r.concept))
+    const totalDiscountPercentage = selectedRules.reduce((sum, r) => sum + r.percentage, 0)
+    const discountReasonText = selectedRules.map(r => `${r.concept} (-${r.percentage}%)`).join(' + ')
 
     useEffect(() => {
         const resolveParams = async () => {
@@ -197,11 +200,20 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
 
         setIsSubmitting(true)
         try {
+            const hasAnyDiscount = formData.selectedDiscountConcepts.length > 0
             const response = await fetch('/api/public/enroll', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    ...formData,
+                    name: formData.name,
+                    email: formData.email,
+                    phone: formData.phone,
+                    dni: formData.dni,
+                    isAffiliated: formData.isAffiliated,
+                    wantsDiscount: hasAnyDiscount,
+                    requestedDiscountPercentage: hasAnyDiscount ? totalDiscountPercentage : null,
+                    requestedDiscountConcept: hasAnyDiscount ? discountReasonText : null,
+                    discountDetails: formData.discountDetails,
                     courseId: id
                 })
             })
@@ -900,9 +912,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                         isAffiliated: false,
                                                         acceptedPrivacy: false,
                                                         wantsDiscount: false,
-                                                        selectedDiscountRuleId: '',
-                                                        requestedDiscountPercentage: 0,
-                                                        requestedDiscountConcept: '',
+                                                        selectedDiscountConcepts: [],
                                                         discountDetails: ''
                                                     })
                                                 }
@@ -1006,11 +1016,11 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                         <div className="flex items-center justify-between">
                                                                             <Label className="text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
                                                                                 <Percent className="h-3.5 w-3.5 text-emerald-600" />
-                                                                                ¿Te corresponde algún descuento especial?
+                                                                                ¿Te corresponde algún descuento especial? (Acumulables)
                                                                             </Label>
-                                                                            {formData.wantsDiscount && (
-                                                                                <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                                                                                    {formData.requestedDiscountPercentage}% Dto. seleccionado
+                                                                            {formData.selectedDiscountConcepts.length > 0 && (
+                                                                                <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full animate-pulse">
+                                                                                    -{totalDiscountPercentage}% Total Acumulado
                                                                                 </span>
                                                                             )}
                                                                         </div>
@@ -1022,53 +1032,52 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                                     setFormData({
                                                                                         ...formData,
                                                                                         wantsDiscount: false,
-                                                                                        selectedDiscountRuleId: '',
-                                                                                        requestedDiscountPercentage: 0,
-                                                                                        requestedDiscountConcept: '',
+                                                                                        selectedDiscountConcepts: [],
                                                                                         discountDetails: ''
                                                                                     })
                                                                                 }}
                                                                                 className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                                                                                    !formData.wantsDiscount
+                                                                                    formData.selectedDiscountConcepts.length === 0
                                                                                         ? 'bg-slate-50 border-slate-300 ring-1 ring-slate-300'
                                                                                         : 'bg-white border-slate-200 hover:border-slate-300'
                                                                                 }`}
                                                                             >
                                                                                 <div className="flex items-center gap-2.5">
                                                                                     <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
-                                                                                        !formData.wantsDiscount ? 'border-slate-800 bg-slate-800' : 'border-slate-300'
+                                                                                        formData.selectedDiscountConcepts.length === 0 ? 'border-slate-800 bg-slate-800' : 'border-slate-300'
                                                                                     }`}>
-                                                                                        {!formData.wantsDiscount && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                                                                                        {formData.selectedDiscountConcepts.length === 0 && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                                                                                     </div>
                                                                                     <span className="text-xs font-semibold text-slate-700">Sin descuento / Tarifa general</span>
                                                                                 </div>
                                                                             </div>
 
-                                                                            {/* Lista de descuentos configurados en el curso */}
-                                                                            {getDiscountRules().map((rule, idx) => {
-                                                                                const isSelected = formData.wantsDiscount && (formData.selectedDiscountRuleId === (rule.id || idx.toString()) || formData.requestedDiscountConcept === rule.concept);
+                                                                            {/* Lista de descuentos configurados en el curso con multiselección */}
+                                                                            {availableRules.map((rule, idx) => {
+                                                                                const isSelected = formData.selectedDiscountConcepts.includes(rule.concept);
                                                                                 return (
                                                                                     <div
                                                                                         key={rule.id || idx}
                                                                                         onClick={() => {
+                                                                                            const nextSelected = isSelected
+                                                                                                ? formData.selectedDiscountConcepts.filter(c => c !== rule.concept)
+                                                                                                : [...formData.selectedDiscountConcepts, rule.concept];
                                                                                             setFormData({
                                                                                                 ...formData,
-                                                                                                wantsDiscount: true,
-                                                                                                selectedDiscountRuleId: rule.id || idx.toString(),
-                                                                                                requestedDiscountPercentage: rule.percentage,
-                                                                                                requestedDiscountConcept: rule.concept
+                                                                                                wantsDiscount: nextSelected.length > 0,
+                                                                                                selectedDiscountConcepts: nextSelected
                                                                                             })
                                                                                         }}
                                                                                         className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 ${
                                                                                             isSelected
-                                                                                                ? 'bg-emerald-50/70 border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm'
+                                                                                                ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/30 shadow-sm'
                                                                                                 : 'bg-white border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/20'
                                                                                         }`}
                                                                                     >
-                                                                                        <div className={`h-4 w-4 rounded-full border mt-0.5 shrink-0 flex items-center justify-center ${
-                                                                                            isSelected ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'
+                                                                                        <div className={`h-4 w-4 rounded-md border mt-0.5 shrink-0 flex items-center justify-center ${
+                                                                                            isSelected ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300 bg-white'
                                                                                         }`}>
-                                                                                            {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                                                                                            {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
                                                                                         </div>
                                                                                         <div className="flex-1">
                                                                                             <div className="flex items-center gap-2 flex-wrap">
@@ -1085,7 +1094,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                             })}
                                                                         </div>
 
-                                                                        {formData.wantsDiscount && (
+                                                                        {formData.selectedDiscountConcepts.length > 0 && (
                                                                             <div className="space-y-1.5 pt-1">
                                                                                 <Label className="text-[10px] font-black uppercase text-emerald-900 tracking-wider">
                                                                                     Observaciones / Justificación adicional (Opcional)
@@ -1163,16 +1172,19 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                 Paso 2 de 2: Pago
                                                             </div>
                                                             <h2 className="text-2xl font-black text-slate-900 mb-1">¡Pre-inscripción realizada!</h2>
-                                                            <p className="text-slate-500 text-xs mb-6">Tu plaza está reservada provisionalmente pendiente del ingreso.</p>
-
                                                             <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 mb-6 text-left space-y-3.5">
                                                                 <div className="space-y-1">
                                                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                                                                         <Euro className="h-3 w-3" /> Importe a transferir
                                                                     </p>
-                                                                    <div className="bg-red-50 rounded-xl border border-red-100 p-2.5 text-center">
+                                                                    <div className="bg-red-50 rounded-xl border border-red-100 p-3 text-center space-y-2">
                                                                         {(() => {
-                                                                            const activePrice = formData.isAffiliated ? course.affiliatePrice : course.price;
+                                                                            const rawBasePrice = formData.isAffiliated ? course.affiliatePrice : course.price;
+                                                                            const hasDiscount = formData.selectedDiscountConcepts.length > 0 && totalDiscountPercentage > 0;
+                                                                            const activePrice = rawBasePrice !== undefined && rawBasePrice !== null
+                                                                                ? (hasDiscount ? Math.round(rawBasePrice * (1 - (totalDiscountPercentage / 100)) * 100) / 100 : rawBasePrice)
+                                                                                : undefined;
+
                                                                             const frac = getFractionInfo(activePrice, course.paymentFrequency);
                                                                             if (frac) {
                                                                                 return (
@@ -1183,20 +1195,30 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                                                 (1.er Plazo de {frac.count})
                                                                                             </span>
                                                                                         </p>
-                                                                                        <p className="text-[10px] font-semibold text-red-600 mt-0.5">
-                                                                                            Total: €{frac.totalPrice.toFixed(2)} en {frac.count} cuotas · Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}
-                                                                                        </p>
+                                                                                        <div className="text-[10px] font-semibold text-slate-600 space-y-0.5 pt-1 border-t border-red-200/60">
+                                                                                            <p>Total: €{frac.totalPrice.toFixed(2)} en {frac.count} cuotas · Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}</p>
+                                                                                            {hasDiscount && (
+                                                                                                <p className="text-emerald-700 font-bold">
+                                                                                                    🏷️ Descuento acumulado del -{totalDiscountPercentage}% aplicado ({discountReasonText})
+                                                                                                </p>
+                                                                                            )}
+                                                                                        </div>
                                                                                     </>
                                                                                 );
                                                                             }
                                                                             return (
                                                                                 <>
-                                                                                    <p className="text-xl font-black text-red-700">
-                                                                                        {activePrice ? `€${activePrice.toFixed(2)}` : 'Por consultar'}
+                                                                                    <p className="text-2xl font-black text-red-700">
+                                                                                        {activePrice !== undefined ? `€${activePrice.toFixed(2)}` : 'Por consultar'}
                                                                                     </p>
-                                                                                    <p className="text-[10px] font-semibold text-red-600 mt-0.5">
-                                                                                        Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}
-                                                                                    </p>
+                                                                                    <div className="text-[10px] font-semibold text-slate-600 space-y-0.5 pt-1 border-t border-red-200/60">
+                                                                                        <p>Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}{rawBasePrice && hasDiscount ? ` (Base: €${rawBasePrice.toFixed(2)})` : ''}</p>
+                                                                                        {hasDiscount && (
+                                                                                            <p className="text-emerald-700 font-bold">
+                                                                                                🏷️ Descuento acumulado del -{totalDiscountPercentage}% aplicado ({discountReasonText})
+                                                                                            </p>
+                                                                                        )}
+                                                                                    </div>
                                                                                 </>
                                                                             );
                                                                         })()}
