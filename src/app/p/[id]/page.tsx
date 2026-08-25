@@ -1002,69 +1002,100 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                 </div>
 
                                                                 {course.hasDiscounts && (
-                                                                    <div className="space-y-3">
-                                                                        <div className="p-3.5 bg-emerald-50/40 rounded-xl border border-emerald-100 flex items-center space-x-3 select-none">
-                                                                            <Checkbox
-                                                                                id="wants-discount"
-                                                                                checked={formData.wantsDiscount}
-                                                                                onCheckedChange={(checked) => {
-                                                                                    const isChecked = !!checked;
-                                                                                    const rules = getDiscountRules();
-                                                                                    const defaultRule = rules.length > 0 ? rules[0] : null;
+                                                                    <div className="space-y-2.5 pt-1">
+                                                                        <div className="flex items-center justify-between">
+                                                                            <Label className="text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                                                                                <Percent className="h-3.5 w-3.5 text-emerald-600" />
+                                                                                ¿Te corresponde algún descuento especial?
+                                                                            </Label>
+                                                                            {formData.wantsDiscount && (
+                                                                                <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                                                                    {formData.requestedDiscountPercentage}% Dto. seleccionado
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+
+                                                                        <div className="space-y-1.5">
+                                                                            {/* Opción Sin Descuento */}
+                                                                            <div
+                                                                                onClick={() => {
                                                                                     setFormData({
                                                                                         ...formData,
-                                                                                        wantsDiscount: isChecked,
-                                                                                        selectedDiscountRuleId: isChecked && defaultRule ? (defaultRule.id || '0') : '',
-                                                                                        requestedDiscountPercentage: isChecked && defaultRule ? defaultRule.percentage : 0,
-                                                                                        requestedDiscountConcept: isChecked && defaultRule ? defaultRule.concept : '',
-                                                                                    });
+                                                                                        wantsDiscount: false,
+                                                                                        selectedDiscountRuleId: '',
+                                                                                        requestedDiscountPercentage: 0,
+                                                                                        requestedDiscountConcept: '',
+                                                                                        discountDetails: ''
+                                                                                    })
                                                                                 }}
-                                                                            />
-                                                                            <div className="flex-1 cursor-pointer">
-                                                                                <Label htmlFor="wants-discount" className="text-xs font-bold text-emerald-900 cursor-pointer block">
-                                                                                    Solicitar descuento aplicable
-                                                                                </Label>
-                                                                                <p className="text-[10px] text-emerald-700 font-medium">Cumplo con alguna de las condiciones de descuento ofertadas.</p>
-                                                                            </div>
-                                                                        </div>
-                                                                        {formData.wantsDiscount && (
-                                                                            <div className="space-y-2 p-3 bg-emerald-50/20 border border-emerald-100 rounded-xl">
-                                                                                {getDiscountRules().length > 0 ? (
-                                                                                    <div className="space-y-1.5">
-                                                                                        <Label className="text-[10px] font-black uppercase text-emerald-900 tracking-wider">Selecciona tu circunstancia de descuento *</Label>
-                                                                                        <Select
-                                                                                            value={formData.requestedDiscountConcept || (getDiscountRules()[0]?.concept || '')}
-                                                                                            onValueChange={(val) => {
-                                                                                                const selected = getDiscountRules().find(r => r.concept === val)
-                                                                                                setFormData({
-                                                                                                    ...formData,
-                                                                                                    requestedDiscountConcept: val,
-                                                                                                    requestedDiscountPercentage: selected ? selected.percentage : 0
-                                                                                                })
-                                                                                            }}
-                                                                                        >
-                                                                                            <SelectTrigger className="h-11 bg-white border-slate-200 text-xs font-semibold">
-                                                                                                <SelectValue placeholder="Selecciona una opción..." />
-                                                                                            </SelectTrigger>
-                                                                                            <SelectContent>
-                                                                                                {getDiscountRules().map((r, i) => (
-                                                                                                    <SelectItem key={r.id || i} value={r.concept} className="text-xs">
-                                                                                                        <span className="font-bold text-emerald-700">-{r.percentage}%:</span> {r.concept}
-                                                                                                    </SelectItem>
-                                                                                                ))}
-                                                                                            </SelectContent>
-                                                                                        </Select>
+                                                                                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                                                                                    !formData.wantsDiscount
+                                                                                        ? 'bg-slate-50 border-slate-300 ring-1 ring-slate-300'
+                                                                                        : 'bg-white border-slate-200 hover:border-slate-300'
+                                                                                }`}
+                                                                            >
+                                                                                <div className="flex items-center gap-2.5">
+                                                                                    <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                                                                                        !formData.wantsDiscount ? 'border-slate-800 bg-slate-800' : 'border-slate-300'
+                                                                                    }`}>
+                                                                                        {!formData.wantsDiscount && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                                                                                     </div>
-                                                                                ) : null}
-                                                                                <div className="space-y-1.5">
-                                                                                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Observaciones / Justificación adicional (Opcional)</Label>
-                                                                                    <Input
-                                                                                        className="h-10 bg-white border-slate-200 rounded-xl text-xs"
-                                                                                        placeholder="Ej: Años de afiliación, año en que cursé la edición anterior, etc."
-                                                                                        value={formData.discountDetails}
-                                                                                        onChange={e => setFormData({ ...formData, discountDetails: e.target.value })}
-                                                                                    />
+                                                                                    <span className="text-xs font-semibold text-slate-700">Sin descuento / Tarifa general</span>
                                                                                 </div>
+                                                                            </div>
+
+                                                                            {/* Lista de descuentos configurados en el curso */}
+                                                                            {getDiscountRules().map((rule, idx) => {
+                                                                                const isSelected = formData.wantsDiscount && (formData.selectedDiscountRuleId === (rule.id || idx.toString()) || formData.requestedDiscountConcept === rule.concept);
+                                                                                return (
+                                                                                    <div
+                                                                                        key={rule.id || idx}
+                                                                                        onClick={() => {
+                                                                                            setFormData({
+                                                                                                ...formData,
+                                                                                                wantsDiscount: true,
+                                                                                                selectedDiscountRuleId: rule.id || idx.toString(),
+                                                                                                requestedDiscountPercentage: rule.percentage,
+                                                                                                requestedDiscountConcept: rule.concept
+                                                                                            })
+                                                                                        }}
+                                                                                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 ${
+                                                                                            isSelected
+                                                                                                ? 'bg-emerald-50/70 border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm'
+                                                                                                : 'bg-white border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/20'
+                                                                                        }`}
+                                                                                    >
+                                                                                        <div className={`h-4 w-4 rounded-full border mt-0.5 shrink-0 flex items-center justify-center ${
+                                                                                            isSelected ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'
+                                                                                        }`}>
+                                                                                            {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                                                                                        </div>
+                                                                                        <div className="flex-1">
+                                                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                                                <span className="font-black text-[11px] px-2 py-0.5 rounded-md bg-emerald-600 text-white leading-none">
+                                                                                                    -{rule.percentage}%
+                                                                                                </span>
+                                                                                                <span className="text-xs font-bold text-slate-800 leading-snug">
+                                                                                                    {rule.concept}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+
+                                                                        {formData.wantsDiscount && (
+                                                                            <div className="space-y-1.5 pt-1">
+                                                                                <Label className="text-[10px] font-black uppercase text-emerald-900 tracking-wider">
+                                                                                    Observaciones / Justificación adicional (Opcional)
+                                                                                </Label>
+                                                                                <Input
+                                                                                    className="h-10 bg-emerald-50/30 border-emerald-200 rounded-xl text-xs"
+                                                                                    placeholder="Ej: Año en que realicé el curso anterior, años de antigüedad, etc."
+                                                                                    value={formData.discountDetails}
+                                                                                    onChange={e => setFormData({ ...formData, discountDetails: e.target.value })}
+                                                                                />
                                                                             </div>
                                                                         )}
                                                                     </div>
