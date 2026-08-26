@@ -95,6 +95,7 @@ export async function notifyNewEnrollment(data: {
   studentName: string
   studentDni: string
   courseName: string
+  courseCode?: string | null
   isAffiliated: boolean
   phone?: string
   email?: string
@@ -137,6 +138,7 @@ export async function notifyNewEnrollment(data: {
     - Afiliado UGT: ${data.isAffiliated ? 'SÍ' : 'NO'}
     
     CURSO Y PAGO:
+    - Código/Expediente: ${data.courseCode || '---'}
     - Curso: ${data.courseName}
     - Tarifa base: ${basePriceText || priceText} (${data.isAffiliated ? 'Afiliado UGT' : 'General'})
     ${hasDiscount ? `- Descuento solicitado: -${data.discountPercentage}% (${data.discountReason || 'Motivo general'})\n    - Importe final neto: ${priceText}` : `- Importe indicado: ${priceText}`}
@@ -165,6 +167,7 @@ export async function notifyNewEnrollment(data: {
         
         <div style="background-color: #eff6ff; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #dbeafe;">
           <h2 style="margin-top: 0; font-size: 16px; color: #1e40af;">Curso y Pago</h2>
+          ${data.courseCode ? `<p style="margin: 4px 0 8px 0; font-size: 13px; color: #64748b;"><strong>Código/Expediente:</strong> <span style="font-family: monospace; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">${data.courseCode}</span></p>` : ''}
           <p style="margin: 8px 0; font-size: 16px; font-weight: bold; color: #1e3a8a;">${data.courseName}</p>
           <p style="margin: 8px 0; color: #64748b;"><strong>Tarifa base:</strong> ${basePriceText || priceText} (${data.isAffiliated ? 'Afiliado UGT' : 'General'})</p>
           ${hasDiscount ? `

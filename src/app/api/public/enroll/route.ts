@@ -136,6 +136,7 @@ export async function POST(request: NextRequest) {
                 studentName: name,
                 studentDni: dni,
                 courseName: enrollment.course.title,
+                courseCode: enrollment.course.code,
                 isAffiliated: !!isAffiliated,
                 phone: phone,
                 email: email,
