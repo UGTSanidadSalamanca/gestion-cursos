@@ -1314,7 +1314,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                     Servicios Públicos UGT Salamanca
                                 </p>
                                 <p className="text-[11px] text-slate-500 font-medium">
-                                    Portal Oficial de Formación y Oposiciones · UGT Castilla y León
+                                    Portal Oficial de Formación y Oposiciones · UGT Salamanca
                                 </p>
                             </div>
                         </div>
@@ -1352,7 +1352,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
 
                     <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500 text-center sm:text-left">
                         <p>
-                            © {currentYear} Unión General de Trabajadores de Castilla y León (UGT-CyL). C/ Gamazo, 13 - 47004 Valladolid (CIF: G47317615).
+                            © {currentYear} UGT Salamanca · C/ Gran Vía, 79-81 · 37001 Salamanca
                         </p>
                         <p className="flex items-center justify-center gap-1 text-slate-500 font-medium">
                             <Lock className="h-3 w-3 text-emerald-600" /> Tratamiento de datos conforme a RGPD y LOPDGDD
