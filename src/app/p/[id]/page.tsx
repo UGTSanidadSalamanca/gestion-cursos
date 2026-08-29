@@ -1118,7 +1118,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                             <span>Información básica de Protección de Datos (RGPD)</span>
                                                                         </div>
                                                                         <p>
-                                                                            <strong className="text-slate-700">Responsable:</strong> Unión General de Trabajadores de Castilla y León (CIF G47317615).
+                                                                            <strong className="text-slate-700">Responsable:</strong> UGT SP.
                                                                         </p>
                                                                         <p>
                                                                             <strong className="text-slate-700">Finalidad:</strong> Tramitar y gestionar tu solicitud de pre-inscripción y reserva de plaza en el curso, así como la posterior comunicación formativa.
@@ -1127,7 +1127,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                             <strong className="text-slate-700">Legitimación:</strong> Tu consentimiento explícito al formalizar este formulario y ejecución de la solicitud.
                                                                         </p>
                                                                         <p>
-                                                                            <strong className="text-slate-700">Derechos y DPD:</strong> Tienes derecho a acceder, rectificar y suprimir tus datos en <a href="mailto:dpd@castyleon.ugt.org" className="text-red-600 font-semibold hover:underline">dpd@castyleon.ugt.org</a>.
+                                                                            <strong className="text-slate-700">Derechos y DPO:</strong> Tienes derecho a acceder, rectificar y suprimir tus datos en <a href="mailto:dpo@ugt-sp.eu" className="text-red-600 font-semibold hover:underline">dpo@ugt-sp.eu</a>.
                                                                         </p>
                                                                     </div>
 
@@ -1342,10 +1342,10 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                             </a>
                             <span className="text-slate-300">·</span>
                             <a
-                                href="mailto:dpd@castyleon.ugt.org"
+                                href="mailto:dpo@ugt-sp.eu"
                                 className="text-slate-700 hover:text-red-600 flex items-center gap-1 transition-colors"
                             >
-                                Contacto DPD: dpd@castyleon.ugt.org
+                                Contacto DPO: dpo@ugt-sp.eu
                             </a>
                         </div>
                     </div>
