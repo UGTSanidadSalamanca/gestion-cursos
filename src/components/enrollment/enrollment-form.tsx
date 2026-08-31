@@ -40,7 +40,7 @@ interface Course {
   price: number
   maxStudents: number
   isActive: boolean
-  isActive: boolean
+  modules?: any[]
   _count?: {
     enrollments: number
   }
@@ -297,15 +297,15 @@ export function EnrollmentForm({ courseId, studentId, onSuccess, onCancel }: Enr
           Inscribir Alumno
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90dvh] flex flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Nueva Inscripción</DialogTitle>
           <DialogDescription>
             Selecciona un alumno y un curso para realizar la inscripción
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 flex-1 overflow-y-auto overscroll-contain pr-1 py-2">
           {/* Student Selection */}
           <div className="space-y-2">
             <Label htmlFor="student">Seleccionar Alumno</Label>
@@ -434,7 +434,7 @@ export function EnrollmentForm({ courseId, studentId, onSuccess, onCancel }: Enr
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0 pt-4 border-t">
           <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
             Cancelar
           </Button>

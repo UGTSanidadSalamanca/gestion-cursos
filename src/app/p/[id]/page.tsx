@@ -926,10 +926,10 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                         <span>Inscribirme Online</span>
                                                     </Button>
                                                 </DialogTrigger>
-                                                <DialogContent className="sm:max-w-[500px] border-none shadow-2xl p-0 overflow-hidden bg-white rounded-3xl">
+                                                <DialogContent className="sm:max-w-[500px] border-none shadow-2xl p-0 overflow-hidden bg-white rounded-3xl max-h-[90dvh] flex flex-col">
                                                     {!showSuccess ? (
-                                                        <form onSubmit={handleEnroll}>
-                                                            <DialogHeader className="p-6 sm:p-8 bg-slate-50 border-b">
+                                                        <form onSubmit={handleEnroll} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                                                            <DialogHeader className="p-6 sm:p-8 bg-slate-50 border-b shrink-0">
                                                                 <div className="bg-red-100 text-red-700 text-[9px] font-black px-2.5 py-0.5 rounded-full w-fit mb-2 tracking-widest uppercase">
                                                                     Paso 1 de 2: Mis datos
                                                                 </div>
@@ -941,7 +941,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                     <span className="text-red-600 font-bold">Tras este paso verás los datos de pago y concepto.</span>
                                                                 </DialogDescription>
                                                             </DialogHeader>
-                                                            <div className="p-6 sm:p-8 space-y-4">
+                                                            <div className="p-6 sm:p-8 space-y-4 flex-1 overflow-y-auto overscroll-contain">
                                                                 <div className="space-y-1.5">
                                                                     <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Nombre y Apellidos *</Label>
                                                                     <div className="relative">
@@ -1157,14 +1157,14 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <DialogFooter className="p-6 bg-slate-50 border-t">
+                                                            <DialogFooter className="p-6 bg-slate-50 border-t shrink-0">
                                                                 <Button type="submit" disabled={isSubmitting} className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs tracking-wider rounded-xl shadow-md">
                                                                     {isSubmitting ? "Procesando..." : "Confirmar Pre-inscripción"}
                                                                 </Button>
                                                             </DialogFooter>
                                                         </form>
                                                     ) : (
-                                                        <div className="p-8 text-center">
+                                                        <div className="p-6 sm:p-8 text-center flex-1 overflow-y-auto overscroll-contain">
                                                             <div className="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                                                 <CheckCircle2 className="h-8 w-8" />
                                                             </div>
