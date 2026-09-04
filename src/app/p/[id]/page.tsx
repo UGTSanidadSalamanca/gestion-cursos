@@ -1143,7 +1143,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                             <Label htmlFor="accepted-privacy" className="cursor-pointer font-medium text-slate-800">
                                                                                 He leído y acepto la{" "}
                                                                                 <a
-                                                                                    href="https://ugtcyl.es/web/politica-de-privacidad"
+                                                                                    href="https://ugtsanidadsalamanca.github.io/-rgpd-formacion/"
                                                                                     target="_blank"
                                                                                     rel="noopener noreferrer"
                                                                                     className="text-red-600 font-bold hover:underline inline-flex items-center gap-0.5"
@@ -1246,7 +1246,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                 <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
                                                                 <p className="text-[11px] text-emerald-950/85 leading-relaxed">
                                                                     <strong className="text-emerald-900 font-bold block mb-0.5">Garantía de Confidencialidad y Custodia RGPD</strong>
-                                                                    Los datos de tu reserva están custodiados de forma segura por UGT Castilla y León conforme al RGPD. Puedes consultar la <a href="https://ugtcyl.es/web/politica-de-privacidad" target="_blank" rel="noopener noreferrer" className="text-emerald-800 font-bold underline hover:text-emerald-950">política de privacidad oficial</a>.
+                                                                    Los datos de tu reserva están custodiados de forma segura por UGT Castilla y León conforme al RGPD. Puedes consultar la <a href="https://ugtsanidadsalamanca.github.io/-rgpd-formacion/" target="_blank" rel="noopener noreferrer" className="text-emerald-800 font-bold underline hover:text-emerald-950">política de privacidad oficial</a>.
                                                                 </p>
                                                             </div>
 
@@ -1299,8 +1299,8 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
 
             {/* Footer Institucional con Enlaces y Protección de Datos */}
             <footer className="mt-16 border-t border-slate-200/80 bg-slate-100/70 py-8 no-print text-slate-600 text-xs">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-slate-200">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-5">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 border-b border-slate-200">
                         <div className="flex items-center gap-3">
                             <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-200 shrink-0">
                                 <img
@@ -1319,43 +1319,39 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold">
-                            <a
-                                href="https://ugtcyl.es/web/politica-de-privacidad"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-slate-700 hover:text-red-600 flex items-center gap-1.5 transition-colors"
-                            >
-                                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                                Política de Privacidad
-                                <ExternalLink className="h-3 w-3 text-slate-400" />
-                            </a>
-                            <span className="text-slate-300">·</span>
-                            <a
-                                href="https://ugtcyl.es/web/aviso-legal"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-slate-700 hover:text-red-600 flex items-center gap-1.5 transition-colors"
-                            >
-                                Aviso Legal
-                                <ExternalLink className="h-3 w-3 text-slate-400" />
-                            </a>
-                            <span className="text-slate-300">·</span>
-                            <a
-                                href="mailto:dpo@ugt-sp.eu"
-                                className="text-slate-700 hover:text-red-600 flex items-center gap-1 transition-colors"
-                            >
-                                Contacto DPO: dpo@ugt-sp.eu
-                            </a>
+                        <div className="text-xs text-slate-500 font-medium text-center sm:text-right">
+                            <p>© {currentYear} UGT Salamanca · C/ Gran Vía, 79-81 · 37001 Salamanca</p>
                         </div>
                     </div>
 
-                    <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500 text-center sm:text-left">
-                        <p>
-                            © {currentYear} UGT Salamanca · C/ Gran Vía, 79-81 · 37001 Salamanca
-                        </p>
-                        <p className="flex items-center justify-center gap-1 text-slate-500 font-medium">
+                    {/* Bloque Resumido RGPD */}
+                    <div
+                        role="note"
+                        aria-label="Información resumida sobre protección de datos"
+                        className="mt-4 p-3.5 sm:p-4 border border-[#e5e5e7] border-l-4 border-l-[#e4002b] rounded-lg bg-[#fafafa] text-[#38383d] text-xs sm:text-[13px] leading-relaxed text-left"
+                    >
+                        <strong className="text-[#1e1e24] font-bold">Protección de datos. </strong>
+                        Responsable: Unión General de Trabajadores de Servicios Públicos (CIF G-78085149). Tus datos se tratarán para gestionar tu inscripción y, en su caso, la organización, desarrollo y seguimiento de la acción formativa, acceso a plataformas, emisión de certificados y las gestiones legalmente necesarias asociadas a la formación. La base jurídica es tu consentimiento, la ejecución de la relación formativa y el cumplimiento de las obligaciones legales aplicables. Podrán comunicarse datos a estructuras de UGT y a las Administraciones Públicas cuando resulte necesario. Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a{" "}
+                        <a href="mailto:dpo@ugt-sp.eu" className="text-[#b00020] font-bold underline underline-offset-2 hover:text-red-800">
+                            dpo@ugt-sp.eu
+                        </a>.{" "}
+                        <a
+                            href="https://ugtsanidadsalamanca.github.io/-rgpd-formacion/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#b00020] font-bold underline underline-offset-2 hover:text-red-800 inline-flex items-center gap-1"
+                        >
+                            Consulta la información completa sobre protección de datos
+                            <ExternalLink className="h-3.5 w-3.5 inline shrink-0" />
+                        </a>.
+                    </div>
+
+                    <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500 text-center sm:text-left">
+                        <p className="flex items-center justify-center gap-1 font-medium">
                             <Lock className="h-3 w-3 text-emerald-600" /> Tratamiento de datos conforme a RGPD y LOPDGDD
+                        </p>
+                        <p className="text-slate-400">
+                            Contacto DPO: <a href="mailto:dpo@ugt-sp.eu" className="hover:underline text-slate-600">dpo@ugt-sp.eu</a>
                         </p>
                     </div>
                 </div>
