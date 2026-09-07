@@ -71,6 +71,8 @@ interface PublicCourse {
     hasDiscounts?: boolean
     discountDescription?: string
     discountRules?: string | DiscountRule[]
+    minStudents?: number
+    maxStudents?: number
     modules?: {
         title: string
         description?: string
@@ -300,9 +302,9 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                 count,
                 installmentPrice,
                 totalPrice: price,
-                mainDisplay: `€${installmentPrice.toFixed(2)}`,
+                mainDisplay: `${installmentPrice.toFixed(2)} €`,
                 perInstallmentText: `por cuota (${count} pagos)`,
-                totalText: `Total del curso: €${price.toFixed(2)} (${count} plazos de €${installmentPrice.toFixed(2)})`
+                totalText: `Total del curso: ${price.toFixed(2)} € (${count} plazos de ${installmentPrice.toFixed(2)} €)`
             };
         }
         return null;
@@ -387,7 +389,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
     }
 
     // Comprobar qué datos rápidos existen para mostrar en la barra de estadísticas
-    const hasQuickStats = (course.duration && course.duration > 0) || course.durationPeriod || course.startDate || (course.modules && course.modules.length > 0)
+    const hasQuickStats = (course.duration && course.duration > 0) || course.durationPeriod || course.startDate || (course.modules && course.modules.length > 0) || (course.minStudents && course.minStudents > 0)
 
     return (
         <div id="public-course-landing" className="min-h-screen bg-slate-50/80 text-slate-900 pb-16 print:bg-white print:pb-0 font-sans antialiased">
@@ -498,7 +500,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                 {/* Barra de Fichas Rápidas (Quick Stats) - Se adapta dinámicamente según los datos existentes */}
                 {hasQuickStats && (
                     <div className="-mt-5 relative z-20 mb-8">
-                        <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/70 border border-slate-100 p-3 sm:p-4 grid grid-cols-2 md:grid-cols-4 gap-3 print:border-slate-300 print:shadow-none">
+                        <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/70 border border-slate-100 p-3 sm:p-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 print:border-slate-300 print:shadow-none">
                             {course.duration && course.duration > 0 ? (
                                 <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 border border-slate-100/80">
                                     <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
@@ -547,6 +549,18 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                         <p className="text-sm sm:text-base font-extrabold text-slate-800 truncate">
                                             {course.modules.length} {course.modules.length === 1 ? 'Módulo' : 'Módulos'}
                                         </p>
+                                    </div>
+                                </div>
+                            ) : null}
+
+                            {course.minStudents && course.minStudents > 0 ? (
+                                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/70">
+                                    <div className="h-10 w-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                                        <Users className="h-5 w-5" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wider truncate">Grupo Mínimo</p>
+                                        <p className="text-sm sm:text-base font-extrabold text-amber-950 truncate">{course.minStudents} alumnos</p>
                                     </div>
                                 </div>
                             ) : null}
@@ -681,6 +695,19 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                     </p>
                                 </div>
 
+                                {/* Requisito de grupo mínimo si aplica */}
+                                {course.minStudents && course.minStudents > 0 && (
+                                    <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-2xl flex items-start gap-2.5">
+                                        <div className="h-6 w-6 rounded-lg bg-amber-200 text-amber-900 flex items-center justify-center shrink-0 mt-0.5">
+                                            <Users className="h-3.5 w-3.5" />
+                                        </div>
+                                        <div className="text-xs text-amber-950 leading-snug">
+                                            <span className="font-bold">Grupo mínimo requerido: </span>
+                                            Se requiere un mínimo de <strong>{course.minStudents} alumnos</strong> inscritos para la realización del curso.
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Bloques de Precios: Diseño vertical anti-desbordamiento */}
                                 <div className="space-y-3">
                                     {/* Precio Afiliados UGT */}
@@ -701,7 +728,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                 {frac.count} plazos de {frac.mainDisplay}
                                                             </div>
                                                             <p className="text-[11px] font-semibold text-emerald-800/80 pt-0.5">
-                                                                Total del curso: €{frac.totalPrice.toFixed(2)}
+                                                                Total del curso: {frac.totalPrice.toFixed(2)} €
                                                             </p>
                                                         </div>
                                                     );
@@ -709,7 +736,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                 return (
                                                     <div className="space-y-0.5">
                                                         <p className="text-3xl sm:text-4xl font-black text-emerald-700 tracking-tight">
-                                                            €{course.affiliatePrice.toFixed(2)}
+                                                            {course.affiliatePrice.toFixed(2)} €
                                                         </p>
                                                         <p className="text-xs font-semibold text-emerald-800/80">
                                                             {[getPriceUnitLabel(course.priceUnit), getFrequencyLabel(course.paymentFrequency)].filter(Boolean).join(' · ') || 'Precio total'}
@@ -739,7 +766,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                 {frac.mainDisplay} <span className="text-xs font-medium text-slate-500">/ plazo</span>
                                                             </p>
                                                             <p className="text-xs font-medium text-slate-600">
-                                                                Total: €{frac.totalPrice.toFixed(2)} ({frac.count} plazos de {frac.mainDisplay})
+                                                                Total: {frac.totalPrice.toFixed(2)} € ({frac.count} plazos de {frac.mainDisplay})
                                                             </p>
                                                         </div>
                                                     );
@@ -747,7 +774,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                 return (
                                                     <div className="space-y-0.5">
                                                         <p className="text-2xl font-black text-slate-900 tracking-tight">
-                                                            €{course.price.toFixed(2)}
+                                                            {course.price.toFixed(2)} €
                                                         </p>
                                                         <p className="text-xs font-medium text-slate-500">
                                                             {[getPriceUnitLabel(course.priceUnit), getFrequencyLabel(course.paymentFrequency)].filter(Boolean).join(' · ') || 'Precio total'}
@@ -1196,7 +1223,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                                             </span>
                                                                                         </p>
                                                                                         <div className="text-[10px] font-semibold text-slate-600 space-y-0.5 pt-1 border-t border-red-200/60">
-                                                                                            <p>Total: €{frac.totalPrice.toFixed(2)} en {frac.count} cuotas · Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}</p>
+                                                                                            <p>Total: {frac.totalPrice.toFixed(2)} € en {frac.count} cuotas · Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}</p>
                                                                                             {hasDiscount && (
                                                                                                 <p className="text-emerald-700 font-bold">
                                                                                                     🏷️ Descuento acumulado del -{totalDiscountPercentage}% aplicado ({discountReasonText})
@@ -1209,10 +1236,10 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                             return (
                                                                                 <>
                                                                                     <p className="text-2xl font-black text-red-700">
-                                                                                        {activePrice !== undefined ? `€${activePrice.toFixed(2)}` : 'Por consultar'}
+                                                                                        {activePrice !== undefined ? `${activePrice.toFixed(2)} €` : 'Por consultar'}
                                                                                     </p>
                                                                                     <div className="text-[10px] font-semibold text-slate-600 space-y-0.5 pt-1 border-t border-red-200/60">
-                                                                                        <p>Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}{rawBasePrice && hasDiscount ? ` (Base: €${rawBasePrice.toFixed(2)})` : ''}</p>
+                                                                                        <p>Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}{rawBasePrice && hasDiscount ? ` (Base: ${rawBasePrice.toFixed(2)} €)` : ''}</p>
                                                                                         {hasDiscount && (
                                                                                             <p className="text-emerald-700 font-bold">
                                                                                                 🏷️ Descuento acumulado del -{totalDiscountPercentage}% aplicado ({discountReasonText})

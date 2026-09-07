@@ -67,7 +67,7 @@ export class NotificationService {
   static async paymentOverdue(studentName: string, amount: number, courseName: string, studentId?: string) {
     return this.create({
       title: 'Pago Pendiente',
-      message: `El alumno ${studentName} tiene un pago pendiente de €${amount} por el curso ${courseName}`,
+      message: `El alumno ${studentName} tiene un pago pendiente de ${amount}€ por el curso ${courseName}`,
       type: NotificationType.WARNING,
       priority: NotificationPriority.HIGH,
       category: NotificationCategory.PAYMENT,

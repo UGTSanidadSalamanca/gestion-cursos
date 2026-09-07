@@ -100,9 +100,9 @@ export default function Home() {
               <CardTitle className="text-sm font-medium">Ingresos Mensuales</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">€{loading ? '...' : (stats?.monthlyRevenue || 0).toLocaleString()}</div>
+              <div className="text-2xl font-bold">{loading ? '...' : (stats?.monthlyRevenue || 0).toLocaleString()} €</div>
               <p className="text-xs text-muted-foreground">
-                Previsto: €{stats?.expectedRevenue ? Math.round(stats.expectedRevenue).toLocaleString() : '0'}
+                Previsto: {stats?.expectedRevenue ? Math.round(stats.expectedRevenue).toLocaleString() : '0'} €
                 {stats?.expectedRevenue > 0 && stats?.monthlyRevenue
                   ? ` (${Math.round((stats.monthlyRevenue / stats.expectedRevenue) * 100)}% cobrado)`
                   : ''}

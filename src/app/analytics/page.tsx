@@ -64,7 +64,7 @@ export default function AnalyticsPage() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">€145,680</div>
+              <div className="text-2xl font-bold">145.680 €</div>
               <p className="text-xs text-green-600">
                 +12.5% respecto al trimestre anterior
               </p>
@@ -215,7 +215,7 @@ export default function AnalyticsPage() {
                         <div className="w-24 bg-slate-200 rounded-full h-2">
                           <div className="bg-blue-500 h-2 rounded-full" style={{ width: "35%" }}></div>
                         </div>
-                        <span className="text-sm text-muted-foreground">€51,200</span>
+                        <span className="text-sm text-muted-foreground">51.200 €</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
@@ -224,7 +224,7 @@ export default function AnalyticsPage() {
                         <div className="w-24 bg-slate-200 rounded-full h-2">
                           <div className="bg-green-500 h-2 rounded-full" style={{ width: "28%" }}></div>
                         </div>
-                        <span className="text-sm text-muted-foreground">€40,800</span>
+                        <span className="text-sm text-muted-foreground">40.800 €</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
@@ -233,7 +233,7 @@ export default function AnalyticsPage() {
                         <div className="w-24 bg-slate-200 rounded-full h-2">
                           <div className="bg-purple-500 h-2 rounded-full" style={{ width: "22%" }}></div>
                         </div>
-                        <span className="text-sm text-muted-foreground">€32,100</span>
+                        <span className="text-sm text-muted-foreground">32.100 €</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
@@ -242,7 +242,7 @@ export default function AnalyticsPage() {
                         <div className="w-24 bg-slate-200 rounded-full h-2">
                           <div className="bg-orange-500 h-2 rounded-full" style={{ width: "15%" }}></div>
                         </div>
-                        <span className="text-sm text-muted-foreground">€21,580</span>
+                        <span className="text-sm text-muted-foreground">21.580 €</span>
                       </div>
                     </div>
                   </div>
@@ -267,7 +267,7 @@ export default function AnalyticsPage() {
                         <div className="w-24 bg-slate-200 rounded-full h-2">
                           <div className="bg-blue-500 h-2 rounded-full" style={{ width: "75%" }}></div>
                         </div>
-                        <span className="text-sm text-muted-foreground">€18,500</span>
+                        <span className="text-sm text-muted-foreground">18.500 €</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
@@ -276,7 +276,7 @@ export default function AnalyticsPage() {
                         <div className="w-24 bg-slate-200 rounded-full h-2">
                           <div className="bg-green-500 h-2 rounded-full" style={{ width: "82%" }}></div>
                         </div>
-                        <span className="text-sm text-muted-foreground">€20,200</span>
+                        <span className="text-sm text-muted-foreground">20.200 €</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
@@ -285,7 +285,7 @@ export default function AnalyticsPage() {
                         <div className="w-24 bg-slate-200 rounded-full h-2">
                           <div className="bg-purple-500 h-2 rounded-full" style={{ width: "88%" }}></div>
                         </div>
-                        <span className="text-sm text-muted-foreground">€21,800</span>
+                        <span className="text-sm text-muted-foreground">21.800 €</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
@@ -294,7 +294,7 @@ export default function AnalyticsPage() {
                         <div className="w-24 bg-slate-200 rounded-full h-2">
                           <div className="bg-orange-500 h-2 rounded-full" style={{ width: "95%" }}></div>
                         </div>
-                        <span className="text-sm text-muted-foreground">€24,580</span>
+                        <span className="text-sm text-muted-foreground">24.580 €</span>
                       </div>
                     </div>
                   </div>

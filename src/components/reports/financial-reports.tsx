@@ -131,28 +131,28 @@ export function FinancialReports() {
           metrics={[
             {
               label: "Ingresos Totales",
-              value: `€${financialData.totalRevenue.toLocaleString()}`,
+              value: `${financialData.totalRevenue.toLocaleString()} €`,
               change: 8,
               changeType: 'positive',
               icon: <DollarSign className="h-4 w-4" />
             },
             {
               label: "Gastos Totales",
-              value: `€${financialData.totalExpenses.toLocaleString()}`,
+              value: `${financialData.totalExpenses.toLocaleString()} €`,
               change: 5,
               changeType: 'positive',
               icon: <TrendingDown className="h-4 w-4" />
             },
             {
               label: "Beneficio Neto",
-              value: `€${financialData.netProfit.toLocaleString()}`,
+              value: `${financialData.netProfit.toLocaleString()} €`,
               change: 12,
               changeType: 'positive',
               icon: <TrendingUp className="h-4 w-4" />
             },
             {
               label: "Pagos Pendientes",
-              value: `€${financialData.pendingPayments.toLocaleString()}`,
+              value: `${financialData.pendingPayments.toLocaleString()} €`,
               change: -3,
               changeType: 'negative',
               icon: <AlertCircle className="h-4 w-4" />
@@ -210,19 +210,19 @@ export function FinancialReports() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Pagos al día</span>
-                    <Badge className="bg-green-100 text-green-800">€16,160</Badge>
+                    <Badge className="bg-green-100 text-green-800">16.160 €</Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Pagos pendientes</span>
-                    <Badge className="bg-yellow-100 text-yellow-800">€8,420</Badge>
+                    <Badge className="bg-yellow-100 text-yellow-800">8.420 €</Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Pagos vencidos</span>
-                    <Badge className="bg-red-100 text-red-800">€2,150</Badge>
+                    <Badge className="bg-red-100 text-red-800">2.150 €</Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Total recaudado</span>
-                    <Badge className="bg-blue-100 text-blue-800">€24,580</Badge>
+                    <Badge className="bg-blue-100 text-blue-800">24.580 €</Badge>
                   </div>
                 </div>
               </CardContent>
@@ -291,7 +291,7 @@ export function FinancialReports() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Proyección anual</span>
-                      <Badge className="bg-purple-100 text-purple-800">€294,960</Badge>
+                      <Badge className="bg-purple-100 text-purple-800">294.960 €</Badge>
                     </div>
                   </div>
                 </div>

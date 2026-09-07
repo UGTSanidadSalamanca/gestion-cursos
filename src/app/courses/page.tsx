@@ -96,6 +96,7 @@ interface Course {
   durationMonths?: number
   durationPeriod?: string
   syllabusUrl?: string
+  minStudents?: number | null
   maxStudents: number
   price?: number
   priceUnit?: string
@@ -198,6 +199,8 @@ export default function CoursesPage() {
     hasDiscounts: false,
     discountDescription: '',
     discountRules: [] as DiscountRule[],
+    hasMinStudents: false,
+    minStudents: '',
     maxStudents: '30',
     modules: [] as { title: string; description: string; teacherId: string }[],
     schedules: [] as { dayOfWeek: string; startTime: string; endTime: string; classroom: string; teacherId: string }[]
@@ -419,6 +422,7 @@ export default function CoursesPage() {
           priceUnit: courseFormData.priceUnit,
           paymentFrequency: courseFormData.paymentFrequency,
           affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
+          minStudents: courseFormData.hasMinStudents && courseFormData.minStudents ? parseInt(courseFormData.minStudents) : null,
           maxStudents: courseFormData.maxStudents ? parseInt(courseFormData.maxStudents) : 0,
           schedules: courseFormData.schedules.map(s => ({
             ...s,
@@ -462,6 +466,7 @@ export default function CoursesPage() {
           priceUnit: courseFormData.priceUnit,
           paymentFrequency: courseFormData.paymentFrequency,
           affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
+          minStudents: courseFormData.hasMinStudents && courseFormData.minStudents ? parseInt(courseFormData.minStudents) : null,
           maxStudents: courseFormData.maxStudents ? parseInt(courseFormData.maxStudents) : 0,
           schedules: courseFormData.schedules.map(s => ({
             ...s,
@@ -553,6 +558,8 @@ export default function CoursesPage() {
       hasDiscounts: false,
       discountDescription: '',
       discountRules: [] as DiscountRule[],
+      hasMinStudents: false,
+      minStudents: '',
       maxStudents: '30',
       modules: [],
       schedules: []
@@ -615,6 +622,8 @@ export default function CoursesPage() {
           return []
         }
       })(),
+      hasMinStudents: !!(course.minStudents && course.minStudents > 0),
+      minStudents: course.minStudents != null ? course.minStudents.toString() : '',
       maxStudents: (course.maxStudents || 0).toString(),
       modules: (course.modules || []).map(m => ({
         title: m.title || '',
@@ -1185,6 +1194,69 @@ export default function CoursesPage() {
                             </button>
                           </div>
                         </div>
+
+                        {/* Configuración de Plazas / Cupo Mínimo y Máximo */}
+                        <div className="col-span-1 md:col-span-4 space-y-4 pt-1">
+                          <div className="flex flex-col gap-3 p-4 bg-blue-50/40 border border-blue-200/70 rounded-xl">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-xs font-bold text-blue-950 uppercase">Requerir número mínimo de alumnos</Label>
+                                <p className="text-[11px] text-blue-700 mt-0.5">Indica en la landing el mínimo de alumnos necesarios para que el curso pueda llevarse a cabo.</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nextState = !courseFormData.hasMinStudents
+                                  setCourseFormData({
+                                    ...courseFormData,
+                                    hasMinStudents: nextState,
+                                    minStudents: nextState && !courseFormData.minStudents ? '10' : courseFormData.minStudents
+                                  })
+                                }}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+                                  courseFormData.hasMinStudents ? 'bg-blue-600' : 'bg-slate-300'
+                                }`}
+                              >
+                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                                  courseFormData.hasMinStudents ? 'translate-x-5' : 'translate-x-0'
+                                }`} />
+                              </button>
+                            </div>
+
+                            {courseFormData.hasMinStudents && (
+                              <div className="pt-2 border-t border-blue-200/60 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                  <Label htmlFor="create-minStudents" className="text-xs font-bold text-blue-900 uppercase">Nº Mínimo de Alumnos para inicio</Label>
+                                  <Input
+                                    id="create-minStudents"
+                                    type="number"
+                                    min="1"
+                                    placeholder="Ej: 10"
+                                    value={courseFormData.minStudents}
+                                    onChange={(e) => setCourseFormData({ ...courseFormData, minStudents: e.target.value })}
+                                    className="bg-white border-blue-200 h-10 font-bold text-blue-900"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                              <Label htmlFor="create-maxStudents" className="text-xs font-bold text-slate-500 uppercase">Cupo Máximo (Plazas Disponibles)</Label>
+                              <Input
+                                id="create-maxStudents"
+                                type="number"
+                                min="1"
+                                value={courseFormData.maxStudents}
+                                onChange={(e) => setCourseFormData({ ...courseFormData, maxStudents: e.target.value })}
+                                className="bg-white border-slate-200 h-11"
+                                placeholder="Ej: 30"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
                         {(() => {
                           const count = courseFormData.paymentFrequency === '2_PAYMENTS' ? 2 :
                             courseFormData.paymentFrequency === '3_PAYMENTS' ? 3 :
@@ -1198,9 +1270,9 @@ export default function CoursesPage() {
                               <div className="col-span-1 md:col-span-4 p-3 bg-violet-50/70 border border-violet-200/80 rounded-xl text-xs text-violet-900 flex items-center gap-2">
                                 <span className="font-bold">ℹ️ Desglose automático de cuotas:</span>
                                 <span>
-                                  {count} plazos de {afiPrice > 0 ? `€${(afiPrice / count).toFixed(2)} (Afiliados)` : ''}
+                                  {count} plazos de {afiPrice > 0 ? `${(afiPrice / count).toFixed(2)} € (Afiliados)` : ''}
                                   {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
-                                  {genPrice > 0 ? `€${(genPrice / count).toFixed(2)} (General)` : ''}
+                                  {genPrice > 0 ? `${(genPrice / count).toFixed(2)} € (General)` : ''}
                                 </span>
                               </div>
                             );
@@ -1583,13 +1655,13 @@ export default function CoursesPage() {
                           <TableCell className="font-medium text-slate-900 leading-tight">
                             <div className="flex flex-col gap-1">
                               {course.price && course.price > 0 ? (
-                                <span className="text-sm font-bold">{`€${course.price.toFixed(2)}`}</span>
+                                <span className="text-sm font-bold">{`${course.price.toFixed(2)} €`}</span>
                               ) : (
                                 <span className="text-[10px] text-slate-400 italic">Gral: Consultar</span>
                               )}
                               {course.affiliatePrice && course.affiliatePrice > 0 ? (
                                 <span className="text-[10px] font-black text-green-600 bg-green-50 px-1.5 py-0.5 rounded w-fit">
-                                  Afi: €{course.affiliatePrice.toFixed(2)}
+                                  Afi: {course.affiliatePrice.toFixed(2)} €
                                 </span>
                               ) : (
                                 <span className="text-[10px] text-slate-400 italic">Afi: Consultar</span>
@@ -1901,7 +1973,7 @@ export default function CoursesPage() {
                         <div className="flex items-center gap-2">
                           <Euro className="h-4 w-4 text-slate-600" />
                           <span className="text-xs font-bold text-slate-700">
-                            {selectedCourse.price && selectedCourse.price > 0 ? `€${selectedCourse.price.toFixed(2)}` : 'Consultar'}
+                            {selectedCourse.price && selectedCourse.price > 0 ? `${selectedCourse.price.toFixed(2)} €` : 'Consultar'}
                             {selectedCourse.priceUnit && selectedCourse.price && selectedCourse.price > 0 && (
                               <span className="text-[10px] text-slate-500 ml-1">
                                 {selectedCourse.priceUnit === 'FULL' ? '' :
@@ -1920,7 +1992,7 @@ export default function CoursesPage() {
                         <div className="flex items-center gap-2">
                           <Euro className="h-4 w-4 text-green-700" />
                           <span className="text-xs font-bold text-green-700">
-                            {selectedCourse.affiliatePrice && selectedCourse.affiliatePrice > 0 ? `€${selectedCourse.affiliatePrice.toFixed(2)}` : 'Consultar'}
+                            {selectedCourse.affiliatePrice && selectedCourse.affiliatePrice > 0 ? `${selectedCourse.affiliatePrice.toFixed(2)} €` : 'Consultar'}
                             {selectedCourse.priceUnit && selectedCourse.affiliatePrice && selectedCourse.affiliatePrice > 0 && (
                               <span className="text-[10px] text-green-600/70 ml-1">
                                 {selectedCourse.priceUnit === 'FULL' ? '' :
@@ -1946,6 +2018,24 @@ export default function CoursesPage() {
                             <p className="text-[10px] font-black text-slate-400 uppercase">Calendario</p>
                             <p className="text-sm font-bold text-slate-800">Inicio: {new Date(selectedCourse.startDate).toLocaleDateString()}</p>
                             {selectedCourse.durationPeriod && <p className="text-[10px] text-slate-500 italic">{selectedCourse.durationPeriod}</p>}
+                          </div>
+                        </div>
+                      )}
+                      {(selectedCourse.minStudents || selectedCourse.maxStudents) && (
+                        <div className="flex items-start gap-3">
+                          <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
+                            <Users className="h-4 w-4 text-indigo-600" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase">Capacidad y Requisitos</p>
+                            <p className="text-sm font-bold text-slate-800">
+                              {selectedCourse.minStudents ? `Mínimo: ${selectedCourse.minStudents} alumnos` : ''}
+                              {selectedCourse.minStudents && selectedCourse.maxStudents ? ' · ' : ''}
+                              {selectedCourse.maxStudents ? `Máx: ${selectedCourse.maxStudents} plazas` : ''}
+                            </p>
+                            {selectedCourse.minStudents && (
+                              <p className="text-[10px] text-blue-600 font-medium">Requerido para la realización del curso</p>
+                            )}
                           </div>
                         </div>
                       )}
@@ -2434,11 +2524,64 @@ export default function CoursesPage() {
                         </button>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-maxStudents" className="text-xs font-bold text-slate-500 uppercase">Cupo Máximo</Label>
-                      <Input id="edit-maxStudents" type="number" value={courseFormData.maxStudents} onChange={(e) => setCourseFormData({ ...courseFormData, maxStudents: e.target.value })} className="bg-white border-slate-200 h-11" />
+                    {/* Toggle: Número Mínimo de Alumnos (edit) */}
+                    <div className="col-span-1 md:col-span-4">
+                      <div className="flex flex-col gap-3 p-4 bg-blue-50/40 border border-blue-200/70 rounded-xl">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-xs font-bold text-blue-950 uppercase">Requerir número mínimo de alumnos</Label>
+                            <p className="text-[11px] text-blue-700 mt-0.5">Indica en la landing el mínimo de alumnos necesarios para que el curso pueda llevarse a cabo.</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const nextState = !courseFormData.hasMinStudents
+                              setCourseFormData({
+                                ...courseFormData,
+                                hasMinStudents: nextState,
+                                minStudents: nextState && !courseFormData.minStudents ? '10' : courseFormData.minStudents
+                              })
+                            }}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+                              courseFormData.hasMinStudents ? 'bg-blue-600' : 'bg-slate-300'
+                            }`}
+                          >
+                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                              courseFormData.hasMinStudents ? 'translate-x-5' : 'translate-x-0'
+                            }`} />
+                          </button>
+                        </div>
+
+                        {courseFormData.hasMinStudents && (
+                          <div className="pt-2 border-t border-blue-200/60 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                              <Label htmlFor="edit-minStudents" className="text-xs font-bold text-blue-900 uppercase">Nº Mínimo de Alumnos para inicio</Label>
+                              <Input
+                                id="edit-minStudents"
+                                type="number"
+                                min="1"
+                                placeholder="Ej: 10"
+                                value={courseFormData.minStudents}
+                                onChange={(e) => setCourseFormData({ ...courseFormData, minStudents: e.target.value })}
+                                className="bg-white border-blue-200 h-10 font-bold text-blue-900"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="space-y-2">
+
+                    <div className="space-y-1.5 col-span-1 md:col-span-2">
+                      <Label htmlFor="edit-maxStudents" className="text-xs font-bold text-slate-500 uppercase">Cupo Máximo (Plazas Disponibles)</Label>
+                      <Input
+                        id="edit-maxStudents"
+                        type="number"
+                        min="1"
+                        value={courseFormData.maxStudents}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, maxStudents: e.target.value })}
+                        className="bg-white border-slate-200 h-11"
+                        placeholder="Ej: 30"
+                      />
                     </div>
                     {(() => {
                       const count = courseFormData.paymentFrequency === '2_PAYMENTS' ? 2 :
@@ -2453,9 +2596,9 @@ export default function CoursesPage() {
                           <div className="col-span-1 md:col-span-4 p-3 bg-violet-50/70 border border-violet-200/80 rounded-xl text-xs text-violet-900 flex items-center gap-2">
                             <span className="font-bold">ℹ️ Desglose automático de cuotas:</span>
                             <span>
-                              {count} plazos de {afiPrice > 0 ? `€${(afiPrice / count).toFixed(2)} (Afiliados)` : ''}
+                              {count} plazos de {afiPrice > 0 ? `${(afiPrice / count).toFixed(2)} € (Afiliados)` : ''}
                               {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
-                              {genPrice > 0 ? `€${(genPrice / count).toFixed(2)} (General)` : ''}
+                              {genPrice > 0 ? `${(genPrice / count).toFixed(2)} € (General)` : ''}
                             </span>
                           </div>
                         );

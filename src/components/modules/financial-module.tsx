@@ -48,7 +48,7 @@ export function FinancialModule({ stats }: FinancialModuleProps) {
                 <DollarSign className="h-4 w-4 text-green-600" />
                 <span className="text-sm font-medium">Ingresos</span>
               </div>
-              <div className="text-2xl font-bold text-green-600">€{(stats?.monthlyRevenue || 0).toLocaleString()}</div>
+              <div className="text-2xl font-bold text-green-600">{(stats?.monthlyRevenue || 0).toLocaleString()} €</div>
               <div className="text-xs text-green-500">Total mensual</div>
             </div>
             <div className="bg-yellow-50 p-3 rounded-lg">
@@ -56,7 +56,7 @@ export function FinancialModule({ stats }: FinancialModuleProps) {
                 <AlertTriangle className="h-4 w-4 text-yellow-600" />
                 <span className="text-sm font-medium">Pendientes</span>
               </div>
-              <div className="text-2xl font-bold text-yellow-600">€{(stats?.pendingRevenue || 0).toLocaleString()}</div>
+              <div className="text-2xl font-bold text-yellow-600">{(stats?.pendingRevenue || 0).toLocaleString()} €</div>
               <div className="text-xs text-yellow-500">Por cobrar</div>
             </div>
             <div className="bg-blue-50 p-3 rounded-lg">
@@ -64,7 +64,7 @@ export function FinancialModule({ stats }: FinancialModuleProps) {
                 <Users className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium">Instructores</span>
               </div>
-              <div className="text-2xl font-bold text-blue-600">€12,340</div>
+              <div className="text-2xl font-bold text-blue-600">12.340 €</div>
               <div className="text-xs text-blue-500">Total pagado</div>
             </div>
             <div className="bg-red-50 p-3 rounded-lg">
@@ -72,7 +72,7 @@ export function FinancialModule({ stats }: FinancialModuleProps) {
                 <TrendingDown className="h-4 w-4 text-red-600" />
                 <span className="text-sm font-medium">Morosidad</span>
               </div>
-              <div className="text-2xl font-bold text-red-600">€{(stats?.overdueRevenue || 0).toLocaleString()}</div>
+              <div className="text-2xl font-bold text-red-600">{(stats?.overdueRevenue || 0).toLocaleString()} €</div>
               <div className="text-xs text-red-500">Vencidos</div>
             </div>
           </div>
@@ -125,7 +125,7 @@ export function FinancialModule({ stats }: FinancialModuleProps) {
                 <DollarSign className="h-4 w-4 text-yellow-600" />
                 <span className="text-sm font-medium">Total Pagado</span>
               </div>
-              <div className="text-2xl font-bold text-yellow-600">€12,340</div>
+              <div className="text-2xl font-bold text-yellow-600">12.340 €</div>
               <div className="text-xs text-yellow-500">Este período</div>
             </div>
             <div className="bg-green-50 p-3 rounded-lg">
@@ -141,7 +141,7 @@ export function FinancialModule({ stats }: FinancialModuleProps) {
                 <TrendingUp className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium">Promedio</span>
               </div>
-              <div className="text-2xl font-bold text-blue-600">€685</div>
+              <div className="text-2xl font-bold text-blue-600">685 €</div>
               <div className="text-xs text-blue-600">Por instructor</div>
             </div>
             <div className="bg-purple-50 p-3 rounded-lg">

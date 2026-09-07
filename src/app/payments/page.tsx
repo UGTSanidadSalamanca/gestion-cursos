@@ -743,7 +743,7 @@ export default function PaymentsPage() {
               <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">€{totalPaid.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-green-600">{totalPaid.toLocaleString()} €</div>
               <p className="text-xs text-muted-foreground">
                 {payments.filter(p => p.status === 'PAID').length} pagos
               </p>
@@ -756,7 +756,7 @@ export default function PaymentsPage() {
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">€{totalPending.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-yellow-600">{totalPending.toLocaleString()} €</div>
               <p className="text-xs text-muted-foreground">
                 {payments.filter(p => p.status === 'PENDING').length} pagos
               </p>
@@ -769,7 +769,7 @@ export default function PaymentsPage() {
               <AlertTriangle className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">€{totalOverdue.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-red-600">{totalOverdue.toLocaleString()} €</div>
               <p className="text-xs text-muted-foreground">
                 {payments.filter(p => p.status === 'OVERDUE').length} pagos
               </p>
@@ -859,11 +859,11 @@ export default function PaymentsPage() {
                           <div>
                             <div className="font-medium">{payment.course?.title || 'No asignado'}</div>
                             {payment.course?.price && (
-                              <div className="text-xs text-muted-foreground">€{payment.course.price}</div>
+                              <div className="text-xs text-muted-foreground">{payment.course.price} €</div>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium">€{payment.amount}</TableCell>
+                        <TableCell className="font-medium">{payment.amount} €</TableCell>
                         <TableCell>{getPaymentMethodBadge(payment.paymentMethod)}</TableCell>
                         <TableCell>{getStatusBadge(payment.status)}</TableCell>
                         <TableCell>
@@ -966,18 +966,18 @@ export default function PaymentsPage() {
                         <TableCell>{item.courseTitle}</TableCell>
                         <TableCell>
                           <div className="flex flex-col">
-                            <span>€{item.coursePrice}</span>
+                            <span>{item.coursePrice} €</span>
                             <span className="text-[10px] text-muted-foreground uppercase">{item.priceUnit}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-slate-500">€{Math.round(item.expectedToDate)}</TableCell>
-                        <TableCell className="font-bold text-green-600">€{item.paidTotal}</TableCell>
+                        <TableCell className="text-slate-500">{Math.round(item.expectedToDate)} €</TableCell>
+                        <TableCell className="font-bold text-green-600">{item.paidTotal} €</TableCell>
                         <TableCell>
                           <span className={cn(
                             "font-bold",
                             item.pendingAmount > 0 ? "text-red-600" : "text-slate-400"
                           )}>
-                            €{Math.round(item.pendingAmount)}
+                            {Math.round(item.pendingAmount)} €
                           </span>
                         </TableCell>
                         <TableCell>

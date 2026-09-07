@@ -19,6 +19,8 @@ export async function GET(
                 level: true,
                 duration: true,
                 durationPeriod: true,
+                minStudents: true,
+                maxStudents: true,
                 price: true,
                 priceUnit: true,
                 paymentFrequency: true,

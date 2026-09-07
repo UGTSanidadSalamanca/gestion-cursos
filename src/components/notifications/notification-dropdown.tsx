@@ -23,7 +23,7 @@ export function NotificationDropdown() {
     {
       id: "1",
       title: "Pago Pendiente",
-      message: "El alumno Juan Pérez tiene un pago pendiente de €250",
+      message: "El alumno Juan Pérez tiene un pago pendiente de 250 €",
       type: "WARNING",
       priority: "HIGH",
       category: "PAYMENT",

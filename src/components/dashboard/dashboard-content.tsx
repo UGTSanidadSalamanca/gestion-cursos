@@ -49,7 +49,7 @@ export function DashboardContent() {
         />
         <StatsCard
           title="Ingresos Mes"
-          value="€12,450"
+          value="12.450 €"
           description="Pagos recibidos"
           icon={CreditCard}
           trend={{ value: 23, isPositive: true }}

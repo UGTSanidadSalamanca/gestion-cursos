@@ -569,7 +569,7 @@ export default function TeachersPage() {
                     <TableCell>{teacher.specialty || '-'}</TableCell>
                     <TableCell>{getContractTypeBadge(teacher.contractType)}</TableCell>
                     <TableCell>
-                      {teacher.hourlyRate ? `€${teacher.hourlyRate}` : '-'}
+                      {teacher.hourlyRate ? `${teacher.hourlyRate} €/h` : '-'}
                     </TableCell>
                     <TableCell>{getStatusBadge(teacher.status)}</TableCell>
                     <TableCell>

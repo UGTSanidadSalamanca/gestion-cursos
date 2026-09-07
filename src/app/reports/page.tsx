@@ -102,9 +102,9 @@ export default function ReportsPage() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">€{stats.totalRevenue.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} €</div>
               <p className="text-xs text-muted-foreground">
-                Promedio mensual: €{stats.averageRevenue.toLocaleString()}
+                Promedio mensual: {stats.averageRevenue.toLocaleString()} €
               </p>
             </CardContent>
           </Card>
@@ -221,7 +221,7 @@ export default function ReportsPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Ingresos estimados</span>
                       <div className="flex items-center space-x-1">
-                        <span className="text-sm font-medium">€9,200</span>
+                        <span className="text-sm font-medium">9.200 €</span>
                         <TrendingUp className="h-4 w-4 text-green-500" />
                       </div>
                     </div>
