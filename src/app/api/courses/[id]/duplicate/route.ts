@@ -65,6 +65,7 @@ export async function POST(
         // La copia nace inactiva y sin fechas (para que el usuario las configure)
         isActive: false,
         startDate: null,
+        startDateHasDay: original.startDateHasDay ?? true,
         endDate: null,
         // Duplicar los módulos (sin IDs, se crearán nuevos)
         modules: {

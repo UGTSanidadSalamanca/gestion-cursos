@@ -91,6 +91,7 @@ export async function PUT(
             affiliatePrice,
             isActive,
             startDate,
+            startDateHasDay,
             endDate,
             publicDescription,
             benefits,
@@ -133,6 +134,7 @@ export async function PUT(
                 affiliatePrice: affiliatePrice ? parseFloat(affiliatePrice) : null,
                 isActive,
                 startDate: startDate ? new Date(startDate) : null,
+                startDateHasDay: startDateHasDay !== undefined ? startDateHasDay : true,
                 endDate: endDate ? new Date(endDate) : null,
                 publicDescription,
                 benefits,
@@ -217,6 +219,10 @@ export async function PATCH(
 
         if (body.startDate !== undefined) {
             updateData.startDate = body.startDate ? new Date(body.startDate) : null
+        }
+
+        if (body.startDateHasDay !== undefined) {
+            updateData.startDateHasDay = body.startDateHasDay
         }
 
         if (body.title !== undefined) updateData.title = body.title

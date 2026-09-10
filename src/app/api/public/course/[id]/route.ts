@@ -27,6 +27,7 @@ export async function GET(
                 affiliatePrice: true,
                 isActive: true,
                 startDate: true,
+                startDateHasDay: true,
                 endDate: true,
                 publicDescription: true,
                 benefits: true,

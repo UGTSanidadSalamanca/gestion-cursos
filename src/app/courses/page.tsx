@@ -104,6 +104,7 @@ interface Course {
   affiliatePrice?: number
   isActive: boolean
   startDate?: string
+  startDateHasDay?: boolean
   endDate?: string
   publicDescription?: string
   benefits?: string
@@ -186,6 +187,7 @@ export default function CoursesPage() {
     paymentFrequency: '',
     affiliatePrice: '',
     startDate: '',
+    startDateHasDay: true,
     endDate: '',
     description: '',
     publicDescription: '',
@@ -247,6 +249,27 @@ export default function CoursesPage() {
       case 'SEMESTER': return short ? 'Semestral' : 'Semestral'
       case 'ANNUAL': return short ? 'Anual' : 'Anual'
       default: return freq
+    }
+  }
+
+  const formatCourseStartDate = (dateVal?: string | Date | null, hasDay: boolean = true) => {
+    if (!dateVal) return ''
+    try {
+      const rawStr = typeof dateVal === 'string' ? dateVal.split('T')[0] : (dateVal as Date).toISOString().split('T')[0]
+      const parts = rawStr.split('-').map(Number)
+      if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) return ''
+      const year = parts[0]
+      const month = parts[1]
+      const day = parts[2] || 1
+
+      const d = new Date(Date.UTC(year, month - 1, day))
+      if (hasDay === false) {
+        const monthName = d.toLocaleDateString('es-ES', { month: 'long', timeZone: 'UTC' })
+        return `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} de ${year}`
+      }
+      return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+    } catch (e) {
+      return ''
     }
   }
 
@@ -545,6 +568,7 @@ export default function CoursesPage() {
       paymentFrequency: '',
       affiliatePrice: '',
       startDate: '',
+      startDateHasDay: true,
       endDate: '',
       description: '',
       publicDescription: '',
@@ -602,6 +626,7 @@ export default function CoursesPage() {
       paymentFrequency: course.paymentFrequency || '',
       affiliatePrice: course.affiliatePrice != null ? course.affiliatePrice.toString() : '',
       startDate: course.startDate ? (typeof course.startDate === 'string' ? course.startDate.split('T')[0] : (course.startDate as any).toISOString().split('T')[0]) : '',
+      startDateHasDay: course.startDateHasDay ?? true,
       endDate: course.endDate ? (typeof course.endDate === 'string' ? course.endDate.split('T')[0] : (course.endDate as any).toISOString().split('T')[0]) : '',
       description: course.description || '',
       publicDescription: course.publicDescription || '',
@@ -632,8 +657,8 @@ export default function CoursesPage() {
       })),
       schedules: (course.schedules || []).map(s => ({
         dayOfWeek: s.dayOfWeek || 'Lunes',
-        startTime: s.startTime ? (typeof s.startTime === 'string' ? s.startTime.substring(11, 16) : s.startTime.toISOString().substring(11, 16)) : '',
-        endTime: s.endTime ? (typeof s.endTime === 'string' ? s.endTime.substring(11, 16) : s.endTime.toISOString().substring(11, 16)) : '',
+        startTime: s.startTime ? (typeof s.startTime === 'string' ? s.startTime.substring(11, 16) : (s.startTime as any).toISOString().substring(11, 16)) : '',
+        endTime: s.endTime ? (typeof s.endTime === 'string' ? s.endTime.substring(11, 16) : (s.endTime as any).toISOString().substring(11, 16)) : '',
         classroom: s.classroom || '',
         teacherId: s.teacherId || ''
       }))
@@ -984,8 +1009,56 @@ export default function CoursesPage() {
                           <Input id="durationPeriod" placeholder="Ej: Oct-Dic" value={courseFormData.durationPeriod} onChange={(e) => setCourseFormData({ ...courseFormData, durationPeriod: e.target.value })} className="bg-white border-slate-200 h-11" />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="startDate" className="text-xs font-bold text-slate-500 uppercase">Fecha Inicio</Label>
-                          <Input id="startDate" type="date" value={courseFormData.startDate} onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })} className="bg-white border-slate-200 h-11" />
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="startDate" className="text-xs font-bold text-slate-500 uppercase">Fecha Inicio</Label>
+                            <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg text-[10px]">
+                              <button
+                                type="button"
+                                onClick={() => setCourseFormData({ ...courseFormData, startDateHasDay: true })}
+                                className={`px-1.5 py-0.5 rounded transition-all font-semibold ${courseFormData.startDateHasDay ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                              >
+                                Día exacto
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  let newDate = courseFormData.startDate;
+                                  if (newDate && newDate.length > 7) {
+                                    newDate = newDate.substring(0, 7) + '-01';
+                                  }
+                                  setCourseFormData({ ...courseFormData, startDateHasDay: false, startDate: newDate });
+                                }}
+                                className={`px-1.5 py-0.5 rounded transition-all font-semibold ${!courseFormData.startDateHasDay ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                              >
+                                Solo mes
+                              </button>
+                            </div>
+                          </div>
+                          {courseFormData.startDateHasDay ? (
+                            <Input
+                              id="startDate"
+                              type="date"
+                              value={courseFormData.startDate ? courseFormData.startDate.substring(0, 10) : ''}
+                              onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })}
+                              className="bg-white border-slate-200 h-11"
+                            />
+                          ) : (
+                            <Input
+                              id="startDate"
+                              type="month"
+                              value={courseFormData.startDate ? courseFormData.startDate.substring(0, 7) : ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setCourseFormData({ ...courseFormData, startDate: val ? `${val}-01` : '' });
+                              }}
+                              className="bg-white border-slate-200 h-11"
+                            />
+                          )}
+                          {courseFormData.startDate && (
+                            <p className="text-[11px] text-slate-500 truncate">
+                              Vista previa: <span className="font-semibold text-slate-700">{formatCourseStartDate(courseFormData.startDate, courseFormData.startDateHasDay)}</span>
+                            </p>
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="endDate" className="text-xs font-bold text-slate-500 uppercase">Fecha Fin</Label>
@@ -2016,7 +2089,7 @@ export default function CoursesPage() {
                           </div>
                           <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase">Calendario</p>
-                            <p className="text-sm font-bold text-slate-800">Inicio: {new Date(selectedCourse.startDate).toLocaleDateString()}</p>
+                            <p className="text-sm font-bold text-slate-800">Inicio: {formatCourseStartDate(selectedCourse.startDate, selectedCourse.startDateHasDay)}</p>
                             {selectedCourse.durationPeriod && <p className="text-[10px] text-slate-500 italic">{selectedCourse.durationPeriod}</p>}
                           </div>
                         </div>
@@ -2314,8 +2387,56 @@ export default function CoursesPage() {
                       <Input id="edit-durationPeriod" placeholder="Ej: Oct-Dic" value={courseFormData.durationPeriod} onChange={(e) => setCourseFormData({ ...courseFormData, durationPeriod: e.target.value })} className="bg-white border-slate-200 h-11" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-startDate" className="text-xs font-bold text-slate-500 uppercase">Fecha Inicio</Label>
-                      <Input id="edit-startDate" type="date" value={courseFormData.startDate} onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })} className="bg-white border-slate-200 h-11" />
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="edit-startDate" className="text-xs font-bold text-slate-500 uppercase">Fecha Inicio</Label>
+                        <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg text-[10px]">
+                          <button
+                            type="button"
+                            onClick={() => setCourseFormData({ ...courseFormData, startDateHasDay: true })}
+                            className={`px-1.5 py-0.5 rounded transition-all font-semibold ${courseFormData.startDateHasDay ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                          >
+                            Día exacto
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              let newDate = courseFormData.startDate;
+                              if (newDate && newDate.length > 7) {
+                                newDate = newDate.substring(0, 7) + '-01';
+                              }
+                              setCourseFormData({ ...courseFormData, startDateHasDay: false, startDate: newDate });
+                            }}
+                            className={`px-1.5 py-0.5 rounded transition-all font-semibold ${!courseFormData.startDateHasDay ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                          >
+                            Solo mes
+                          </button>
+                        </div>
+                      </div>
+                      {courseFormData.startDateHasDay ? (
+                        <Input
+                          id="edit-startDate"
+                          type="date"
+                          value={courseFormData.startDate ? courseFormData.startDate.substring(0, 10) : ''}
+                          onChange={(e) => setCourseFormData({ ...courseFormData, startDate: e.target.value })}
+                          className="bg-white border-slate-200 h-11"
+                        />
+                      ) : (
+                        <Input
+                          id="edit-startDate"
+                          type="month"
+                          value={courseFormData.startDate ? courseFormData.startDate.substring(0, 7) : ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCourseFormData({ ...courseFormData, startDate: val ? `${val}-01` : '' });
+                          }}
+                          className="bg-white border-slate-200 h-11"
+                        />
+                      )}
+                      {courseFormData.startDate && (
+                        <p className="text-[11px] text-slate-500 truncate">
+                          Vista previa: <span className="font-semibold text-slate-700">{formatCourseStartDate(courseFormData.startDate, courseFormData.startDateHasDay)}</span>
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="edit-endDate" className="text-xs font-bold text-slate-500 uppercase">Fecha Fin</Label>

@@ -102,6 +102,7 @@ model Course {
   price             Float?
   isActive          Boolean          @default(true)
   startDate         DateTime?
+  startDateHasDay   Boolean          @default(true)
   endDate           DateTime?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt

@@ -61,6 +61,7 @@ interface PublicCourse {
     paymentFrequency?: string
     affiliatePrice?: number
     startDate?: string
+    startDateHasDay?: boolean
     endDate?: string
     isActive?: boolean
     features?: string
@@ -310,6 +311,26 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
         return null;
     }
 
+    const formatCourseStartDate = (dateStr?: string, hasDay: boolean = true) => {
+        if (!dateStr) return '';
+        try {
+            const raw = dateStr.split('T')[0];
+            const parts = raw.split('-').map(Number);
+            if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) return '';
+            const year = parts[0];
+            const month = parts[1];
+            const day = parts[2] || 1;
+            const d = new Date(Date.UTC(year, month - 1, day));
+            if (hasDay === false) {
+                const monthName = d.toLocaleDateString('es-ES', { month: 'long', timeZone: 'UTC' });
+                return `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} de ${year}`;
+            }
+            return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+        } catch {
+            return '';
+        }
+    }
+
     const getSpanishSchedule = (schedule: any, startDate?: string) => {
         const dayMap: Record<string, string> = {
             'MONDAY': 'Lunes',
@@ -533,7 +554,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                     <div className="min-w-0">
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Fecha de Inicio</p>
                                         <p className="text-sm sm:text-base font-extrabold text-slate-800 truncate">
-                                            {new Date(course.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}
+                                            {formatCourseStartDate(course.startDate, course.startDateHasDay)}
                                         </p>
                                     </div>
                                 </div>
@@ -749,43 +770,43 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                         )}
                                     </div>
 
-                                    {/* Precio General (solo si existe o si no hay precio de afiliados) */}
-                                    <div className={`p-3.5 rounded-2xl border text-center ${course.price && course.price > 0 && course.availableForNonMembers !== false ? 'bg-slate-50 border-slate-200/70' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
-                                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                                            Precio General (No Afiliados)
-                                        </p>
-                                        {course.availableForNonMembers === false ? (
-                                            <p className="text-sm font-bold text-slate-400 py-0.5 italic">Consultar</p>
-                                        ) : course.price && course.price > 0 ? (
-                                            (() => {
-                                                const frac = getFractionInfo(course.price, course.paymentFrequency);
-                                                if (frac) {
+                                    {/* Precio General (No Afiliados) — únicamente visible si el curso está disponible para no afiliados */}
+                                    {course.availableForNonMembers !== false && (
+                                        <div className={`p-3.5 rounded-2xl border text-center ${course.price && course.price > 0 ? 'bg-slate-50 border-slate-200/70' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                                                Precio General (No Afiliados)
+                                            </p>
+                                            {course.price && course.price > 0 ? (
+                                                (() => {
+                                                    const frac = getFractionInfo(course.price, course.paymentFrequency);
+                                                    if (frac) {
+                                                        return (
+                                                            <div className="space-y-1">
+                                                                <p className="text-2xl font-black text-slate-900 tracking-tight">
+                                                                    {frac.mainDisplay} <span className="text-xs font-medium text-slate-500">/ plazo</span>
+                                                                </p>
+                                                                <p className="text-xs font-medium text-slate-600">
+                                                                    Total: {frac.totalPrice.toFixed(2)} € ({frac.count} plazos de {frac.mainDisplay})
+                                                                </p>
+                                                            </div>
+                                                        );
+                                                    }
                                                     return (
-                                                        <div className="space-y-1">
+                                                        <div className="space-y-0.5">
                                                             <p className="text-2xl font-black text-slate-900 tracking-tight">
-                                                                {frac.mainDisplay} <span className="text-xs font-medium text-slate-500">/ plazo</span>
+                                                                {course.price.toFixed(2)} €
                                                             </p>
-                                                            <p className="text-xs font-medium text-slate-600">
-                                                                Total: {frac.totalPrice.toFixed(2)} € ({frac.count} plazos de {frac.mainDisplay})
+                                                            <p className="text-xs font-medium text-slate-500">
+                                                                {[getPriceUnitLabel(course.priceUnit), getFrequencyLabel(course.paymentFrequency)].filter(Boolean).join(' · ') || 'Precio total'}
                                                             </p>
                                                         </div>
                                                     );
-                                                }
-                                                return (
-                                                    <div className="space-y-0.5">
-                                                        <p className="text-2xl font-black text-slate-900 tracking-tight">
-                                                            {course.price.toFixed(2)} €
-                                                        </p>
-                                                        <p className="text-xs font-medium text-slate-500">
-                                                            {[getPriceUnitLabel(course.priceUnit), getFrequencyLabel(course.paymentFrequency)].filter(Boolean).join(' · ') || 'Precio total'}
-                                                        </p>
-                                                    </div>
-                                                );
-                                            })()
-                                        ) : (
-                                            <p className="text-sm font-bold text-slate-400 py-0.5 italic">Consultar</p>
-                                        )}
-                                    </div>
+                                                })()
+                                            ) : (
+                                                <p className="text-sm font-bold text-slate-400 py-0.5 italic">Consultar</p>
+                                            )}
+                                        </div>
+                                    )}
 
                                     {/* Panel de afiliación — solo si el curso no está disponible para no afiliados */}
                                     {course.availableForNonMembers === false && (
@@ -936,7 +957,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                         email: '',
                                                         phone: '',
                                                         dni: '',
-                                                        isAffiliated: false,
+                                                        isAffiliated: course.availableForNonMembers === false ? true : false,
                                                         acceptedPrivacy: false,
                                                         wantsDiscount: false,
                                                         selectedDiscountConcepts: [],
@@ -1024,19 +1045,35 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                     </div>
                                                                 </div>
 
-                                                                <div className="p-3.5 bg-red-50/50 rounded-xl border border-red-100 flex items-center space-x-3 select-none">
-                                                                    <Checkbox
-                                                                        id="is-affiliated"
-                                                                        checked={formData.isAffiliated}
-                                                                        onCheckedChange={(checked) => setFormData({ ...formData, isAffiliated: !!checked })}
-                                                                    />
-                                                                    <div className="flex-1 cursor-pointer">
-                                                                        <Label htmlFor="is-affiliated" className="text-xs font-bold text-red-900 cursor-pointer block">
-                                                                            Soy afiliado/a a UGT
-                                                                        </Label>
-                                                                        <p className="text-[10px] text-red-600 font-medium">Se aplicará la tarifa bonificada de afiliación.</p>
+                                                                {course.availableForNonMembers === false ? (
+                                                                    <div className="p-3.5 bg-red-50/70 rounded-xl border border-red-200 flex items-center space-x-3 select-none">
+                                                                        <Checkbox
+                                                                            id="is-affiliated"
+                                                                            checked={true}
+                                                                            disabled={true}
+                                                                        />
+                                                                        <div className="flex-1">
+                                                                            <Label htmlFor="is-affiliated" className="text-xs font-bold text-red-900 block">
+                                                                                Afiliado/a a UGT (Obligatorio)
+                                                                            </Label>
+                                                                            <p className="text-[10px] text-red-600 font-medium">Este curso es de participación exclusiva para miembros afiliados a UGT.</p>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
+                                                                ) : (
+                                                                    <div className="p-3.5 bg-red-50/50 rounded-xl border border-red-100 flex items-center space-x-3 select-none">
+                                                                        <Checkbox
+                                                                            id="is-affiliated"
+                                                                            checked={formData.isAffiliated}
+                                                                            onCheckedChange={(checked) => setFormData({ ...formData, isAffiliated: !!checked })}
+                                                                        />
+                                                                        <div className="flex-1 cursor-pointer">
+                                                                            <Label htmlFor="is-affiliated" className="text-xs font-bold text-red-900 cursor-pointer block">
+                                                                                Soy afiliado/a a UGT
+                                                                            </Label>
+                                                                            <p className="text-[10px] text-red-600 font-medium">Se aplicará la tarifa bonificada de afiliación.</p>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
 
                                                                 {course.hasDiscounts && (
                                                                     <div className="space-y-2.5 pt-1">
@@ -1307,9 +1344,6 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                     <div className="space-y-1 text-slate-600">
                                         <a href="mailto:formacion.salamanca@ugt-sp.ugt.org" className="text-red-600 hover:underline font-medium block truncate text-[11px]">
                                             formacion.salamanca@ugt-sp.ugt.org
-                                        </a>
-                                        <a href="mailto:fespugtsalamanca@gmail.com" className="text-red-600 hover:underline font-medium block truncate text-[11px]">
-                                            fespugtsalamanca@gmail.com
                                         </a>
                                         <p className="font-bold text-slate-800 text-[11px] pt-1">
                                             Teléfono: +34 600 43 71 34
