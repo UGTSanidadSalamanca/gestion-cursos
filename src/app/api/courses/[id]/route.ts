@@ -103,6 +103,10 @@ export async function PUT(
             hasDiscounts,
             discountDescription,
             discountRules,
+            hasOffer,
+            offerTitle,
+            offerDescription,
+            offerBadge,
             // @ts-ignore
             modules = [],
             // @ts-ignore
@@ -146,6 +150,10 @@ export async function PUT(
                 hasDiscounts: hasDiscounts !== undefined ? hasDiscounts : false,
                 discountDescription,
                 discountRules: discountRulesStr,
+                hasOffer: hasOffer !== undefined ? hasOffer : false,
+                offerTitle: offerTitle || null,
+                offerDescription: offerDescription || null,
+                offerBadge: offerBadge || null,
                 modules: {
                     deleteMany: {},
                     create: modules.map((m: any) => ({

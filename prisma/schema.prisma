@@ -124,6 +124,10 @@ model Course {
   hasDiscounts             Boolean          @default(false)
   discountDescription      String?
   discountRules            String?
+  hasOffer                 Boolean          @default(false)
+  offerTitle               String?
+  offerDescription         String?
+  offerBadge               String?
   materials         CourseMaterial[]
   modules           CourseModule[]
   enrollments       Enrollment[]

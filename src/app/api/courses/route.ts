@@ -82,6 +82,10 @@ export async function POST(request: NextRequest) {
       hasDiscounts = false,
       discountDescription,
       discountRules,
+      hasOffer = false,
+      offerTitle,
+      offerDescription,
+      offerBadge,
       modules = [],
       schedules = []
     } = body
@@ -122,6 +126,10 @@ export async function POST(request: NextRequest) {
         hasDiscounts: hasDiscounts !== undefined ? hasDiscounts : false,
         discountDescription,
         discountRules: discountRulesStr,
+        hasOffer: hasOffer !== undefined ? hasOffer : false,
+        offerTitle: offerTitle || null,
+        offerDescription: offerDescription || null,
+        offerBadge: offerBadge || null,
         modules: {
           deleteMany: {},
           create: modules.map((m: any) => ({
@@ -175,6 +183,10 @@ export async function POST(request: NextRequest) {
         hasDiscounts: hasDiscounts !== undefined ? hasDiscounts : false,
         discountDescription,
         discountRules: discountRulesStr,
+        hasOffer: hasOffer !== undefined ? hasOffer : false,
+        offerTitle: offerTitle || null,
+        offerDescription: offerDescription || null,
+        offerBadge: offerBadge || null,
         modules: {
           create: modules.map((m: any) => ({
             title: m.title,

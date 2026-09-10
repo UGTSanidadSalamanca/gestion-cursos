@@ -39,6 +39,10 @@ export async function GET(
                 hasDiscounts: true,
                 discountDescription: true,
                 discountRules: true,
+                hasOffer: true,
+                offerTitle: true,
+                offerDescription: true,
+                offerBadge: true,
                 modules: {
                     select: {
                         title: true,

@@ -116,6 +116,10 @@ interface Course {
   hasDiscounts?: boolean
   discountDescription?: string
   discountRules?: string | DiscountRule[]
+  hasOffer?: boolean
+  offerTitle?: string
+  offerDescription?: string
+  offerBadge?: string
   modules?: CourseModule[]
   enrollments?: {
     id: string
@@ -201,6 +205,10 @@ export default function CoursesPage() {
     hasDiscounts: false,
     discountDescription: '',
     discountRules: [] as DiscountRule[],
+    hasOffer: false,
+    offerTitle: '',
+    offerDescription: '',
+    offerBadge: '',
     hasMinStudents: false,
     minStudents: '',
     maxStudents: '30',
@@ -582,6 +590,10 @@ export default function CoursesPage() {
       hasDiscounts: false,
       discountDescription: '',
       discountRules: [] as DiscountRule[],
+      hasOffer: false,
+      offerTitle: '',
+      offerDescription: '',
+      offerBadge: '',
       hasMinStudents: false,
       minStudents: '',
       maxStudents: '30',
@@ -647,6 +659,10 @@ export default function CoursesPage() {
           return []
         }
       })(),
+      hasOffer: course.hasOffer ?? false,
+      offerTitle: course.offerTitle || '',
+      offerDescription: course.offerDescription || '',
+      offerBadge: course.offerBadge || '',
       hasMinStudents: !!(course.minStudents && course.minStudents > 0),
       minStudents: course.minStudents != null ? course.minStudents.toString() : '',
       maxStudents: (course.maxStudents || 0).toString(),
@@ -1241,6 +1257,62 @@ export default function CoursesPage() {
                                       ⚠️ No has añadido ningún descuento. Pulsa "+ Añadir otro descuento" para crear las opciones disponibles.
                                     </p>
                                   )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Toggle: Activar oferta especial */}
+                        <div className="col-span-1 md:col-span-4">
+                          <div className="flex flex-col gap-3 p-4 bg-orange-50/40 border border-orange-200/70 rounded-xl">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-xs font-bold text-orange-900 uppercase">🎁 Activar Oferta Especial</Label>
+                                <p className="text-[11px] text-orange-700 mt-0.5">Muestra un banner de oferta editable en la landing del curso (ej: "Curso acreditado gratis para los 40 primeros inscritos").</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setCourseFormData({ ...courseFormData, hasOffer: !courseFormData.hasOffer })}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+                                  courseFormData.hasOffer ? 'bg-orange-500' : 'bg-slate-300'
+                                }`}
+                              >
+                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                                  courseFormData.hasOffer ? 'translate-x-5' : 'translate-x-0'
+                                }`} />
+                              </button>
+                            </div>
+
+                            {courseFormData.hasOffer && (
+                              <div className="space-y-3 pt-2 border-t border-orange-200/60">
+                                <div className="space-y-2">
+                                  <Label className="text-[11px] font-bold text-orange-900 uppercase">Título de la oferta</Label>
+                                  <Input
+                                    placeholder="ej: ¡Oferta especial para los primeros inscritos!"
+                                    value={courseFormData.offerTitle}
+                                    onChange={(e) => setCourseFormData({ ...courseFormData, offerTitle: e.target.value })}
+                                    className="h-9 text-xs bg-white border-orange-200"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-[11px] font-bold text-orange-900 uppercase">Descripción de la oferta</Label>
+                                  <textarea
+                                    placeholder="ej: Regalamos el curso acreditado a los 40 primeros alumnos que se inscriban. ¡No pierdas tu plaza!"
+                                    value={courseFormData.offerDescription}
+                                    onChange={(e) => setCourseFormData({ ...courseFormData, offerDescription: e.target.value })}
+                                    rows={3}
+                                    className="w-full text-xs rounded-lg border border-orange-200 bg-white px-3 py-2 text-slate-700 resize-none focus:outline-none focus:ring-2 focus:ring-orange-400"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-[11px] font-bold text-orange-900 uppercase">Etiqueta/Badge (opcional)</Label>
+                                  <Input
+                                    placeholder="ej: GRATIS · TIEMPO LIMITADO · PLAZAS LIMITADAS"
+                                    value={courseFormData.offerBadge}
+                                    onChange={(e) => setCourseFormData({ ...courseFormData, offerBadge: e.target.value })}
+                                    className="h-9 text-xs bg-white border-orange-200"
+                                  />
                                 </div>
                               </div>
                             )}
@@ -2619,6 +2691,62 @@ export default function CoursesPage() {
                                   ⚠️ No has añadido ningún descuento. Pulsa "+ Añadir otro descuento" para crear las opciones disponibles.
                                 </p>
                               )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Toggle: Activar oferta especial (edit) */}
+                    <div className="col-span-1 md:col-span-4">
+                      <div className="flex flex-col gap-3 p-4 bg-orange-50/40 border border-orange-200/70 rounded-xl">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-xs font-bold text-orange-900 uppercase">🎁 Activar Oferta Especial</Label>
+                            <p className="text-[11px] text-orange-700 mt-0.5">Muestra un banner de oferta editable en la landing del curso (ej: "Curso acreditado gratis para los 40 primeros inscritos").</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setCourseFormData({ ...courseFormData, hasOffer: !courseFormData.hasOffer })}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+                              courseFormData.hasOffer ? 'bg-orange-500' : 'bg-slate-300'
+                            }`}
+                          >
+                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                              courseFormData.hasOffer ? 'translate-x-5' : 'translate-x-0'
+                            }`} />
+                          </button>
+                        </div>
+
+                        {courseFormData.hasOffer && (
+                          <div className="space-y-3 pt-2 border-t border-orange-200/60">
+                            <div className="space-y-2">
+                              <Label className="text-[11px] font-bold text-orange-900 uppercase">Título de la oferta</Label>
+                              <Input
+                                placeholder="ej: ¡Oferta especial para los primeros inscritos!"
+                                value={courseFormData.offerTitle}
+                                onChange={(e) => setCourseFormData({ ...courseFormData, offerTitle: e.target.value })}
+                                className="h-9 text-xs bg-white border-orange-200"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-[11px] font-bold text-orange-900 uppercase">Descripción de la oferta</Label>
+                              <textarea
+                                placeholder="ej: Regalamos el curso acreditado a los 40 primeros alumnos que se inscriban. ¡No pierdas tu plaza!"
+                                value={courseFormData.offerDescription}
+                                onChange={(e) => setCourseFormData({ ...courseFormData, offerDescription: e.target.value })}
+                                rows={3}
+                                className="w-full text-xs rounded-lg border border-orange-200 bg-white px-3 py-2 text-slate-700 resize-none focus:outline-none focus:ring-2 focus:ring-orange-400"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-[11px] font-bold text-orange-900 uppercase">Etiqueta/Badge (opcional)</Label>
+                              <Input
+                                placeholder="ej: GRATIS · TIEMPO LIMITADO · PLAZAS LIMITADAS"
+                                value={courseFormData.offerBadge}
+                                onChange={(e) => setCourseFormData({ ...courseFormData, offerBadge: e.target.value })}
+                                className="h-9 text-xs bg-white border-orange-200"
+                              />
                             </div>
                           </div>
                         )}

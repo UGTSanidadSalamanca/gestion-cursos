@@ -847,6 +847,34 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                         </div>
                                     )}
 
+                                    {/* Banner de Oferta Especial */}
+                                    {course.hasOffer && (
+                                        <div className="p-4 rounded-2xl border-2 border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50 space-y-2">
+                                            <div className="flex items-start gap-2.5">
+                                                <div className="h-8 w-8 rounded-xl bg-orange-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                                                    <span className="text-base leading-none">🎁</span>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <p className="text-xs font-black text-orange-900 leading-snug">
+                                                            {course.offerTitle || '¡Oferta Especial!'}
+                                                        </p>
+                                                        {course.offerBadge && (
+                                                            <span className="px-1.5 py-0.5 rounded-md bg-orange-500 text-white text-[9px] font-black uppercase tracking-wide shrink-0">
+                                                                {course.offerBadge}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {course.offerDescription && (
+                                                        <p className="text-[11px] text-orange-800 font-medium leading-snug mt-1">
+                                                            {course.offerDescription}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Panel de descuentos aplicables */}
                                     {course.hasDiscounts && (
                                         <div className="p-4 rounded-2xl border border-emerald-100 bg-emerald-50/60 space-y-2.5">
