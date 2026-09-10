@@ -72,6 +72,11 @@ interface PublicCourse {
     hasDiscounts?: boolean
     discountDescription?: string
     discountRules?: string | DiscountRule[]
+    hasOffer?: boolean
+    offerTitle?: string
+    offerDescription?: string
+    offerBadge?: string
+    customHtml?: string
     minStudents?: number
     maxStudents?: number
     modules?: {
@@ -698,6 +703,18 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                             </div>
                                         </div>
                                     ))}
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Bloque HTML Personalizado (si existe) */}
+                        {course.customHtml && (
+                            <Card className="border-none shadow-sm rounded-2xl bg-white overflow-hidden border border-slate-100/80">
+                                <CardContent className="p-6 sm:p-7">
+                                    <div
+                                        className="prose prose-sm max-w-none text-slate-700"
+                                        dangerouslySetInnerHTML={{ __html: course.customHtml }}
+                                    />
                                 </CardContent>
                             </Card>
                         )}

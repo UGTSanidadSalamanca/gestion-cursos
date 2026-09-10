@@ -1575,6 +1575,33 @@ export default function CoursesPage() {
                       </div>
                     </div>
 
+                    {/* HTML personalizado en landing (crear) */}
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="create-customHtml" className="text-xs font-bold text-slate-500 uppercase text-left block">
+                          🖥️ Bloque HTML personalizado (opcional)
+                        </Label>
+                        <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded font-mono">Se renderizará tal cual en la landing</span>
+                      </div>
+                      <Textarea
+                        id="create-customHtml"
+                        className="min-h-[160px] font-mono text-xs bg-indigo-50/20 border-indigo-100 focus:border-indigo-400"
+                        value={courseFormData.customHtml || ''}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, customHtml: e.target.value })}
+                        placeholder={'<!-- Puedes escribir HTML aquí -->\n<p class="text-blue-600 font-bold">Texto especial</p>\n<ul>\n  <li>Elemento 1</li>\n  <li>Elemento 2</li>\n</ul>'}
+                      />
+                      {courseFormData.customHtml && (
+                        <div className="border border-indigo-200 rounded-xl p-4 bg-indigo-50/30">
+                          <p className="text-[10px] font-bold text-indigo-400 uppercase mb-2 tracking-wider">Vista previa</p>
+                          <div
+                            className="prose prose-sm max-w-none text-slate-700"
+                            dangerouslySetInnerHTML={{ __html: courseFormData.customHtml }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                     {/* Sección 6: Área Interna */}
                     <div className="space-y-4 pt-6 border-t text-left pb-4">
                       <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -3004,6 +3031,32 @@ export default function CoursesPage() {
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  {/* HTML personalizado en landing */}
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="customHtml" className="text-xs font-bold text-slate-500 uppercase text-left block">
+                        🖥️ Bloque HTML personalizado (opcional)
+                      </Label>
+                      <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded font-mono">Se renderizará tal cual en la landing</span>
+                    </div>
+                    <Textarea
+                      id="customHtml"
+                      className="min-h-[160px] font-mono text-xs bg-indigo-50/20 border-indigo-100 focus:border-indigo-400"
+                      value={courseFormData.customHtml || ''}
+                      onChange={(e) => setCourseFormData({ ...courseFormData, customHtml: e.target.value })}
+                      placeholder={'<!-- Puedes escribir HTML aquí -->\n<p class="text-blue-600 font-bold">Texto especial</p>\n<ul>\n  <li>Elemento 1</li>\n  <li>Elemento 2</li>\n</ul>'}
+                    />
+                    {courseFormData.customHtml && (
+                      <div className="border border-indigo-200 rounded-xl p-4 bg-indigo-50/30">
+                        <p className="text-[10px] font-bold text-indigo-400 uppercase mb-2 tracking-wider">Vista previa</p>
+                        <div
+                          className="prose prose-sm max-w-none text-slate-700"
+                          dangerouslySetInnerHTML={{ __html: courseFormData.customHtml }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 

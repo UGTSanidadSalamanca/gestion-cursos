@@ -107,6 +107,7 @@ export async function PUT(
             offerTitle,
             offerDescription,
             offerBadge,
+            customHtml,
             // @ts-ignore
             modules = [],
             // @ts-ignore
@@ -154,6 +155,7 @@ export async function PUT(
                 offerTitle: offerTitle || null,
                 offerDescription: offerDescription || null,
                 offerBadge: offerBadge || null,
+                customHtml: customHtml || null,
                 modules: {
                     deleteMany: {},
                     create: modules.map((m: any) => ({

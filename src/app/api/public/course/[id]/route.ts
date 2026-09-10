@@ -43,6 +43,7 @@ export async function GET(
                 offerTitle: true,
                 offerDescription: true,
                 offerBadge: true,
+                customHtml: true,
                 modules: {
                     select: {
                         title: true,

@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
       offerTitle,
       offerDescription,
       offerBadge,
+      customHtml,
       modules = [],
       schedules = []
     } = body
@@ -130,6 +131,7 @@ export async function POST(request: NextRequest) {
         offerTitle: offerTitle || null,
         offerDescription: offerDescription || null,
         offerBadge: offerBadge || null,
+        customHtml: customHtml || null,
         modules: {
           deleteMany: {},
           create: modules.map((m: any) => ({
@@ -187,6 +189,7 @@ export async function POST(request: NextRequest) {
         offerTitle: offerTitle || null,
         offerDescription: offerDescription || null,
         offerBadge: offerBadge || null,
+        customHtml: customHtml || null,
         modules: {
           create: modules.map((m: any) => ({
             title: m.title,
