@@ -1573,7 +1573,6 @@ export default function CoursesPage() {
                           </div>
                         </div>
                       </div>
-                    </div>
 
                     {/* HTML personalizado en landing (crear) */}
                     <div className="space-y-3 pt-2">
