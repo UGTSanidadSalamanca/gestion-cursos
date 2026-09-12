@@ -177,7 +177,7 @@ export function generateReceiptPdf(data: ReceiptData): jsPDF {
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(15, 23, 42)
     const titleLines = doc.splitTextToSize(data.courseTitle, contentWidth - 40)
-    doc.text(titleLines[0] || '—', col1 + 22, rowY)
+    doc.text(titleLines[0] || '—', col1 + 32, rowY)
 
     rowY += 6
     doc.setFont('helvetica', 'bold')
@@ -185,7 +185,7 @@ export function generateReceiptPdf(data: ReceiptData): jsPDF {
     doc.text('Código Curso:', col1, rowY)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(15, 23, 42)
-    doc.text(data.courseCode || '—', col1 + 22, rowY)
+    doc.text(data.courseCode || '—', col1 + 32, rowY)
 
     if (data.courseLevel) {
         doc.setFont('helvetica', 'bold')
@@ -193,7 +193,7 @@ export function generateReceiptPdf(data: ReceiptData): jsPDF {
         doc.text('Nivel:', col2, rowY)
         doc.setFont('helvetica', 'normal')
         doc.setTextColor(15, 23, 42)
-        doc.text(data.courseLevel, col2 + 20, rowY)
+        doc.text(data.courseLevel, col2 + 28, rowY)
     }
 
     rowY += 6
@@ -203,7 +203,7 @@ export function generateReceiptPdf(data: ReceiptData): jsPDF {
         doc.text('Duración:', col1, rowY)
         doc.setFont('helvetica', 'normal')
         doc.setTextColor(15, 23, 42)
-        doc.text(`${data.duration} horas lectivas`, col1 + 22, rowY)
+        doc.text(`${data.duration} horas lectivas`, col1 + 32, rowY)
     }
 
     if (data.startDate || data.durationPeriod) {
@@ -212,7 +212,7 @@ export function generateReceiptPdf(data: ReceiptData): jsPDF {
         doc.text('Período / Inicio:', col2, rowY)
         doc.setFont('helvetica', 'normal')
         doc.setTextColor(15, 23, 42)
-        doc.text(data.durationPeriod || data.startDate || '—', col2 + 25, rowY)
+        doc.text(data.durationPeriod || data.startDate || '—', col2 + 28, rowY)
     }
 
     // 7. Bloque 3: Datos de Pago y Transferencia Bancaria (El más importante)
@@ -295,7 +295,9 @@ export function generateReceiptPdf(data: ReceiptData): jsPDF {
     doc.setFont('helvetica', 'italic')
     doc.setFontSize(7)
     doc.setTextColor(154, 52, 18)
-    doc.text('⚠️ Es imprescindible indicar exactamente este concepto en la transferencia para vincular el pago a tu matrícula.', col1 + 3, rowY)
+    const warningText = 'IMPORTANTE: Es imprescindible indicar exactamente este concepto en la transferencia para vincular el pago a tu matrícula.'
+    const warningLines = doc.splitTextToSize(warningText, contentWidth - 14)
+    doc.text(warningLines, col1 + 3, rowY)
 
     // 8. Bloque 4: Instrucciones adicionales
     y += paymentBoxHeight + 6
