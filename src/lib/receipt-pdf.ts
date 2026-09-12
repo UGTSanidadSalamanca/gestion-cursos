@@ -288,7 +288,7 @@ export function generateReceiptPdf(data: ReceiptData): jsPDF {
     doc.setFont('courier', 'bold')
     doc.setFontSize(11)
     doc.setTextColor(185, 28, 28)
-    doc.text(data.paymentConcept || `${data.courseCode}${new Date().getFullYear()}`, col1 + 52, rowY + 2.3)
+    doc.text(data.paymentConcept || data.courseCode, col1 + 52, rowY + 2.3)
 
     // Aviso sobre el concepto
     rowY += 8
