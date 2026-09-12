@@ -415,11 +415,37 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
     }
 
     // Comprobar qué datos rápidos existen para mostrar en la barra de estadísticas
-    const hasQuickStats = (course.duration && course.duration > 0) || course.durationPeriod || course.startDate || (course.modules && course.modules.length > 0) || (course.minStudents && course.minStudents > 0)
+    const activeStatsCount = [
+        course.duration && course.duration > 0,
+        course.durationPeriod,
+        course.startDate,
+        course.modules && course.modules.length > 0,
+        course.minStudents && course.minStudents > 0
+    ].filter(Boolean).length;
+    const hasQuickStats = activeStatsCount > 0;
 
     return (
         <div id="public-course-landing" className="min-h-screen bg-slate-50/80 text-slate-900 pb-16 print:bg-white print:pb-0 font-sans antialiased">
             <style jsx global>{`
+                #public-course-landing p,
+                #public-course-landing .prose p {
+                    text-align: justify;
+                    text-justify: inter-word;
+                }
+                #public-course-landing .text-center,
+                #public-course-landing .text-center p,
+                #public-course-landing p.text-center {
+                    text-align: center !important;
+                }
+                #public-course-landing .text-right,
+                #public-course-landing .text-right p,
+                #public-course-landing p.text-right {
+                    text-align: right !important;
+                }
+                #public-course-landing .text-left,
+                #public-course-landing p.text-left {
+                    text-align: left !important;
+                }
                 @media print {
                     @page {
                         size: A4;
@@ -526,39 +552,39 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                 {/* Barra de Fichas Rápidas (Quick Stats) - Se adapta dinámicamente según los datos existentes */}
                 {hasQuickStats && (
                     <div className="-mt-5 relative z-20 mb-8">
-                        <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/70 border border-slate-100 p-3 sm:p-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 print:border-slate-300 print:shadow-none">
+                        <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/70 border border-slate-100 p-2.5 sm:p-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 print:border-slate-300 print:shadow-none">
                             {course.duration && course.duration > 0 ? (
-                                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 border border-slate-100/80">
-                                    <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                                        <Clock className="h-5 w-5" />
+                                <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-xl bg-slate-50/80 border border-slate-100/80 min-w-0">
+                                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                        <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Duración</p>
-                                        <p className="text-sm sm:text-base font-extrabold text-slate-800 truncate">{course.duration}h lectivas</p>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-normal sm:tracking-wider leading-tight break-words">Duración</p>
+                                        <p className="text-xs sm:text-sm md:text-base font-extrabold text-slate-800 leading-snug break-words">{course.duration}h lectivas</p>
                                     </div>
                                 </div>
                             ) : null}
 
                             {course.durationPeriod ? (
-                                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 border border-slate-100/80">
-                                    <div className="h-10 w-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                                        <Calendar className="h-5 w-5" />
+                                <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-xl bg-slate-50/80 border border-slate-100/80 min-w-0">
+                                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Período</p>
-                                        <p className="text-sm sm:text-base font-extrabold text-slate-800 truncate">{course.durationPeriod}</p>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-normal sm:tracking-wider leading-tight break-words">Período</p>
+                                        <p className="text-xs sm:text-sm md:text-base font-extrabold text-slate-800 leading-snug break-words">{course.durationPeriod}</p>
                                     </div>
                                 </div>
                             ) : null}
 
                             {course.startDate ? (
-                                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 border border-slate-100/80">
-                                    <div className="h-10 w-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
-                                        <Calendar className="h-5 w-5" />
+                                <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-xl bg-slate-50/80 border border-slate-100/80 min-w-0">
+                                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Fecha de Inicio</p>
-                                        <p className="text-sm sm:text-base font-extrabold text-slate-800 truncate">
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-normal sm:tracking-wider leading-tight break-words">Fecha de Inicio</p>
+                                        <p className="text-xs sm:text-sm md:text-base font-extrabold text-slate-800 leading-snug break-words">
                                             {formatCourseStartDate(course.startDate, course.startDateHasDay)}
                                         </p>
                                     </div>
@@ -566,13 +592,13 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                             ) : null}
 
                             {course.modules && course.modules.length > 0 ? (
-                                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 border border-slate-100/80">
-                                    <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                                        <Layers className="h-5 w-5" />
+                                <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-xl bg-slate-50/80 border border-slate-100/80 min-w-0">
+                                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                        <Layers className="h-4 w-4 sm:h-5 sm:w-5" />
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Temario</p>
-                                        <p className="text-sm sm:text-base font-extrabold text-slate-800 truncate">
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-normal sm:tracking-wider leading-tight break-words">Temario</p>
+                                        <p className="text-xs sm:text-sm md:text-base font-extrabold text-slate-800 leading-snug break-words">
                                             {course.modules.length} {course.modules.length === 1 ? 'Módulo' : 'Módulos'}
                                         </p>
                                     </div>
@@ -580,13 +606,13 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                             ) : null}
 
                             {course.minStudents && course.minStudents > 0 ? (
-                                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/70">
-                                    <div className="h-10 w-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
-                                        <Users className="h-5 w-5" />
+                                <div className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/70 min-w-0 ${activeStatsCount % 2 !== 0 ? 'col-span-2 sm:col-span-1' : ''}`}>
+                                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                                        <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wider truncate">Grupo Mínimo</p>
-                                        <p className="text-sm sm:text-base font-extrabold text-amber-950 truncate">{course.minStudents} alumnos</p>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-[10px] sm:text-[11px] font-bold text-amber-800 uppercase tracking-normal sm:tracking-wider leading-tight break-words">Grupo Mínimo</p>
+                                        <p className="text-xs sm:text-sm md:text-base font-extrabold text-amber-950 leading-snug break-words">{course.minStudents} alumnos</p>
                                     </div>
                                 </div>
                             ) : null}
@@ -609,7 +635,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                 </div>
                             </CardHeader>
                             <CardContent className="p-6 sm:p-7">
-                                <p className="text-slate-700 text-base leading-relaxed whitespace-pre-wrap">
+                                <p className="text-slate-700 text-base leading-relaxed whitespace-pre-wrap text-justify">
                                     {course.publicDescription || course.description || "Este programa formativo ofrece una capacitación completa y actualizada adaptada a las necesidades de los profesionales y opositores. Contacta con nosotros para consultar el programa detallado."}
                                 </p>
 
@@ -659,7 +685,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                             <div className="flex-1 min-w-0">
                                                 <h4 className="font-bold text-slate-900 text-sm sm:text-base leading-snug">{module.title}</h4>
                                                 {module.description && (
-                                                    <p className="text-slate-500 text-xs mt-1 leading-relaxed">{module.description}</p>
+                                                    <p className="text-slate-500 text-xs mt-1 leading-relaxed text-justify">{module.description}</p>
                                                 )}
                                                 {module.teacher?.name && (
                                                     <p className="text-slate-400 text-[11px] mt-1.5 font-medium flex items-center gap-1">
@@ -712,7 +738,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                             <Card className="border-none shadow-sm rounded-2xl bg-white overflow-hidden border border-slate-100/80">
                                 <CardContent className="p-6 sm:p-7">
                                     <div
-                                        className="prose prose-sm max-w-none text-slate-700"
+                                        className="prose prose-sm max-w-none text-slate-700 [&_p]:text-justify"
                                         dangerouslySetInnerHTML={{ __html: course.customHtml }}
                                     />
                                 </CardContent>
@@ -1434,7 +1460,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                     <div
                         role="note"
                         aria-label="Información resumida sobre protección de datos"
-                        className="mt-4 p-3.5 sm:p-4 border border-[#e5e5e7] border-l-4 border-l-[#e4002b] rounded-lg bg-[#fafafa] text-[#38383d] text-xs sm:text-[13px] leading-relaxed text-left"
+                        className="mt-4 p-3.5 sm:p-4 border border-[#e5e5e7] border-l-4 border-l-[#e4002b] rounded-lg bg-[#fafafa] text-[#38383d] text-xs sm:text-[13px] leading-relaxed text-justify"
                     >
                         <strong className="text-[#1e1e24] font-bold">Protección de datos. </strong>
                         Responsable: Unión General de Trabajadores de Servicios Públicos (CIF G-78085149). Tus datos se tratarán para gestionar tu inscripción y, en su caso, la organización, desarrollo y seguimiento de la acción formativa, acceso a plataformas, emisión de certificados y las gestiones legalmente necesarias asociadas a la formación. La base jurídica es tu consentimiento, la ejecución de la relación formativa y el cumplimiento de las obligaciones legales aplicables. Podrán comunicarse datos a estructuras de UGT y a las Administraciones Públicas cuando resulte necesario. Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a{" "}
