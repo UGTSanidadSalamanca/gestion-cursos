@@ -145,7 +145,7 @@ export async function notifyNewEnrollment(data: {
     - Estado: PENDIENTE DE PAGO
     
     Puedes ver más detalles en el panel de administración:
-    http://localhost:3000/enrollments
+    https://gestion-cursos-ashy.vercel.app/enrollments
   `
 
   const html = `
@@ -182,7 +182,7 @@ export async function notifyNewEnrollment(data: {
         </div>
         
         <div style="text-align: center; margin-top: 30px;">
-          <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/enrollments" style="background-color: #2563eb; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+          <a href="${process.env.NEXTAUTH_URL || 'https://gestion-cursos-ashy.vercel.app'}/enrollments" style="background-color: #2563eb; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
             Ver en el Panel de Administración
           </a>
         </div>
