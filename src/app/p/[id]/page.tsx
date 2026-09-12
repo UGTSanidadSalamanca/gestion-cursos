@@ -414,6 +414,22 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
         }
     }
 
+    const handleOpenEnrollModal = () => {
+        setShowSuccess(false)
+        setFormData({
+            name: '',
+            email: '',
+            phone: '',
+            dni: '',
+            isAffiliated: course.availableForNonMembers === false ? true : false,
+            acceptedPrivacy: false,
+            wantsDiscount: false,
+            selectedDiscountConcepts: [],
+            discountDetails: ''
+        })
+        setIsDialogOpen(true)
+    }
+
     // Comprobar qué datos rápidos existen para mostrar en la barra de estadísticas
     const activeStatsCount = [
         course.duration && course.duration > 0,
@@ -752,11 +768,29 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                             <div className="bg-red-600 h-2 w-full" />
                             <CardContent className="p-6 sm:p-7 space-y-6">
 
-                                {/* Título de la tarjeta */}
-                                <div className="text-center pb-2 border-b border-slate-100">
-                                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                                        Inversión y Matrícula
-                                    </p>
+                                {/* Título de la tarjeta y Botón Inscribirme Online al principio */}
+                                <div className="space-y-3 pb-3 border-b border-slate-100">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                                            Inversión y Matrícula
+                                        </p>
+                                        {course.isActive !== false && (
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                                <Sparkles className="h-2.5 w-2.5" /> Plazas Abiertas
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {course.isActive !== false && (
+                                        <Button
+                                            type="button"
+                                            onClick={handleOpenEnrollModal}
+                                            className="w-full min-h-11 bg-red-600 hover:bg-red-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md shadow-red-200 transition-all flex items-center justify-center gap-2 px-4 py-2.5 text-center active:scale-[0.98] no-print"
+                                        >
+                                            <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                            <span>Inscribirme Online</span>
+                                        </Button>
+                                    )}
                                 </div>
 
                                 {/* Requisito de grupo mínimo si aplica */}
