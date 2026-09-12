@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner"
 import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
 import { CertificateGenerator } from "@/components/certificates/certificate-generator"
+import { generatePaymentConfirmationPdf } from "@/lib/payment-pdf"
 import {
   Users,
   BookOpen,
@@ -36,11 +37,14 @@ interface Enrollment {
   certificate?: string
   discountPercentage?: number
   discountReason?: string
-  student: { name: string }
+  student: { name: string; dni?: string; email?: string; phone?: string; isAffiliated?: boolean }
   course: {
     title: string
     duration: number
     teacher?: { name: string }
+    code?: string
+    level?: string
+    price?: number
   }
   updatedAt: string
 }
@@ -73,6 +77,32 @@ export default function EnrollmentsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleDownloadPaymentPdf = (enrollment: Enrollment) => {
+    const basePrice = enrollment.course.price || 0;
+    const discount = enrollment.discountPercentage || 0;
+    const amountPaid = basePrice * (1 - discount / 100);
+
+    const data = {
+      studentName: enrollment.studentName,
+      dni: enrollment.student.dni || '',
+      email: enrollment.student.email || '',
+      phone: enrollment.student.phone || '',
+      isAffiliated: !!enrollment.student.isAffiliated,
+      courseTitle: enrollment.courseName,
+      courseCode: enrollment.course.code || '',
+      courseLevel: enrollment.course.level,
+      totalAmount: basePrice,
+      amountPaid: amountPaid,
+      discountApplied: discount > 0 ? `${discount}% (${enrollment.discountReason || 'Beca / Descuento'})` : undefined,
+      enrollmentDate: enrollment.enrollmentDate,
+      confirmationDate: enrollment.updatedAt,
+      referenceId: enrollment.id.slice(0, 8).toUpperCase()
+    };
+
+    const doc = generatePaymentConfirmationPdf(data);
+    doc.save(`Confirmacion-Pago-${enrollment.studentName.replace(/\s+/g, '-')}-${enrollment.course.code || 'Curso'}.pdf`);
   }
 
   const getStatusBadge = (status: string) => {
@@ -420,6 +450,17 @@ export default function EnrollmentsPage() {
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Confirmar Pago
+                      </Button>
+                    )}
+                    {selectedEnrollment.status !== 'PENDING' && selectedEnrollment.status !== 'CANCELLED' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                        onClick={() => handleDownloadPaymentPdf(selectedEnrollment)}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Descargar Justificante de Pago
                       </Button>
                     )}
                     {selectedEnrollment.status !== 'CANCELLED' && (
