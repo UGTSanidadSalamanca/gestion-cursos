@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -97,20 +98,6 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
     const [id, setId] = useState<string | null>(null)
     const [course, setCourse] = useState<PublicCourse | null>(null)
     const [loading, setLoading] = useState(true)
-    const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const [showSuccess, setShowSuccess] = useState(false)
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        dni: '',
-        isAffiliated: false,
-        acceptedPrivacy: false,
-        wantsDiscount: false,
-        selectedDiscountConcepts: [] as string[],
-        discountDetails: ''
-    })
 
     const getDiscountRules = (): DiscountRule[] => {
         if (!course?.discountRules) return []
@@ -120,11 +107,6 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
             return []
         }
     }
-
-    const availableRules = getDiscountRules()
-    const selectedRules = availableRules.filter(r => formData.selectedDiscountConcepts.includes(r.concept))
-    const totalDiscountPercentage = selectedRules.reduce((sum, r) => sum + r.percentage, 0)
-    const discountReasonText = selectedRules.map(r => `${r.concept} (-${r.percentage}%)`).join(' + ')
 
     useEffect(() => {
         const resolveParams = async () => {
@@ -782,14 +764,15 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                     </div>
 
                                     {course.isActive !== false && (
-                                        <Button
-                                            type="button"
-                                            onClick={handleOpenEnrollModal}
-                                            className="w-full min-h-11 bg-red-600 hover:bg-red-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md shadow-red-200 transition-all flex items-center justify-center gap-2 px-4 py-2.5 text-center active:scale-[0.98] no-print"
-                                        >
-                                            <CheckCircle2 className="h-4 w-4 shrink-0" />
-                                            <span>Inscribirme Online</span>
-                                        </Button>
+                                        <Link href={`/p/${course.id}/enroll`} className="w-full block no-print">
+                                            <Button
+                                                type="button"
+                                                className="w-full min-h-11 bg-red-600 hover:bg-red-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md shadow-red-200 transition-all flex items-center justify-center gap-2 px-4 py-2.5 text-center active:scale-[0.98]"
+                                            >
+                                                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                                <span>Inscribirme Online</span>
+                                            </Button>
+                                        </Link>
                                     )}
                                 </div>
 
@@ -1053,379 +1036,15 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                 <div className="flex-grow border-t border-slate-200"></div>
                                             </div>
 
-                                            <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                                                setIsDialogOpen(open)
-                                                if (!open) {
-                                                    setShowSuccess(false)
-                                                    setFormData({
-                                                        name: '',
-                                                        email: '',
-                                                        phone: '',
-                                                        dni: '',
-                                                        isAffiliated: course.availableForNonMembers === false ? true : false,
-                                                        acceptedPrivacy: false,
-                                                        wantsDiscount: false,
-                                                        selectedDiscountConcepts: [],
-                                                        discountDetails: ''
-                                                    })
-                                                }
-                                            }}>
-                                                <DialogTrigger asChild>
-                                                    <Button
-                                                        variant="outline"
-                                                        className="w-full min-h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 font-bold text-xs sm:text-sm rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 px-4 py-3 text-center whitespace-normal leading-snug"
-                                                    >
-                                                        <CheckCircle2 className="h-4 w-4 shrink-0" />
-                                                        <span>Inscribirme Online</span>
-                                                    </Button>
-                                                </DialogTrigger>
-                                                <DialogContent className="sm:max-w-[500px] border-none shadow-2xl p-0 overflow-hidden bg-white rounded-3xl max-h-[90dvh] flex flex-col">
-                                                    {!showSuccess ? (
-                                                        <form onSubmit={handleEnroll} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-                                                            <DialogHeader className="p-6 sm:p-8 bg-slate-50 border-b shrink-0">
-                                                                <div className="bg-red-100 text-red-700 text-[9px] font-black px-2.5 py-0.5 rounded-full w-fit mb-2 tracking-widest uppercase">
-                                                                    Paso 1 de 2: Mis datos
-                                                                </div>
-                                                                <DialogTitle className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
-                                                                    Formulario de Inscripción
-                                                                </DialogTitle>
-                                                                <DialogDescription className="text-slate-500 text-xs font-medium leading-relaxed mt-1">
-                                                                    Completa tus datos para reservar tu plaza. <br />
-                                                                    <span className="text-red-600 font-bold">Tras este paso verás los datos de pago y concepto.</span>
-                                                                </DialogDescription>
-                                                            </DialogHeader>
-                                                            <div className="p-6 sm:p-8 space-y-4 flex-1 overflow-y-auto overscroll-contain">
-                                                                <div className="space-y-1.5">
-                                                                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Nombre y Apellidos *</Label>
-                                                                    <div className="relative">
-                                                                        <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                                                                        <Input required className="pl-10 h-11 bg-slate-50 border-slate-200 rounded-xl" placeholder="Tu nombre completo..." value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-                                                                    </div>
-                                                                </div>
-                                                                <div className="space-y-1.5">
-                                                                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">DNI / NIE *</Label>
-                                                                    <div className="relative">
-                                                                        <Fingerprint className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                                                                        <Input required className="pl-10 h-11 bg-slate-50 border-slate-200 rounded-xl" placeholder="12345678X" value={formData.dni} onChange={e => setFormData({ ...formData, dni: e.target.value })} />
-                                                                    </div>
-                                                                </div>
-                                                                <div className="space-y-1.5">
-                                                                    <div className="flex items-center justify-between">
-                                                                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                                                                            Correo Electrónico *
-                                                                        </Label>
-                                                                        <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100 flex items-center gap-1">
-                                                                            <Sparkles className="h-2.5 w-2.5 text-red-500" /> Preferiblemente @gmail.com
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="relative">
-                                                                        <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                                                                        <Input
-                                                                            required
-                                                                            className="pl-10 h-11 bg-slate-50 border-slate-200 rounded-xl"
-                                                                            type="email"
-                                                                            placeholder="ejemplo@gmail.com"
-                                                                            value={formData.email}
-                                                                            onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                                                        />
-                                                                    </div>
-                                                                    <p className="text-[11px] text-slate-500 leading-tight">
-                                                                        Te aconsejamos indicar una cuenta de <strong className="text-slate-700">Gmail</strong> para facilitarte el acceso directo al aula virtual (Google Classroom / Meet) y los materiales docentes.
-                                                                    </p>
-                                                                    {formData.email && formData.email.includes('@') && !formData.email.toLowerCase().includes('@gmail.com') && (
-                                                                        <div className="p-2.5 bg-amber-50/90 border border-amber-200/90 rounded-xl flex items-start gap-2 text-[11px] text-amber-900">
-                                                                            <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                                                                            <p className="leading-snug">
-                                                                                <strong>Nota informativa:</strong> Si dispones de cuenta <span className="underline font-semibold">@gmail.com</span>, te recomendamos utilizarla para que tu alta en Google Classroom sea inmediata y sin incompatibilidades.
-                                                                            </p>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-
-                                                                <div className="space-y-1.5">
-                                                                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Teléfono de Contacto (Móvil / WhatsApp)</Label>
-                                                                    <div className="relative">
-                                                                        <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                                                                        <Input className="pl-10 h-11 bg-slate-50 border-slate-200 rounded-xl" placeholder="600000000" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
-                                                                    </div>
-                                                                </div>
-
-                                                                {course.availableForNonMembers === false ? (
-                                                                    <div className="p-3.5 bg-red-50/70 rounded-xl border border-red-200 flex items-center space-x-3 select-none">
-                                                                        <Checkbox
-                                                                            id="is-affiliated"
-                                                                            checked={true}
-                                                                            disabled={true}
-                                                                        />
-                                                                        <div className="flex-1">
-                                                                            <Label htmlFor="is-affiliated" className="text-xs font-bold text-red-900 block">
-                                                                                Afiliado/a a UGT (Obligatorio)
-                                                                            </Label>
-                                                                            <p className="text-[10px] text-red-600 font-medium">Este curso es de participación exclusiva para miembros afiliados a UGT.</p>
-                                                                        </div>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="p-3.5 bg-red-50/50 rounded-xl border border-red-100 flex items-center space-x-3 select-none">
-                                                                        <Checkbox
-                                                                            id="is-affiliated"
-                                                                            checked={formData.isAffiliated}
-                                                                            onCheckedChange={(checked) => setFormData({ ...formData, isAffiliated: !!checked })}
-                                                                        />
-                                                                        <div className="flex-1 cursor-pointer">
-                                                                            <Label htmlFor="is-affiliated" className="text-xs font-bold text-red-900 cursor-pointer block">
-                                                                                Soy afiliado/a a UGT
-                                                                            </Label>
-                                                                            <p className="text-[10px] text-red-600 font-medium">Se aplicará la tarifa bonificada de afiliación.</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-
-                                                                {course.hasDiscounts && (
-                                                                    <div className="space-y-2.5 pt-1">
-                                                                        <div className="flex items-center justify-between">
-                                                                            <Label className="text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
-                                                                                <Percent className="h-3.5 w-3.5 text-emerald-600" />
-                                                                                ¿Te corresponde algún descuento especial? (Acumulables)
-                                                                            </Label>
-                                                                            {formData.selectedDiscountConcepts.length > 0 && (
-                                                                                <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full animate-pulse">
-                                                                                    -{totalDiscountPercentage}% Total Acumulado
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
-
-                                                                        <div className="space-y-1.5">
-                                                                            {/* Opción Sin Descuento */}
-                                                                            <div
-                                                                                onClick={() => {
-                                                                                    setFormData({
-                                                                                        ...formData,
-                                                                                        wantsDiscount: false,
-                                                                                        selectedDiscountConcepts: [],
-                                                                                        discountDetails: ''
-                                                                                    })
-                                                                                }}
-                                                                                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                                                                                    formData.selectedDiscountConcepts.length === 0
-                                                                                        ? 'bg-slate-50 border-slate-300 ring-1 ring-slate-300'
-                                                                                        : 'bg-white border-slate-200 hover:border-slate-300'
-                                                                                }`}
-                                                                            >
-                                                                                <div className="flex items-center gap-2.5">
-                                                                                    <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
-                                                                                        formData.selectedDiscountConcepts.length === 0 ? 'border-slate-800 bg-slate-800' : 'border-slate-300'
-                                                                                    }`}>
-                                                                                        {formData.selectedDiscountConcepts.length === 0 && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
-                                                                                    </div>
-                                                                                    <span className="text-xs font-semibold text-slate-700">Sin descuento / Tarifa general</span>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            {/* Lista de descuentos configurados en el curso con multiselección */}
-                                                                            {availableRules.map((rule, idx) => {
-                                                                                const isSelected = formData.selectedDiscountConcepts.includes(rule.concept);
-                                                                                return (
-                                                                                    <div
-                                                                                        key={rule.id || idx}
-                                                                                        onClick={() => {
-                                                                                            const nextSelected = isSelected
-                                                                                                ? formData.selectedDiscountConcepts.filter(c => c !== rule.concept)
-                                                                                                : [...formData.selectedDiscountConcepts, rule.concept];
-                                                                                            setFormData({
-                                                                                                ...formData,
-                                                                                                wantsDiscount: nextSelected.length > 0,
-                                                                                                selectedDiscountConcepts: nextSelected
-                                                                                            })
-                                                                                        }}
-                                                                                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 ${
-                                                                                            isSelected
-                                                                                                ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/30 shadow-sm'
-                                                                                                : 'bg-white border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/20'
-                                                                                        }`}
-                                                                                    >
-                                                                                        <div className={`h-4 w-4 rounded-md border mt-0.5 shrink-0 flex items-center justify-center ${
-                                                                                            isSelected ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300 bg-white'
-                                                                                        }`}>
-                                                                                            {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
-                                                                                        </div>
-                                                                                        <div className="flex-1">
-                                                                                            <div className="flex items-center gap-2 flex-wrap">
-                                                                                                <span className="font-black text-[11px] px-2 py-0.5 rounded-md bg-emerald-600 text-white leading-none">
-                                                                                                    -{rule.percentage}%
-                                                                                                </span>
-                                                                                                <span className="text-xs font-bold text-slate-800 leading-snug">
-                                                                                                    {rule.concept}
-                                                                                                </span>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                );
-                                                                            })}
-                                                                        </div>
-
-                                                                        {formData.selectedDiscountConcepts.length > 0 && (
-                                                                            <div className="space-y-1.5 pt-1">
-                                                                                <Label className="text-[10px] font-black uppercase text-emerald-900 tracking-wider">
-                                                                                    Observaciones / Justificación adicional (Opcional)
-                                                                                </Label>
-                                                                                <Input
-                                                                                    className="h-10 bg-emerald-50/30 border-emerald-200 rounded-xl text-xs"
-                                                                                    placeholder="Ej: Año en que realicé el curso anterior, años de antigüedad, etc."
-                                                                                    value={formData.discountDetails}
-                                                                                    onChange={e => setFormData({ ...formData, discountDetails: e.target.value })}
-                                                                                />
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-
-                                                                {/* Cláusula Informativa RGPD / Capa 1 y Consentimiento */}
-                                                                <div className="space-y-2.5 pt-1">
-                                                                    <div className="p-3 bg-slate-50 border border-slate-200/90 rounded-xl text-[11px] text-slate-600 leading-relaxed space-y-1">
-                                                                        <div className="flex items-center gap-1.5 font-bold text-slate-800 text-[11px] mb-0.5">
-                                                                            <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-                                                                            <span>Información básica de Protección de Datos (RGPD)</span>
-                                                                        </div>
-                                                                        <p>
-                                                                            <strong className="text-slate-700">Responsable:</strong> UGT SP.
-                                                                        </p>
-                                                                        <p>
-                                                                            <strong className="text-slate-700">Finalidad:</strong> Tramitar y gestionar tu solicitud de pre-inscripción y reserva de plaza en el curso, así como la posterior comunicación formativa.
-                                                                        </p>
-                                                                        <p>
-                                                                            <strong className="text-slate-700">Legitimación:</strong> Tu consentimiento explícito al formalizar este formulario y ejecución de la solicitud.
-                                                                        </p>
-                                                                        <p>
-                                                                            <strong className="text-slate-700">Derechos y DPO:</strong> Tienes derecho a acceder, rectificar y suprimir tus datos en <a href="mailto:dpo@ugt-sp.eu" className="text-red-600 font-semibold hover:underline">dpo@ugt-sp.eu</a>.
-                                                                        </p>
-                                                                    </div>
-
-                                                                    <div className="p-3 rounded-xl border border-slate-200 bg-white flex items-start space-x-3 select-none">
-                                                                        <Checkbox
-                                                                            id="accepted-privacy"
-                                                                            required
-                                                                            checked={formData.acceptedPrivacy}
-                                                                            onCheckedChange={(checked) => setFormData({ ...formData, acceptedPrivacy: !!checked })}
-                                                                            className="mt-0.5"
-                                                                        />
-                                                                        <div className="flex-1 text-xs text-slate-700 leading-snug">
-                                                                            <Label htmlFor="accepted-privacy" className="cursor-pointer font-medium text-slate-800">
-                                                                                He leído y acepto la{" "}
-                                                                                <a
-                                                                                    href="https://ugtsanidadsalamanca.github.io/-rgpd-formacion/"
-                                                                                    target="_blank"
-                                                                                    rel="noopener noreferrer"
-                                                                                    className="text-red-600 font-bold hover:underline inline-flex items-center gap-0.5"
-                                                                                >
-                                                                                    Política de Privacidad y Protección de Datos
-                                                                                    <ExternalLink className="h-3 w-3 inline ml-0.5" />
-                                                                                </a>{" "}
-                                                                                *
-                                                                            </Label>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <DialogFooter className="p-6 bg-slate-50 border-t shrink-0">
-                                                                <Button type="submit" disabled={isSubmitting} className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs tracking-wider rounded-xl shadow-md">
-                                                                    {isSubmitting ? "Procesando..." : "Confirmar Pre-inscripción"}
-                                                                </Button>
-                                                            </DialogFooter>
-                                                        </form>
-                                                    ) : (
-                                                        <div className="p-6 sm:p-8 text-center flex-1 overflow-y-auto overscroll-contain">
-                                                            <div className="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                                                <CheckCircle2 className="h-8 w-8" />
-                                                            </div>
-                                                            <div className="bg-emerald-100 text-emerald-700 text-[9px] font-black px-2.5 py-0.5 rounded-full w-fit mb-2 tracking-widest uppercase mx-auto">
-                                                                Paso 2 de 2: Pago
-                                                            </div>
-                                                            <h2 className="text-2xl font-black text-slate-900 mb-1">¡Pre-inscripción realizada!</h2>
-                                                            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 mb-6 text-left space-y-3.5">
-                                                                <div className="space-y-1">
-                                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                                                        <Euro className="h-3 w-3" /> Importe a transferir
-                                                                    </p>
-                                                                    <div className="bg-red-50 rounded-xl border border-red-100 p-3 text-center space-y-2">
-                                                                        {(() => {
-                                                                            const rawBasePrice = formData.isAffiliated ? course.affiliatePrice : course.price;
-                                                                            const hasDiscount = formData.selectedDiscountConcepts.length > 0 && totalDiscountPercentage > 0;
-                                                                            const activePrice = rawBasePrice !== undefined && rawBasePrice !== null
-                                                                                ? (hasDiscount ? Math.round(rawBasePrice * (1 - (totalDiscountPercentage / 100)) * 100) / 100 : rawBasePrice)
-                                                                                : undefined;
-
-                                                                            const frac = getFractionInfo(activePrice, course.paymentFrequency);
-                                                                            if (frac) {
-                                                                                return (
-                                                                                    <>
-                                                                                        <p className="text-2xl font-black text-red-700">
-                                                                                            {frac.mainDisplay}
-                                                                                            <span className="text-xs font-bold text-red-500 ml-1">
-                                                                                                (1.er Plazo de {frac.count})
-                                                                                            </span>
-                                                                                        </p>
-                                                                                        <div className="text-[10px] font-semibold text-slate-600 space-y-0.5 pt-1 border-t border-red-200/60">
-                                                                                            <p>Total: {frac.totalPrice.toFixed(2)} € en {frac.count} cuotas · Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}</p>
-                                                                                            {hasDiscount && (
-                                                                                                <p className="text-emerald-700 font-bold">
-                                                                                                    🏷️ Descuento acumulado del -{totalDiscountPercentage}% aplicado ({discountReasonText})
-                                                                                                </p>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    </>
-                                                                                );
-                                                                            }
-                                                                            return (
-                                                                                <>
-                                                                                    <p className="text-2xl font-black text-red-700">
-                                                                                        {activePrice !== undefined ? `${activePrice.toFixed(2)} €` : 'Por consultar'}
-                                                                                    </p>
-                                                                                    <div className="text-[10px] font-semibold text-slate-600 space-y-0.5 pt-1 border-t border-red-200/60">
-                                                                                        <p>Tarifa {formData.isAffiliated ? 'Afiliado UGT' : 'General'}{rawBasePrice && hasDiscount ? ` (Base: ${rawBasePrice.toFixed(2)} €)` : ''}</p>
-                                                                                        {hasDiscount && (
-                                                                                            <p className="text-emerald-700 font-bold">
-                                                                                                🏷️ Descuento acumulado del -{totalDiscountPercentage}% aplicado ({discountReasonText})
-                                                                                            </p>
-                                                                                        )}
-                                                                                    </div>
-                                                                                </>
-                                                                            );
-                                                                        })()}
-                                                                    </div>
-                                                                </div>
-                                                                <div className="space-y-1">
-                                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                                                        <CreditCard className="h-3 w-3" /> Cuenta Bancaria (IBAN)
-                                                                    </p>
-                                                                    <p className="text-xs font-bold text-slate-800 select-all block p-2 bg-white rounded-lg border border-slate-200 text-center font-mono">
-                                                                        ES59 2103 2347 4000 3377 9482
-                                                                    </p>
-                                                                </div>
-                                                                <div className="space-y-1">
-                                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                                                        <Info className="h-3 w-3" /> Concepto obligatorio
-                                                                    </p>
-                                                                    <p className="text-xs font-black text-red-700 select-all block p-2 bg-red-50 rounded-lg border border-red-100 text-center tracking-widest font-mono">
-                                                                        {paymentConcept}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="p-3 bg-emerald-50/80 border border-emerald-150 rounded-xl flex items-start gap-2.5 text-left mb-5">
-                                                                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                                                                <p className="text-[11px] text-emerald-950/85 leading-relaxed">
-                                                                    <strong className="text-emerald-900 font-bold block mb-0.5">Garantía de Confidencialidad y Custodia RGPD</strong>
-                                                                    Los datos de tu reserva están custodiados de forma segura por UGT Castilla y León conforme al RGPD. Puedes consultar la <a href="https://ugtsanidadsalamanca.github.io/-rgpd-formacion/" target="_blank" rel="noopener noreferrer" className="text-emerald-800 font-bold underline hover:text-emerald-950">política de privacidad oficial</a>.
-                                                                </p>
-                                                            </div>
-
-                                                            <Button onClick={() => setIsDialogOpen(false)} className="w-full h-11 bg-slate-900 hover:bg-black text-white font-bold rounded-xl text-xs">
-                                                                Cerrar y guardar justificante
-                                                            </Button>
-                                                        </div>
-                                                    )}
-                                                </DialogContent>
-                                            </Dialog>
+                                            <Link href={`/p/${course.id}/enroll`} className="w-full block no-print">
+                                                <Button
+                                                    variant="outline"
+                                                    className="w-full min-h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 font-bold text-xs sm:text-sm rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 px-4 py-3 text-center whitespace-normal leading-snug"
+                                                >
+                                                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                                    <span>Inscribirme Online</span>
+                                                </Button>
+                                            </Link>
                                         </>
                                     )}
 
