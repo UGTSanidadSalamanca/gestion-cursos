@@ -174,54 +174,6 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
         window.open(`https://wa.me/34600437134?text=${encodeURIComponent(message)}`, '_blank')
     }
 
-    const handleEnroll = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!course) return
-
-        if (!formData.email || !formData.email.trim()) {
-            toast.error("Por favor, introduce tu correo electrónico.")
-            return
-        }
-
-        if (!formData.acceptedPrivacy) {
-            toast.error("Debes aceptar la política de privacidad y protección de datos para continuar.")
-            return
-        }
-
-        setIsSubmitting(true)
-        try {
-            const hasAnyDiscount = formData.selectedDiscountConcepts.length > 0
-            const response = await fetch('/api/public/enroll', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: formData.name,
-                    email: formData.email,
-                    phone: formData.phone,
-                    dni: formData.dni,
-                    isAffiliated: formData.isAffiliated,
-                    wantsDiscount: hasAnyDiscount,
-                    requestedDiscountPercentage: hasAnyDiscount ? totalDiscountPercentage : null,
-                    requestedDiscountConcept: hasAnyDiscount ? discountReasonText : null,
-                    discountDetails: formData.discountDetails,
-                    courseId: id
-                })
-            })
-
-            if (response.ok) {
-                setShowSuccess(true)
-            } else {
-                const error = await response.json()
-                toast.error(error.error || "Error al procesar la inscripción")
-            }
-        } catch (error) {
-            console.error("Enrollment error:", error)
-            toast.error("Error técnico al procesar la inscripción")
-        } finally {
-            setIsSubmitting(false)
-        }
-    }
-
     const currentYear = new Date().getFullYear()
     const paymentConcept = course ? `${course.code}${currentYear}` : ''
     const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
@@ -394,22 +346,6 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
             console.error("PDF generation error:", error)
             toast.error("Error al generar el PDF", { id: toastId })
         }
-    }
-
-    const handleOpenEnrollModal = () => {
-        setShowSuccess(false)
-        setFormData({
-            name: '',
-            email: '',
-            phone: '',
-            dni: '',
-            isAffiliated: course.availableForNonMembers === false ? true : false,
-            acceptedPrivacy: false,
-            wantsDiscount: false,
-            selectedDiscountConcepts: [],
-            discountDetails: ''
-        })
-        setIsDialogOpen(true)
     }
 
     // Comprobar qué datos rápidos existen para mostrar en la barra de estadísticas
@@ -742,6 +678,87 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                 </CardContent>
                             </Card>
                         )}
+
+                        {/* Card: Condiciones de Inscripción y Contratación */}
+                        <Card className="border-none shadow-sm rounded-2xl bg-white overflow-hidden border border-slate-100/80">
+                            <CardHeader className="bg-slate-50/70 border-b border-slate-100 py-4 px-6">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                    <div className="flex items-center gap-2 text-slate-700 text-xs font-bold uppercase tracking-wider">
+                                        <FileText className="h-4 w-4 text-red-600" />
+                                        Condiciones de Inscripción y Contratación
+                                    </div>
+                                    <a
+                                        href="https://ugtsanidadsalamanca.github.io/Condiciones-inscripcion-contratacion/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[11px] font-bold text-red-600 hover:text-red-700 hover:underline inline-flex items-center gap-1 transition-colors self-start sm:self-auto"
+                                    >
+                                        <span>Consultar normativa completa</span>
+                                        <ExternalLink className="h-3 w-3 shrink-0" />
+                                    </a>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-6 sm:p-7 space-y-4">
+                                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed text-justify">
+                                    La inscripción y participación en esta acción formativa organizada por <strong>UGT Servicios Públicos Salamanca</strong> está sujeta a las condiciones generales de matrícula, pago y contratación de las actividades docentes:
+                                </p>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                    <div className="p-3.5 bg-slate-50/90 rounded-xl border border-slate-100 space-y-1">
+                                        <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                            <span className="h-2 w-2 rounded-full bg-red-600 inline-block"></span>
+                                            Preinscripción y Reserva
+                                        </p>
+                                        <p className="text-[11px] text-slate-600 leading-snug">
+                                            La reserva online constituye una plaza provisional hasta la verificación del abono bancario correspondiente dentro del plazo establecido.
+                                        </p>
+                                    </div>
+
+                                    <div className="p-3.5 bg-slate-50/90 rounded-xl border border-slate-100 space-y-1">
+                                        <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                            <span className="h-2 w-2 rounded-full bg-red-600 inline-block"></span>
+                                            Grupo Mínimo de Alumnos
+                                        </p>
+                                        <p className="text-[11px] text-slate-600 leading-snug">
+                                            La celebración del curso queda condicionada a alcanzar el número mínimo de participantes necesario para la viabilidad pedagógica del grupo.
+                                        </p>
+                                    </div>
+
+                                    <div className="p-3.5 bg-slate-50/90 rounded-xl border border-slate-100 space-y-1">
+                                        <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                            <span className="h-2 w-2 rounded-full bg-red-600 inline-block"></span>
+                                            Derecho de Desistimiento
+                                        </p>
+                                        <p className="text-[11px] text-slate-600 leading-snug">
+                                            Conforme a la normativa vigente en materia de consumidores, dispones de 14 días naturales para desistir de la contratación realizada.
+                                        </p>
+                                    </div>
+
+                                    <div className="p-3.5 bg-slate-50/90 rounded-xl border border-slate-100 space-y-1">
+                                        <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                            <span className="h-2 w-2 rounded-full bg-red-600 inline-block"></span>
+                                            Baja Voluntaria y Devolución
+                                        </p>
+                                        <p className="text-[11px] text-slate-600 leading-snug">
+                                            Reintegro íntegro si el curso no llega a iniciarse por causas imputables a la organización, conforme a la política general de bajas.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="pt-2">
+                                    <a
+                                        href="https://ugtsanidadsalamanca.github.io/Condiciones-inscripcion-contratacion/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full py-2.5 px-4 bg-slate-50 hover:bg-red-50 text-slate-700 hover:text-red-700 border border-slate-200 hover:border-red-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all text-center"
+                                    >
+                                        <FileText className="h-4 w-4 text-red-600 shrink-0" />
+                                        <span>Leer el documento oficial de Condiciones de Inscripción y Contratación</span>
+                                        <ExternalLink className="h-3.5 w-3.5 opacity-70 shrink-0" />
+                                    </a>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
 
                     {/* COLUMNA DERECHA: Sidebar CTA / Tarjeta de Matrícula e Inversión */}
@@ -1075,6 +1092,19 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                     </div>
                                 </div>
 
+                                <div className="pt-3 border-t border-slate-100 text-center">
+                                    <a
+                                        href="https://ugtsanidadsalamanca.github.io/Condiciones-inscripcion-contratacion/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[11px] font-semibold text-slate-500 hover:text-red-600 inline-flex items-center gap-1 transition-colors"
+                                    >
+                                        <FileText className="h-3 w-3 text-slate-400" />
+                                        <span>Condiciones de inscripción y contratación</span>
+                                        <ExternalLink className="h-2.5 w-2.5 opacity-70" />
+                                    </a>
+                                </div>
+
                             </CardContent>
                         </Card>
                     </div>
@@ -1109,11 +1139,29 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                         </div>
                     </div>
 
-                    {/* Bloque Resumido RGPD */}
+                    {/* Bloque Resumido RGPD y Condiciones de Contratación */}
+                    <div
+                        role="note"
+                        aria-label="Condiciones de inscripción y contratación"
+                        className="p-3.5 sm:p-4 border border-[#e5e5e7] border-l-4 border-l-[#e4002b] rounded-lg bg-[#fafafa] text-[#38383d] text-xs sm:text-[13px] leading-relaxed text-justify"
+                    >
+                        <strong className="text-[#1e1e24] font-bold">Condiciones de inscripción y contratación. </strong>
+                        La participación en las actividades formativas de UGT Servicios Públicos Salamanca está regulada por las normas de preinscripción, reserva de plaza, grupo mínimo, precios bonificados, baja voluntaria y derecho legal de desistimiento de 14 días naturales.{" "}
+                        <a
+                            href="https://ugtsanidadsalamanca.github.io/Condiciones-inscripcion-contratacion/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#b00020] font-bold underline underline-offset-2 hover:text-red-800 inline-flex items-center gap-1"
+                        >
+                            Consulta el documento íntegro de condiciones de inscripción y contratación
+                            <ExternalLink className="h-3.5 w-3.5 inline shrink-0" />
+                        </a>.
+                    </div>
+
                     <div
                         role="note"
                         aria-label="Información resumida sobre protección de datos"
-                        className="mt-4 p-3.5 sm:p-4 border border-[#e5e5e7] border-l-4 border-l-[#e4002b] rounded-lg bg-[#fafafa] text-[#38383d] text-xs sm:text-[13px] leading-relaxed text-justify"
+                        className="mt-3 p-3.5 sm:p-4 border border-[#e5e5e7] border-l-4 border-l-[#e4002b] rounded-lg bg-[#fafafa] text-[#38383d] text-xs sm:text-[13px] leading-relaxed text-justify"
                     >
                         <strong className="text-[#1e1e24] font-bold">Protección de datos. </strong>
                         Responsable: Unión General de Trabajadores de Servicios Públicos (CIF G-78085149). Tus datos se tratarán para gestionar tu inscripción y, en su caso, la organización, desarrollo y seguimiento de la acción formativa, acceso a plataformas, emisión de certificados y las gestiones legalmente necesarias asociadas a la formación. La base jurídica es tu consentimiento, la ejecución de la relación formativa y el cumplimiento de las obligaciones legales aplicables. Podrán comunicarse datos a estructuras de UGT y a las Administraciones Públicas cuando resulte necesario. Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a{" "}

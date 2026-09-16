@@ -30,7 +30,8 @@ import {
     Calendar,
     Clock,
     Percent,
-    AlertCircle
+    AlertCircle,
+    FileText
 } from "lucide-react"
 import { toast } from "sonner"
 import { generateReceiptPdf, ReceiptData } from "@/lib/receipt-pdf"
@@ -80,6 +81,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
         dni: '',
         isAffiliated: false,
         acceptedPrivacy: false,
+        acceptedTerms: false,
         wantsDiscount: false,
         selectedDiscountConcepts: [] as string[],
         discountDetails: ''
@@ -191,6 +193,11 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
 
         if (!formData.acceptedPrivacy) {
             toast.error("Debes aceptar la política de privacidad y protección de datos.")
+            return
+        }
+
+        if (!formData.acceptedTerms) {
+            toast.error("Debes aceptar las condiciones de inscripción y contratación para continuar.")
             return
         }
 
@@ -649,9 +656,61 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
                                     </div>
                                 </div>
 
-                                {/* Protección de Datos RGPD y Aceptación */}
-                                <div className="space-y-3 pt-2">
-                                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-[11px] text-slate-600 leading-relaxed space-y-1.5">
+                                {/* Condiciones de Inscripción y Contratación & Protección de Datos */}
+                                <div className="space-y-4 pt-2">
+                                    {/* Aviso informativo de Condiciones de Contratación */}
+                                    <div className="p-4 bg-slate-50 border border-slate-200 border-l-4 border-l-[#e4002b] rounded-2xl text-[11px] text-slate-600 leading-relaxed space-y-1.5">
+                                        <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs mb-0.5">
+                                            <FileText className="h-4 w-4 text-red-600 shrink-0" />
+                                            <span>Información de Condiciones de Inscripción y Contratación</span>
+                                        </div>
+                                        <p><strong className="text-slate-700">Reserva y formalización:</strong> La solicitud online formaliza una reserva provisional condicionada al abono bancario en el plazo señalado indicando el concepto obligatorio facilitado.</p>
+                                        <p><strong className="text-slate-700">Grupo mínimo:</strong> La realización definitiva de la acción formativa está sujeta a alcanzar el número mínimo de participantes establecido.</p>
+                                        <p><strong className="text-slate-700">Bajas y desistimiento:</strong> Dispones de 14 días naturales para ejercer el derecho legal de desistimiento conforme a la normativa vigente, así como las garantías de reintegro en caso de cancelación imputable a la organización.</p>
+                                        <p className="pt-0.5">
+                                            <a
+                                                href="https://ugtsanidadsalamanca.github.io/Condiciones-inscripcion-contratacion/"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-red-600 font-bold hover:underline inline-flex items-center gap-1"
+                                            >
+                                                Consulta el texto oficial completo de Condiciones de Inscripción y Contratación
+                                                <ExternalLink className="h-3 w-3 inline shrink-0" />
+                                            </a>
+                                        </p>
+                                    </div>
+
+                                    {/* Aceptación de Condiciones de Inscripción y Contratación */}
+                                    <div className="p-4 rounded-2xl border border-slate-200 bg-white flex items-start space-x-3 select-none">
+                                        <Checkbox
+                                            id="accepted-terms"
+                                            required
+                                            checked={formData.acceptedTerms}
+                                            onCheckedChange={(checked) => setFormData({ ...formData, acceptedTerms: !!checked })}
+                                            className="mt-0.5"
+                                        />
+                                        <div className="flex-1 text-xs text-slate-700 leading-snug">
+                                            <Label htmlFor="accepted-terms" className="cursor-pointer font-medium text-slate-800">
+                                                He leído y acepto las{" "}
+                                                <a
+                                                    href="https://ugtsanidadsalamanca.github.io/Condiciones-inscripcion-contratacion/"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-red-600 font-bold hover:underline inline-flex items-center gap-0.5"
+                                                >
+                                                    Condiciones de Inscripción y Contratación
+                                                    <ExternalLink className="h-3 w-3 inline ml-0.5" />
+                                                </a>{" "}
+                                                *
+                                            </Label>
+                                            <p className="text-[11px] text-slate-500 mt-1">
+                                                Reconozco haber sido informado/a sobre las normas relativas a reserva provisional, abono bancario, grupo mínimo y derecho de desistimiento de 14 días naturales.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Aviso informativo de Protección de Datos */}
+                                    <div className="p-4 bg-slate-50 border border-slate-200 border-l-4 border-l-[#e4002b] rounded-2xl text-[11px] text-slate-600 leading-relaxed space-y-1.5">
                                         <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs mb-0.5">
                                             <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
                                             <span>Información básica de Protección de Datos (RGPD)</span>
@@ -662,6 +721,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
                                         <p><strong className="text-slate-700">Derechos y Delegado de Protección de Datos:</strong> Puedes ejercer tus derechos de acceso, rectificación y supresión enviando un correo a <a href="mailto:dpo@ugt-sp.eu" className="text-red-600 font-bold hover:underline">dpo@ugt-sp.eu</a>.</p>
                                     </div>
 
+                                    {/* Aceptación de Protección de Datos */}
                                     <div className="p-4 rounded-2xl border border-slate-200 bg-white flex items-start space-x-3 select-none">
                                         <Checkbox
                                             id="accepted-privacy"

@@ -248,7 +248,7 @@ export function generatePaymentConfirmationPdf(data: PaymentConfirmationData): j
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(6)
     doc.setTextColor(148, 163, 184)
-    const rgpdText = 'Responsable: UGT Servicios Públicos. Finalidad: Gestión de pre-inscripción, reserva de plaza, emisión de certificados y seguimiento de la acción formativa. Derechos: Tienes derecho a acceder, rectificar y suprimir tus datos escribiendo a dpo@ugt-sp.eu. Consulta la política completa en ugtsanidadsalamanca.github.io/-rgpd-formacion/'
+    const rgpdText = 'Responsable: UGT Servicios Públicos. Finalidad: Gestión de pre-inscripción, reserva de plaza, emisión de certificados y seguimiento de la acción formativa. Derechos: dpo@ugt-sp.eu. Política de privacidad: ugtsanidadsalamanca.github.io/-rgpd-formacion/ · Condiciones de contratación: ugtsanidadsalamanca.github.io/Condiciones-inscripcion-contratacion/'
     const rgpdLines = doc.splitTextToSize(rgpdText, contentWidth - 6)
     doc.text(rgpdLines, margin + 3, y + 7.5)
 
