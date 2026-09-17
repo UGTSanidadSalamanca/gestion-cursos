@@ -688,7 +688,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                         Condiciones de Inscripción y Contratación
                                     </div>
                                     <a
-                                        href="https://ugtsanidadsalamanca.github.io/Condiciones-inscripcion-contratacion/"
+                                        href="https://sites.google.com/view/sp-formacinsalamanca/cursos/terminos-legales/condiciones-inscripci%C3%B3n?authuser=0"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-[11px] font-bold text-red-600 hover:text-red-700 hover:underline inline-flex items-center gap-1 transition-colors self-start sm:self-auto"
@@ -747,7 +747,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
 
                                 <div className="pt-2">
                                     <a
-                                        href="https://ugtsanidadsalamanca.github.io/Condiciones-inscripcion-contratacion/"
+                                        href="https://sites.google.com/view/sp-formacinsalamanca/cursos/terminos-legales/condiciones-inscripci%C3%B3n?authuser=0"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="w-full py-2.5 px-4 bg-slate-50 hover:bg-red-50 text-slate-700 hover:text-red-700 border border-slate-200 hover:border-red-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all text-center"
@@ -1094,7 +1094,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
 
                                 <div className="pt-3 border-t border-slate-100 text-center">
                                     <a
-                                        href="https://ugtsanidadsalamanca.github.io/Condiciones-inscripcion-contratacion/"
+                                        href="https://sites.google.com/view/sp-formacinsalamanca/cursos/terminos-legales/condiciones-inscripci%C3%B3n?authuser=0"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-[11px] font-semibold text-slate-500 hover:text-red-600 inline-flex items-center gap-1 transition-colors"
@@ -1148,7 +1148,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                         <strong className="text-[#1e1e24] font-bold">Condiciones de inscripción y contratación. </strong>
                         La participación en las actividades formativas de UGT Servicios Públicos Salamanca está regulada por las normas de preinscripción, reserva de plaza, grupo mínimo, precios bonificados, baja voluntaria y derecho legal de desistimiento de 14 días naturales.{" "}
                         <a
-                            href="https://ugtsanidadsalamanca.github.io/Condiciones-inscripcion-contratacion/"
+                            href="https://sites.google.com/view/sp-formacinsalamanca/cursos/terminos-legales/condiciones-inscripci%C3%B3n?authuser=0"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[#b00020] font-bold underline underline-offset-2 hover:text-red-800 inline-flex items-center gap-1"

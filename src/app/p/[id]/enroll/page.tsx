@@ -669,7 +669,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
                                         <p><strong className="text-slate-700">Bajas y desistimiento:</strong> Dispones de 14 días naturales para ejercer el derecho legal de desistimiento conforme a la normativa vigente, así como las garantías de reintegro en caso de cancelación imputable a la organización.</p>
                                         <p className="pt-0.5">
                                             <a
-                                                href="https://ugtsanidadsalamanca.github.io/Condiciones-inscripcion-contratacion/"
+                                                href="https://sites.google.com/view/sp-formacinsalamanca/cursos/terminos-legales/condiciones-inscripci%C3%B3n?authuser=0"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-red-600 font-bold hover:underline inline-flex items-center gap-1"
@@ -693,7 +693,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
                                             <Label htmlFor="accepted-terms" className="cursor-pointer font-medium text-slate-800">
                                                 He leído y acepto las{" "}
                                                 <a
-                                                    href="https://ugtsanidadsalamanca.github.io/Condiciones-inscripcion-contratacion/"
+                                                    href="https://sites.google.com/view/sp-formacinsalamanca/cursos/terminos-legales/condiciones-inscripci%C3%B3n?authuser=0"
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-red-600 font-bold hover:underline inline-flex items-center gap-0.5"
