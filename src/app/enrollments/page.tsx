@@ -5,9 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MainLayout } from "@/components/layout/main-layout"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
 import { CertificateGenerator } from "@/components/certificates/certificate-generator"
@@ -54,6 +56,9 @@ export default function EnrollmentsPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null)
+  const [paymentPdfDialog, setPaymentPdfDialog] = useState<{ open: boolean; enrollment: Enrollment | null; amount: string; totalAmount: string }>({
+    open: false, enrollment: null, amount: '', totalAmount: ''
+  })
 
   useEffect(() => {
     fetchEnrollments()
@@ -79,10 +84,24 @@ export default function EnrollmentsPage() {
     }
   }
 
-  const handleDownloadPaymentPdf = (enrollment: Enrollment) => {
+  const handleOpenPaymentPdfDialog = (enrollment: Enrollment) => {
     const basePrice = enrollment.course.price || 0;
     const discount = enrollment.discountPercentage || 0;
-    const amountPaid = basePrice * (1 - discount / 100);
+    const amountPaid = basePrice > 0 ? Math.round(basePrice * (1 - discount / 100) * 100) / 100 : 0;
+    setPaymentPdfDialog({
+      open: true,
+      enrollment,
+      amount: amountPaid > 0 ? String(amountPaid) : '',
+      totalAmount: basePrice > 0 ? String(basePrice) : ''
+    });
+  }
+
+  const handleConfirmPaymentPdf = () => {
+    const { enrollment, amount, totalAmount } = paymentPdfDialog;
+    if (!enrollment) return;
+    const amountPaid = parseFloat(amount) || 0;
+    const total = parseFloat(totalAmount) || amountPaid;
+    const discount = enrollment.discountPercentage || 0;
 
     const data = {
       studentName: enrollment.studentName,
@@ -93,7 +112,7 @@ export default function EnrollmentsPage() {
       courseTitle: enrollment.courseName,
       courseCode: enrollment.course.code || '',
       courseLevel: enrollment.course.level,
-      totalAmount: basePrice,
+      totalAmount: total,
       amountPaid: amountPaid,
       discountApplied: discount > 0 ? `${discount}% (${enrollment.discountReason || 'Beca / Descuento'})` : undefined,
       enrollmentDate: enrollment.enrollmentDate,
@@ -103,6 +122,7 @@ export default function EnrollmentsPage() {
 
     const doc = generatePaymentConfirmationPdf(data);
     doc.save(`Confirmacion-Pago-${enrollment.studentName.replace(/\s+/g, '-')}-${enrollment.course.code || 'Curso'}.pdf`);
+    setPaymentPdfDialog({ open: false, enrollment: null, amount: '', totalAmount: '' });
   }
 
   const getStatusBadge = (status: string) => {
@@ -156,6 +176,7 @@ export default function EnrollmentsPage() {
   }
 
   return (
+    <>
     <MainLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
@@ -457,7 +478,7 @@ export default function EnrollmentsPage() {
                         size="sm"
                         variant="outline"
                         className="text-emerald-700 border-emerald-200 hover:bg-emerald-50"
-                        onClick={() => handleDownloadPaymentPdf(selectedEnrollment)}
+                        onClick={() => handleOpenPaymentPdfDialog(selectedEnrollment)}
                       >
                         <FileText className="h-4 w-4 mr-2" />
                         Descargar Justificante de Pago
@@ -616,5 +637,77 @@ export default function EnrollmentsPage() {
         </Card>
       </div>
     </MainLayout>
+
+    {/* Diálogo de edición de importe para el justificante de pago */}
+    <Dialog open={paymentPdfDialog.open} onOpenChange={(open) => !open && setPaymentPdfDialog({ open: false, enrollment: null, amount: '', totalAmount: '' })}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-emerald-600" />
+            Justificante de Pago
+          </DialogTitle>
+          <DialogDescription>
+            Revisa y edita el importe antes de generar el PDF.
+            {paymentPdfDialog.enrollment && (
+              <span className="block mt-1 font-medium text-slate-700">
+                {paymentPdfDialog.enrollment.studentName} — {paymentPdfDialog.enrollment.courseName}
+              </span>
+            )}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="pdf-amount-paid" className="text-xs font-bold text-slate-700">
+              Importe abonado (€) <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="pdf-amount-paid"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={paymentPdfDialog.amount}
+              onChange={(e) => setPaymentPdfDialog({ ...paymentPdfDialog, amount: e.target.value })}
+              className="text-lg font-bold"
+              autoFocus
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pdf-total-amount" className="text-xs font-bold text-slate-700">
+              Importe total del curso (€)
+            </Label>
+            <Input
+              id="pdf-total-amount"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={paymentPdfDialog.totalAmount}
+              onChange={(e) => setPaymentPdfDialog({ ...paymentPdfDialog, totalAmount: e.target.value })}
+            />
+            <p className="text-[11px] text-slate-400">Opcional. Si se deja vacío, se usará el importe abonado como total.</p>
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setPaymentPdfDialog({ open: false, enrollment: null, amount: '', totalAmount: '' })}
+          >
+            Cancelar
+          </Button>
+          <Button
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+            onClick={handleConfirmPaymentPdf}
+            disabled={!paymentPdfDialog.amount || parseFloat(paymentPdfDialog.amount) <= 0}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Generar PDF
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }
