@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { formatPrice } from '@/lib/utils'
 
 // Configuración de transporte
 // Estos valores deberían venir de variables de entorno en producción
@@ -120,11 +121,11 @@ export async function notifyNewEnrollment(data: {
 
   const hasDiscount = data.discountPercentage && data.discountPercentage > 0;
   const priceText = data.price !== undefined && data.price !== null
-    ? `${data.price.toFixed(2)}€${formatPriceUnit(data.priceUnit)}`
+    ? `${formatPrice(data.price)}€${formatPriceUnit(data.priceUnit)}`
     : 'Pendiente de definir';
 
   const basePriceText = data.basePrice !== undefined && data.basePrice !== null
-    ? `${data.basePrice.toFixed(2)}€${formatPriceUnit(data.priceUnit)}`
+    ? `${formatPrice(data.basePrice)}€${formatPriceUnit(data.priceUnit)}`
     : '';
 
   const text = `

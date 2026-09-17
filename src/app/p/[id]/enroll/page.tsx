@@ -35,6 +35,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { generateReceiptPdf, ReceiptData } from "@/lib/receipt-pdf"
+import { formatPrice } from "@/lib/utils"
 
 interface DiscountRule {
     id?: string
@@ -139,9 +140,9 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
                 count,
                 installmentPrice,
                 totalPrice: price,
-                mainDisplay: `${installmentPrice.toFixed(2)} €`,
+                mainDisplay: `${formatPrice(installmentPrice)} €`,
                 perInstallmentText: `por cuota (${count} plazos)`,
-                totalText: `Total del curso: ${price.toFixed(2)} € (${count} cuotas de ${installmentPrice.toFixed(2)} €)`
+                totalText: `Total del curso: ${formatPrice(price)} € (${count} cuotas de ${formatPrice(installmentPrice)} €)`
             }
         }
         return null
@@ -634,7 +635,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
                                     <div className="pt-2 border-t border-slate-200 flex items-baseline justify-between">
                                         <div>
                                             <p className="text-3xl font-black text-red-600">
-                                                {frac ? frac.mainDisplay : (activePrice !== undefined ? `${activePrice.toFixed(2)} €` : '—')}
+                                                {frac ? frac.mainDisplay : (activePrice !== undefined ? `${formatPrice(activePrice)} €` : '—')}
                                                 {frac && (
                                                     <span className="text-xs font-bold text-slate-500 ml-1.5">
                                                         (1.er Plazo de {frac.count})
@@ -642,7 +643,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
                                                 )}
                                             </p>
                                             <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                                                {frac ? frac.totalText : `Total del curso: ${activePrice?.toFixed(2)} € (Pago único)`}
+                                                {frac ? frac.totalText : `Total del curso: ${formatPrice(activePrice)} € (Pago único)`}
                                             </p>
                                         </div>
 
@@ -824,7 +825,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
                                                 <Euro className="h-3 w-3" /> Importe a transferir
                                             </p>
                                             <p className="text-2xl font-black text-red-700">
-                                                {frac ? frac.mainDisplay : (activePrice !== undefined ? `${activePrice.toFixed(2)} €` : '—')}
+                                                {frac ? frac.mainDisplay : (activePrice !== undefined ? `${formatPrice(activePrice)} €` : '—')}
                                             </p>
                                             <p className="text-[11px] text-red-950 font-medium">
                                                 {frac

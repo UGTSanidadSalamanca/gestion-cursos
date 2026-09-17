@@ -40,6 +40,7 @@ import {
   Box,
   Trash2
 } from "lucide-react"
+import { formatPrice } from "@/lib/utils"
 
 interface Material {
   id: string
@@ -392,7 +393,7 @@ export default function MaterialsPage() {
               <Euro className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalValue.toFixed(2)} €</div>
+              <div className="text-2xl font-bold">{formatPrice(totalValue)} €</div>
             </CardContent>
           </Card>
         </div>
@@ -475,7 +476,7 @@ export default function MaterialsPage() {
                             <span>{material.quantity}</span>
                           </div>
                         </TableCell>
-                        <TableCell>{Number(material.unitPrice).toFixed(2)} €</TableCell>
+                        <TableCell>{formatPrice(material.unitPrice)} €</TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-1">
                             <MapPin className="h-3 w-3 text-muted-foreground" />

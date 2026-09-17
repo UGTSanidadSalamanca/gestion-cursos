@@ -30,3 +30,20 @@ export function isCourseExpired(endDate?: Date | string | null): boolean {
   return targetEnd < today
 }
 
+/**
+ * Formatea un importe o precio.
+ * Si el número no tiene decimales (es entero), no muestra decimales (ej. 50).
+ * Si tiene decimales, muestra hasta 2 decimales (ej. 50.50 o 33.33).
+ */
+export function formatPrice(amount: number | string | null | undefined): string {
+  if (amount === null || amount === undefined || amount === '') return '0'
+  const num = typeof amount === 'string' ? parseFloat(amount) : amount
+  if (isNaN(num)) return '0'
+
+  const rounded = Math.round(num * 100) / 100
+  if (rounded % 1 === 0) {
+    return rounded.toFixed(0)
+  }
+  return rounded.toFixed(2)
+}
+

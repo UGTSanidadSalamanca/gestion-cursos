@@ -39,8 +39,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { QRCodeSVG } from "qrcode.react"
 import { jsPDF } from "jspdf"
-import html2canvas from "html2canvas"
-import { formatTimeUTC } from "@/lib/utils"
+import { formatTimeUTC, formatPrice } from "@/lib/utils"
 
 interface DiscountRule {
     id?: string
@@ -242,9 +241,9 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                 count,
                 installmentPrice,
                 totalPrice: price,
-                mainDisplay: `${installmentPrice.toFixed(2)} €`,
+                mainDisplay: `${formatPrice(installmentPrice)} €`,
                 perInstallmentText: `por cuota (${count} pagos)`,
-                totalText: `Total del curso: ${price.toFixed(2)} € (${count} plazos de ${installmentPrice.toFixed(2)} €)`
+                totalText: `Total del curso: ${formatPrice(price)} € (${count} plazos de ${formatPrice(installmentPrice)} €)`
             };
         }
         return null;
@@ -826,7 +825,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                 {frac.count} plazos de {frac.mainDisplay}
                                                             </div>
                                                             <p className="text-[11px] font-semibold text-emerald-800/80 pt-0.5">
-                                                                Total del curso: {frac.totalPrice.toFixed(2)} €
+                                                                Total del curso: {formatPrice(frac.totalPrice)} €
                                                             </p>
                                                         </div>
                                                     );
@@ -834,7 +833,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                 return (
                                                     <div className="space-y-0.5">
                                                         <p className="text-3xl sm:text-4xl font-black text-emerald-700 tracking-tight">
-                                                            {course.affiliatePrice.toFixed(2)} €
+                                                            {formatPrice(course.affiliatePrice)} €
                                                         </p>
                                                         <p className="text-xs font-semibold text-emerald-800/80">
                                                             {[getPriceUnitLabel(course.priceUnit), getFrequencyLabel(course.paymentFrequency)].filter(Boolean).join(' · ') || 'Precio total'}
@@ -863,7 +862,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                     {frac.mainDisplay} <span className="text-xs font-medium text-slate-500">/ plazo</span>
                                                                 </p>
                                                                 <p className="text-xs font-medium text-slate-600">
-                                                                    Total: {frac.totalPrice.toFixed(2)} € ({frac.count} plazos de {frac.mainDisplay})
+                                                                    Total: {formatPrice(frac.totalPrice)} € ({frac.count} plazos de {frac.mainDisplay})
                                                                 </p>
                                                             </div>
                                                         );
@@ -871,7 +870,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                     return (
                                                         <div className="space-y-0.5">
                                                             <p className="text-2xl font-black text-slate-900 tracking-tight">
-                                                                {course.price.toFixed(2)} €
+                                                                {formatPrice(course.price)} €
                                                             </p>
                                                             <p className="text-xs font-medium text-slate-500">
                                                                 {[getPriceUnitLabel(course.priceUnit), getFrequencyLabel(course.paymentFrequency)].filter(Boolean).join(' · ') || 'Precio total'}

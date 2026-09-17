@@ -23,6 +23,7 @@ import {
   Euro,
   UserPlus
 } from 'lucide-react'
+import { formatPrice } from '@/lib/utils'
 
 interface Student {
   id: string
@@ -214,7 +215,7 @@ export function EnrollmentForm({ courseId, studentId, onSuccess, onCancel }: Enr
                           <span>{course.duration}h</span>
                           <span className="flex items-center space-x-1">
                             <Euro className="h-3 w-3" />
-                            <span>{course.price}</span>
+                            <span>{formatPrice(course.price)}</span>
                           </span>
                           <span className="flex items-center space-x-1">
                             <Users className="h-3 w-3" />
@@ -262,7 +263,7 @@ export function EnrollmentForm({ courseId, studentId, onSuccess, onCancel }: Enr
                         <Label className="text-sm font-medium text-muted-foreground">Precio</Label>
                         <p className="flex items-center space-x-1">
                           <Euro className="h-4 w-4" />
-                          <span>{course.price}</span>
+                          <span>{formatPrice(course.price)}</span>
                         </p>
                       </div>
                       <div>
@@ -370,7 +371,7 @@ export function EnrollmentForm({ courseId, studentId, onSuccess, onCancel }: Enr
                             <span>{course.duration}h</span>
                             <span className="flex items-center space-x-1">
                               <Euro className="h-3 w-3" />
-                              <span>{course.price}</span>
+                              <span>{formatPrice(course.price)}</span>
                             </span>
                             <span className="flex items-center space-x-1">
                               <Users className="h-3 w-3" />
@@ -418,7 +419,7 @@ export function EnrollmentForm({ courseId, studentId, onSuccess, onCancel }: Enr
                           <Label className="text-sm font-medium text-muted-foreground">Precio</Label>
                           <p className="flex items-center space-x-1">
                             <Euro className="h-4 w-4" />
-                            <span>{course.price}</span>
+                            <span>{formatPrice(course.price)}</span>
                           </p>
                         </div>
                         <div>

@@ -62,7 +62,7 @@ import { toast } from "sonner"
 import { jsPDF } from "jspdf"
 import html2canvas from "html2canvas"
 import { QRCodeSVG } from "qrcode.react"
-import { isCourseExpired } from "@/lib/utils"
+import { isCourseExpired, formatPrice } from "@/lib/utils"
 
 interface DiscountRule {
   id: string
@@ -1415,9 +1415,9 @@ export default function CoursesPage() {
                               <div className="col-span-1 md:col-span-4 p-3 bg-violet-50/70 border border-violet-200/80 rounded-xl text-xs text-violet-900 flex items-center gap-2">
                                 <span className="font-bold">ℹ️ Desglose automático de cuotas:</span>
                                 <span>
-                                  {count} plazos de {afiPrice > 0 ? `${(afiPrice / count).toFixed(2)} € (Afiliados)` : ''}
+                                  {count} plazos de {afiPrice > 0 ? `${formatPrice(afiPrice / count)} € (Afiliados)` : ''}
                                   {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
-                                  {genPrice > 0 ? `${(genPrice / count).toFixed(2)} € (General)` : ''}
+                                  {genPrice > 0 ? `${formatPrice(genPrice / count)} € (General)` : ''}
                                 </span>
                               </div>
                             );
@@ -1826,13 +1826,13 @@ export default function CoursesPage() {
                           <TableCell className="font-medium text-slate-900 leading-tight">
                             <div className="flex flex-col gap-1">
                               {course.price && course.price > 0 ? (
-                                <span className="text-sm font-bold">{`${course.price.toFixed(2)} €`}</span>
+                                <span className="text-sm font-bold">{`${formatPrice(course.price)} €`}</span>
                               ) : (
                                 <span className="text-[10px] text-slate-400 italic">Gral: Consultar</span>
                               )}
                               {course.affiliatePrice && course.affiliatePrice > 0 ? (
                                 <span className="text-[10px] font-black text-green-600 bg-green-50 px-1.5 py-0.5 rounded w-fit">
-                                  Afi: {course.affiliatePrice.toFixed(2)} €
+                                  Afi: {formatPrice(course.affiliatePrice)} €
                                 </span>
                               ) : (
                                 <span className="text-[10px] text-slate-400 italic">Afi: Consultar</span>
@@ -2144,7 +2144,7 @@ export default function CoursesPage() {
                         <div className="flex items-center gap-2">
                           <Euro className="h-4 w-4 text-slate-600" />
                           <span className="text-xs font-bold text-slate-700">
-                            {selectedCourse.price && selectedCourse.price > 0 ? `${selectedCourse.price.toFixed(2)} €` : 'Consultar'}
+                            {selectedCourse.price && selectedCourse.price > 0 ? `${formatPrice(selectedCourse.price)} €` : 'Consultar'}
                             {selectedCourse.priceUnit && selectedCourse.price && selectedCourse.price > 0 && (
                               <span className="text-[10px] text-slate-500 ml-1">
                                 {selectedCourse.priceUnit === 'FULL' ? '' :
@@ -2163,7 +2163,7 @@ export default function CoursesPage() {
                         <div className="flex items-center gap-2">
                           <Euro className="h-4 w-4 text-green-700" />
                           <span className="text-xs font-bold text-green-700">
-                            {selectedCourse.affiliatePrice && selectedCourse.affiliatePrice > 0 ? `${selectedCourse.affiliatePrice.toFixed(2)} €` : 'Consultar'}
+                            {selectedCourse.affiliatePrice && selectedCourse.affiliatePrice > 0 ? `${formatPrice(selectedCourse.affiliatePrice)} €` : 'Consultar'}
                             {selectedCourse.priceUnit && selectedCourse.affiliatePrice && selectedCourse.affiliatePrice > 0 && (
                               <span className="text-[10px] text-green-600/70 ml-1">
                                 {selectedCourse.priceUnit === 'FULL' ? '' :
@@ -2871,9 +2871,9 @@ export default function CoursesPage() {
                           <div className="col-span-1 md:col-span-4 p-3 bg-violet-50/70 border border-violet-200/80 rounded-xl text-xs text-violet-900 flex items-center gap-2">
                             <span className="font-bold">ℹ️ Desglose automático de cuotas:</span>
                             <span>
-                              {count} plazos de {afiPrice > 0 ? `${(afiPrice / count).toFixed(2)} € (Afiliados)` : ''}
+                              {count} plazos de {afiPrice > 0 ? `${formatPrice(afiPrice / count)} € (Afiliados)` : ''}
                               {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
-                              {genPrice > 0 ? `${(genPrice / count).toFixed(2)} € (General)` : ''}
+                              {genPrice > 0 ? `${formatPrice(genPrice / count)} € (General)` : ''}
                             </span>
                           </div>
                         );

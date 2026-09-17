@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf'
+import { formatPrice } from '@/lib/utils'
 
 export interface ReceiptData {
     studentName: string
@@ -241,13 +242,13 @@ export function generateReceiptPdf(data: ReceiptData): jsPDF {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(13)
     doc.setTextColor(185, 28, 28)
-    doc.text(`${amountToPay.toFixed(2)} €`, col1 + 45, rowY)
+    doc.text(`${formatPrice(amountToPay)} €`, col1 + 45, rowY)
 
     if (data.isFractioned && data.paymentCount) {
         doc.setFont('helvetica', 'normal')
         doc.setFontSize(8)
         doc.setTextColor(154, 52, 18)
-        doc.text(`(1.er plazo de ${data.paymentCount} cuotas · Total curso: ${data.totalAmount.toFixed(2)} €)`, col1 + 65, rowY - 0.5)
+        doc.text(`(1.er plazo de ${data.paymentCount} cuotas · Total curso: ${formatPrice(data.totalAmount)} €)`, col1 + 65, rowY - 0.5)
     }
 
     if (data.discountApplied) {

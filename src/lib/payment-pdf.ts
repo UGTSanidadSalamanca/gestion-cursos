@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf'
+import { formatPrice } from '@/lib/utils'
 
 export interface PaymentConfirmationData {
     studentName: string
@@ -213,7 +214,7 @@ export function generatePaymentConfirmationPdf(data: PaymentConfirmationData): j
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(13)
     doc.setTextColor(21, 128, 61)
-    doc.text(`${data.amountPaid.toFixed(2)} €`, col1 + 45, rowY)
+    doc.text(`${formatPrice(data.amountPaid)} €`, col1 + 45, rowY)
 
     if (data.discountApplied) {
         rowY += 5
