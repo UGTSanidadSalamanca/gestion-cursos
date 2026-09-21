@@ -39,6 +39,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { QRCodeSVG } from "qrcode.react"
 import { jsPDF } from "jspdf"
+import html2canvas from "html2canvas"
 import { formatTimeUTC, formatPrice } from "@/lib/utils"
 
 interface DiscountRule {
@@ -48,6 +49,7 @@ interface DiscountRule {
 }
 
 interface PublicCourse {
+    id: string
     title: string
     description?: string
     publicDescription?: string
