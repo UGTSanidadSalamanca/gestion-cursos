@@ -44,6 +44,7 @@ export async function GET(
                 offerDescription: true,
                 offerBadge: true,
                 customHtml: true,
+                imageUrl: true,
                 modules: {
                     select: {
                         title: true,

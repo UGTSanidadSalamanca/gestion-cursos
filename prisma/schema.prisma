@@ -129,6 +129,7 @@ model Course {
   offerDescription         String?
   offerBadge               String?
   customHtml               String?
+  imageUrl                 String?
   materials         CourseMaterial[]
   modules           CourseModule[]
   enrollments       Enrollment[]

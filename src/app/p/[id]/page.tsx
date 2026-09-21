@@ -77,6 +77,7 @@ interface PublicCourse {
     offerDescription?: string
     offerBadge?: string
     customHtml?: string
+    imageUrl?: string
     minStudents?: number
     maxStudents?: number
     modules?: {
@@ -452,29 +453,72 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                         </div>
                     </div>
 
-                    {/* Título y Badges del Curso */}
+                    {/* Título, Badges e Imagen de Portada del Curso */}
                     <div className="pt-6 pb-2">
-                        <div className="flex flex-wrap items-center gap-2 mb-3">
-                            <span className="bg-white/20 backdrop-blur-sm text-white text-[11px] font-bold px-2.5 py-0.5 rounded-lg uppercase tracking-wider border border-white/20">
-                                {course.code}
-                            </span>
-                            <span className="bg-white/15 text-red-100 text-[11px] font-semibold px-2.5 py-0.5 rounded-lg">
-                                Nivel {getSpanishLevel(course.level)}
-                            </span>
-                            {course.isActive === false ? (
-                                <span className="bg-amber-400 text-amber-950 text-[11px] font-bold px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-sm">
-                                    <AlertCircle className="h-3 w-3" /> Inscripciones Cerradas
-                                </span>
-                            ) : (
-                                <span className="bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-sm">
-                                    <Sparkles className="h-3 w-3" /> Convocatoria Abierta
-                                </span>
-                            )}
-                        </div>
+                        {course.imageUrl ? (
+                            <div className="flex flex-col-reverse md:flex-row md:items-center justify-between gap-6 lg:gap-8">
+                                {/* Columna Izquierda: Título y Metadatos */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                                        <span className="bg-white/20 backdrop-blur-sm text-white text-[11px] font-bold px-2.5 py-0.5 rounded-lg uppercase tracking-wider border border-white/20">
+                                            {course.code}
+                                        </span>
+                                        <span className="bg-white/15 text-red-100 text-[11px] font-semibold px-2.5 py-0.5 rounded-lg">
+                                            Nivel {getSpanishLevel(course.level)}
+                                        </span>
+                                        {course.isActive === false ? (
+                                            <span className="bg-amber-400 text-amber-950 text-[11px] font-bold px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-sm">
+                                                <AlertCircle className="h-3 w-3" /> Inscripciones Cerradas
+                                            </span>
+                                        ) : (
+                                            <span className="bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-sm">
+                                                <Sparkles className="h-3 w-3" /> Convocatoria Abierta
+                                            </span>
+                                        )}
+                                    </div>
 
-                        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white max-w-4xl">
-                            {course.title}
-                        </h1>
+                                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white">
+                                        {course.title}
+                                    </h1>
+                                </div>
+
+                                {/* Columna Derecha: Tarjeta Cuadrada 1:1 con la Imagen del Curso */}
+                                <div className="shrink-0 flex justify-center md:justify-end self-center md:self-auto">
+                                    <div className="w-44 h-44 sm:w-52 sm:h-52 md:w-56 md:h-56 lg:w-60 lg:h-60 rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md p-1.5 border border-white/25 shadow-2xl transition-transform hover:scale-[1.02]">
+                                        <img
+                                            src={course.imageUrl}
+                                            alt={course.title}
+                                            className="w-full h-full object-cover rounded-xl bg-white shadow-xs"
+                                            loading="eager"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div>
+                                <div className="flex flex-wrap items-center gap-2 mb-3">
+                                    <span className="bg-white/20 backdrop-blur-sm text-white text-[11px] font-bold px-2.5 py-0.5 rounded-lg uppercase tracking-wider border border-white/20">
+                                        {course.code}
+                                    </span>
+                                    <span className="bg-white/15 text-red-100 text-[11px] font-semibold px-2.5 py-0.5 rounded-lg">
+                                        Nivel {getSpanishLevel(course.level)}
+                                    </span>
+                                    {course.isActive === false ? (
+                                        <span className="bg-amber-400 text-amber-950 text-[11px] font-bold px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-sm">
+                                            <AlertCircle className="h-3 w-3" /> Inscripciones Cerradas
+                                        </span>
+                                    ) : (
+                                        <span className="bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-sm">
+                                            <Sparkles className="h-3 w-3" /> Convocatoria Abierta
+                                        </span>
+                                    )}
+                                </div>
+
+                                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white max-w-4xl">
+                                    {course.title}
+                                </h1>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

@@ -71,6 +71,7 @@ export async function POST(
         offerDescription: original.offerDescription,
         offerBadge: original.offerBadge,
         customHtml: original.customHtml,
+        imageUrl: original.imageUrl,
         // La copia nace inactiva y sin fechas (para que el usuario las configure)
         isActive: false,
         startDate: null,

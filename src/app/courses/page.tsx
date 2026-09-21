@@ -57,6 +57,7 @@ import {
 } from "lucide-react"
 import * as XLSX from "xlsx"
 import { GroupEmailDialog } from "@/components/courses/group-email-dialog"
+import { CourseImagePicker } from "@/components/courses/course-image-picker"
 import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
 import { toast } from "sonner"
 import { jsPDF } from "jspdf"
@@ -120,6 +121,8 @@ interface Course {
   offerTitle?: string
   offerDescription?: string
   offerBadge?: string
+  customHtml?: string
+  imageUrl?: string | null
   modules?: CourseModule[]
   enrollments?: {
     id: string
@@ -209,6 +212,8 @@ export default function CoursesPage() {
     offerTitle: '',
     offerDescription: '',
     offerBadge: '',
+    customHtml: '',
+    imageUrl: '',
     hasMinStudents: false,
     minStudents: '',
     maxStudents: '30',
@@ -594,6 +599,8 @@ export default function CoursesPage() {
       offerTitle: '',
       offerDescription: '',
       offerBadge: '',
+      customHtml: '',
+      imageUrl: '',
       hasMinStudents: false,
       minStudents: '',
       maxStudents: '30',
@@ -663,6 +670,8 @@ export default function CoursesPage() {
       offerTitle: course.offerTitle || '',
       offerDescription: course.offerDescription || '',
       offerBadge: course.offerBadge || '',
+      customHtml: course.customHtml || '',
+      imageUrl: course.imageUrl || '',
       hasMinStudents: !!(course.minStudents && course.minStudents > 0),
       minStudents: course.minStudents != null ? course.minStudents.toString() : '',
       maxStudents: (course.maxStudents || 0).toString(),
@@ -1538,6 +1547,13 @@ export default function CoursesPage() {
                       <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
                         <ExternalLink className="h-4 w-4" /> Marketing y Landing
                       </h3>
+
+                      {/* Selector de Imagen de Portada */}
+                      <CourseImagePicker
+                        value={courseFormData.imageUrl}
+                        onChange={(url) => setCourseFormData({ ...courseFormData, imageUrl: url })}
+                      />
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
                         <div className="space-y-6">
                           <div className="space-y-2">
@@ -1796,15 +1812,26 @@ export default function CoursesPage() {
                       return (
                         <TableRow key={course.id} className="hover:bg-slate-50/50 transition-colors">
                           <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-semibold text-slate-900">{course.title}</span>
-                              <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                                <span className="text-[11px] text-slate-500 font-mono font-medium">{course.code}</span>
-                                {course.endDate && (
-                                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-medium ${isExpired ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-600'}`}>
-                                    Fin: {new Date(course.endDate).toLocaleDateString('es-ES')}
-                                  </span>
-                                )}
+                            <div className="flex items-center gap-3">
+                              {course.imageUrl ? (
+                                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100 shadow-2xs">
+                                  <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover" />
+                                </div>
+                              ) : (
+                                <div className="w-10 h-10 rounded-lg shrink-0 border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-400">
+                                  <BookOpen className="w-5 h-5 text-slate-400" />
+                                </div>
+                              )}
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-semibold text-slate-900">{course.title}</span>
+                                <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                  <span className="text-[11px] text-slate-500 font-mono font-medium">{course.code}</span>
+                                  {course.endDate && (
+                                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-medium ${isExpired ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-600'}`}>
+                                      Fin: {new Date(course.endDate).toLocaleDateString('es-ES')}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </TableCell>
@@ -3002,6 +3029,13 @@ export default function CoursesPage() {
                   <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
                     <ExternalLink className="h-4 w-4" /> Marketing y Landing Page
                   </h3>
+
+                  {/* Selector de Imagen de Portada */}
+                  <CourseImagePicker
+                    value={courseFormData.imageUrl}
+                    onChange={(url) => setCourseFormData({ ...courseFormData, imageUrl: url })}
+                  />
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
                       <div className="space-y-2">

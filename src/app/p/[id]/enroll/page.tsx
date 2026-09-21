@@ -60,6 +60,7 @@ interface PublicCourse {
     discountDescription?: string
     discountRules?: string | DiscountRule[]
     isActive?: boolean
+    imageUrl?: string
 }
 
 export default function CourseEnrollPage({ params }: { params: Promise<{ id: string }> }) {
@@ -358,29 +359,38 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
                 <Card className="border-none shadow-md bg-white rounded-3xl overflow-hidden">
                     <div className="bg-red-600 h-2 w-full" />
                     <CardContent className="p-5 sm:p-7">
-                        <div className="flex flex-wrap items-center gap-2 mb-2.5">
-                            <Badge className="bg-red-100 text-red-700 border-none font-black text-[10px] tracking-widest uppercase">
-                                {course.code}
-                            </Badge>
-                            {course.level && (
-                                <Badge variant="outline" className="text-slate-600 border-slate-200 font-bold text-[10px]">
-                                    {course.level}
-                                </Badge>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                            {course.imageUrl && (
+                                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shrink-0 border border-slate-200 bg-slate-50 shadow-sm self-center sm:self-auto">
+                                    <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover" />
+                                </div>
                             )}
-                            {course.duration && (
-                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 ml-auto">
-                                    <Clock className="h-3 w-3 text-slate-400" />
-                                    {course.duration} {course.durationPeriod ? course.durationPeriod.toLowerCase() : 'horas'}
-                                </span>
-                            )}
-                        </div>
+                            <div className="flex-1 min-w-0 w-full">
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                    <Badge className="bg-red-100 text-red-700 border-none font-black text-[10px] tracking-widest uppercase">
+                                        {course.code}
+                                    </Badge>
+                                    {course.level && (
+                                        <Badge variant="outline" className="text-slate-600 border-slate-200 font-bold text-[10px]">
+                                            {course.level}
+                                        </Badge>
+                                    )}
+                                    {course.duration && (
+                                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 ml-auto">
+                                            <Clock className="h-3 w-3 text-slate-400" />
+                                            {course.duration} {course.durationPeriod ? course.durationPeriod.toLowerCase() : 'horas'}
+                                        </span>
+                                    )}
+                                </div>
 
-                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
-                            {course.title}
-                        </h1>
-                        <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                            Formulario oficial de pre-inscripción y reserva de plaza online.
-                        </p>
+                                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                                    {course.title}
+                                </h1>
+                                <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+                                    Formulario oficial de pre-inscripción y reserva de plaza online.
+                                </p>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
 
