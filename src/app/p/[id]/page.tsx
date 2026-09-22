@@ -100,6 +100,20 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
     const [id, setId] = useState<string | null>(null)
     const [course, setCourse] = useState<PublicCourse | null>(null)
     const [loading, setLoading] = useState(true)
+    const [imageError, setImageError] = useState(false)
+
+    const getSafeImageUrl = (url?: string) => {
+        if (!url) return ''
+        let clean = url
+            .replace(/\/Imagenes\/cursos\/aux%20admin%20junta\.png/g, '/Imagenes/cursos/aux-admin-junta.png')
+            .replace(/\/Imagenes\/cursos\/aux%20admin%20sacyl\.png/g, '/Imagenes/cursos/aux-admin-sacyl.png')
+            .replace('/Imagenes/cursos/aux admin junta.png', '/Imagenes/cursos/aux-admin-junta.png')
+            .replace('/Imagenes/cursos/aux admin sacyl.png', '/Imagenes/cursos/aux-admin-sacyl.png')
+        if (!clean.startsWith('http')) {
+            clean = encodeURI(decodeURI(clean))
+        }
+        return clean
+    }
 
     const getDiscountRules = (): DiscountRule[] => {
         if (!course?.discountRules) return []
@@ -457,7 +471,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
 
                     {/* Título, Badges e Imagen de Portada del Curso */}
                     <div className="pt-6 pb-2">
-                        {course.imageUrl ? (
+                        {course.imageUrl && !imageError ? (
                             <div className="flex flex-col-reverse md:flex-row md:items-center justify-between gap-6 lg:gap-8">
                                 {/* Columna Izquierda: Título y Metadatos */}
                                 <div className="flex-1 min-w-0">
@@ -486,12 +500,14 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
 
                                 {/* Columna Derecha: Tarjeta Cuadrada 1:1 con la Imagen del Curso */}
                                 <div className="shrink-0 flex justify-center md:justify-end self-center md:self-auto">
-                                    <div className="w-44 h-44 sm:w-52 sm:h-52 md:w-56 md:h-56 lg:w-60 lg:h-60 rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md p-1.5 border border-white/25 shadow-2xl transition-transform hover:scale-[1.02]">
+                                    <div className="w-44 h-44 sm:w-52 sm:h-52 md:w-56 md:h-56 lg:w-60 lg:h-60 rounded-2xl overflow-hidden bg-white/15 backdrop-blur-md p-1.5 border border-white/25 shadow-2xl transition-transform hover:scale-[1.02]">
                                         <img
-                                            src={course.imageUrl}
+                                            src={getSafeImageUrl(course.imageUrl)}
                                             alt={course.title}
-                                            className="w-full h-full object-cover rounded-xl bg-white shadow-xs"
+                                            className="w-full h-full object-cover rounded-xl shadow-xs"
                                             loading="eager"
+                                            referrerPolicy="no-referrer"
+                                            onError={() => setImageError(true)}
                                         />
                                     </div>
                                 </div>
