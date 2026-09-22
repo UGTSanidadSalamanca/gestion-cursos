@@ -27,6 +27,27 @@ const nextConfig: NextConfig = {
     // 构建时忽略ESLint错误
     ignoreDuringBuilds: true,
   },
+  async headers() {
+    return [
+      {
+        // Páginas públicas de curso: permitir embeber en iframes (Google Sites)
+        source: '/p/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'ALLOWALL' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self' https://sites.google.com https://*.google.com" },
+        ],
+      },
+      {
+        // Imágenes de cursos: servir sin restricciones de acceso cruzado
+        source: '/Imagenes/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+          { key: 'Referrer-Policy', value: 'no-referrer-when-downgrade' },
+        ],
+      },
+    ]
+  },
 };
 
 export default withPWA(nextConfig);
