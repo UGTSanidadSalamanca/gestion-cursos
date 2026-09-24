@@ -36,6 +36,7 @@ import {
 import { toast } from "sonner"
 import { generateReceiptPdf, ReceiptData } from "@/lib/receipt-pdf"
 import { formatPrice } from "@/lib/utils"
+import { validateDniNie, checkEmailValidation } from "@/lib/validation-helpers"
 
 interface DiscountRule {
     id?: string
@@ -183,13 +184,15 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
             return
         }
 
-        if (!formData.dni.trim()) {
-            toast.error("Por favor, introduce tu DNI o NIE.")
+        const dniCheck = validateDniNie(formData.dni)
+        if (!dniCheck.isValid) {
+            toast.error(dniCheck.error || "Por favor, introduce un DNI o NIE válido.")
             return
         }
 
-        if (!formData.email.trim() || !formData.email.includes('@')) {
-            toast.error("Por favor, introduce un correo electrónico válido.")
+        const emailCheck = checkEmailValidation(formData.email)
+        if (!emailCheck.isValid) {
+            toast.error(emailCheck.error || "Por favor, introduce un correo electrónico válido.")
             return
         }
 
@@ -434,55 +437,124 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
                                 </div>
 
                                 {/* DNI / NIE */}
-                                <div className="space-y-1.5">
-                                    <Label className="text-[11px] font-black uppercase text-slate-600 tracking-wider">
-                                        DNI o NIE *
-                                    </Label>
-                                    <div className="relative">
-                                        <Fingerprint className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                                        <Input
-                                            required
-                                            className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl text-sm font-mono uppercase focus:bg-white"
-                                            placeholder="12345678Z"
-                                            value={formData.dni}
-                                            onChange={e => setFormData({ ...formData, dni: e.target.value.toUpperCase() })}
-                                        />
-                                    </div>
-                                </div>
+                                {(() => {
+                                    const dniCheck = formData.dni.trim() ? validateDniNie(formData.dni) : null
+                                    const isDniValid = dniCheck?.isValid
+                                    const hasDniError = dniCheck && !dniCheck.isValid && formData.dni.trim().length >= 8
+
+                                    return (
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-[11px] font-black uppercase text-slate-600 tracking-wider">
+                                                    DNI o NIE *
+                                                </Label>
+                                                {isDniValid && (
+                                                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                                        <Check className="h-2.5 w-2.5 text-emerald-600" /> DNI/NIE correcto
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="relative">
+                                                <Fingerprint className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                                                <Input
+                                                    required
+                                                    className={`pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl text-sm font-mono uppercase focus:bg-white ${hasDniError ? 'border-red-400 bg-red-50/30' : isDniValid ? 'border-emerald-400 bg-emerald-50/20' : ''}`}
+                                                    placeholder="12345678Z"
+                                                    value={formData.dni}
+                                                    onChange={e => setFormData({ ...formData, dni: e.target.value.toUpperCase().replace(/[^0-9A-Z]/g, '') })}
+                                                />
+                                            </div>
+                                            {hasDniError && (
+                                                <div className="p-2.5 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between text-xs text-red-700">
+                                                    <div className="flex items-center gap-2">
+                                                        <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                                                        <span>{dniCheck.error}</span>
+                                                    </div>
+                                                    {dniCheck.formatted && dniCheck.formatted !== formData.dni && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData(prev => ({ ...prev, dni: dniCheck.formatted! }))}
+                                                            className="ml-2 px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[11px] font-bold shrink-0 transition-colors shadow-sm cursor-pointer"
+                                                        >
+                                                            Añadir letra {dniCheck.formatted.slice(-1)}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })()}
 
                                 {/* Correo Electrónico */}
-                                <div className="space-y-1.5">
-                                    <div className="flex items-center justify-between">
-                                        <Label className="text-[11px] font-black uppercase text-slate-600 tracking-wider">
-                                            Correo Electrónico *
-                                        </Label>
-                                        <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100 flex items-center gap-1">
-                                            <Sparkles className="h-2.5 w-2.5 text-red-500" /> Preferiblemente @gmail.com
-                                        </span>
-                                    </div>
-                                    <div className="relative">
-                                        <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                                        <Input
-                                            required
-                                            type="email"
-                                            className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl text-sm font-medium focus:bg-white"
-                                            placeholder="ejemplo@gmail.com"
-                                            value={formData.email}
-                                            onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                        />
-                                    </div>
-                                    <p className="text-[11px] text-slate-500 leading-tight">
-                                        Te aconsejamos indicar una cuenta de <strong className="text-slate-700">Gmail</strong> para facilitarte el acceso directo al aula virtual (Google Classroom / Meet) y a los materiales docentes.
-                                    </p>
-                                    {formData.email && formData.email.includes('@') && !formData.email.toLowerCase().includes('@gmail.com') && (
-                                        <div className="p-3 bg-amber-50/90 border border-amber-200/90 rounded-xl flex items-start gap-2.5 text-[11px] text-amber-900">
-                                            <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                                            <p className="leading-snug">
-                                                <strong>Nota informativa:</strong> Si dispones de cuenta <span className="underline font-semibold">@gmail.com</span>, te sugerimos utilizarla para que tu acceso a Google Classroom sea directo y sin incompatibilidades.
+                                {(() => {
+                                    const emailCheck = formData.email.trim() ? checkEmailValidation(formData.email) : null
+                                    const hasEmailError = emailCheck && !emailCheck.isValid
+                                    const hasSuggestion = emailCheck?.suggestion
+
+                                    return (
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-[11px] font-black uppercase text-slate-600 tracking-wider">
+                                                    Correo Electrónico *
+                                                </Label>
+                                                <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100 flex items-center gap-1">
+                                                    <Sparkles className="h-2.5 w-2.5 text-red-500" /> Preferiblemente @gmail.com
+                                                </span>
+                                            </div>
+                                            <div className="relative">
+                                                <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                                                <Input
+                                                    required
+                                                    type="email"
+                                                    className={`pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl text-sm font-medium focus:bg-white ${hasEmailError ? 'border-red-400 bg-red-50/30' : ''}`}
+                                                    placeholder="ejemplo@gmail.com"
+                                                    value={formData.email}
+                                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                                />
+                                            </div>
+
+                                            {/* Error de prueba / inválido */}
+                                            {hasEmailError && (
+                                                <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-700 font-medium">
+                                                    <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                                                    <p>{emailCheck.error}</p>
+                                                </div>
+                                            )}
+
+                                            {/* Sugerencia tipográfica inteligente */}
+                                            {hasSuggestion && (
+                                                <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-between text-xs text-indigo-900 font-medium">
+                                                    <div className="flex items-center gap-2">
+                                                        <Sparkles className="h-4 w-4 text-indigo-600 shrink-0" />
+                                                        <span>
+                                                            ¿Quisiste escribir <strong>{hasSuggestion}</strong>?
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData(prev => ({ ...prev, email: hasSuggestion }))}
+                                                        className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[11px] font-bold shrink-0 transition-colors shadow-sm ml-2 cursor-pointer"
+                                                    >
+                                                        Corregir
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            <p className="text-[11px] text-slate-500 leading-tight">
+                                                Te aconsejamos indicar una cuenta de <strong className="text-slate-700">Gmail</strong> para facilitarte el acceso directo al aula virtual (Google Classroom / Meet) y a los materiales docentes.
                                             </p>
+
+                                            {formData.email && formData.email.includes('@') && !formData.email.toLowerCase().includes('@gmail.com') && !hasEmailError && !hasSuggestion && (
+                                                <div className="p-3 bg-amber-50/90 border border-amber-200/90 rounded-xl flex items-start gap-2.5 text-[11px] text-amber-900">
+                                                    <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                                                    <p className="leading-snug">
+                                                        <strong>Nota informativa:</strong> Si dispones de cuenta <span className="underline font-semibold">@gmail.com</span>, te sugerimos utilizarla para que tu acceso a Google Classroom sea directo y sin incompatibilidades.
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
+                                    )
+                                })()}
 
                                 {/* Teléfono */}
                                 <div className="space-y-1.5">

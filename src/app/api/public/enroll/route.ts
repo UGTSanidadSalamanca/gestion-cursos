@@ -4,6 +4,7 @@ import { NotificationService } from '@/lib/notification-service'
 import { notifyNewEnrollment } from '@/lib/email-service'
 import { syncStudentToGoogleContacts } from '@/lib/google-contacts-service'
 import { isCourseExpired } from '@/lib/course-utils'
+import { validateDniNie, checkEmailValidation } from '@/lib/validation-helpers'
 
 export async function POST(request: NextRequest) {
     let body;
@@ -20,9 +21,16 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Faltan campos obligatorios: Nombre, DNI y Correo Electrónico son requeridos' }, { status: 400 })
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(email.trim())) {
-            return NextResponse.json({ error: 'El formato del correo electrónico no es válido' }, { status: 400 })
+        // Validación matemática de DNI / NIE
+        const dniCheck = validateDniNie(dni)
+        if (!dniCheck.isValid) {
+            return NextResponse.json({ error: dniCheck.error || 'El DNI o NIE introducido no es válido.' }, { status: 400 })
+        }
+
+        // Validación de correo (formato, prueba/fake, desechables)
+        const emailCheck = checkEmailValidation(email)
+        if (!emailCheck.isValid) {
+            return NextResponse.json({ error: emailCheck.error || 'El correo electrónico no es válido.' }, { status: 400 })
         }
 
         // 0. Verificar si el curso existe, está activo y no está vencido
