@@ -270,12 +270,34 @@ export async function DELETE(
 ) {
     try {
         const { id } = await params
-        await db.course.delete({
-            where: { id }
+
+        const course = await db.course.findUnique({
+            where: { id },
+            select: { id: true, title: true }
         })
-        return NextResponse.json({ message: 'Course deleted successfully' })
+
+        if (!course) {
+            return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 })
+        }
+
+        await db.$transaction(async (tx) => {
+            // Desvincular pagos asociados al curso para evitar violaciones de clave foránea
+            await tx.payment.updateMany({
+                where: { courseId: id },
+                data: { courseId: null }
+            })
+
+            // Eliminar el curso (módulos, matrículas, horarios y materiales se eliminan en cascada)
+            await tx.course.delete({
+                where: { id }
+            })
+        })
+
+        return NextResponse.json({ message: 'Curso eliminado correctamente' })
     } catch (error) {
-        return NextResponse.json({ error: 'Error deleting course' }, { status: 500 })
+        console.error('Error deleting course:', error)
+        return NextResponse.json({ error: 'Error al eliminar el curso' }, { status: 500 })
     }
 }
+
 

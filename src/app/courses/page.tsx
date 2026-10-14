@@ -246,6 +246,8 @@ export default function CoursesPage() {
   const [reactivateAction, setReactivateAction] = useState<'extend' | 'no-limit'>('extend')
   const [duplicateDialogCourse, setDuplicateDialogCourse] = useState<Course | null>(null)
   const [isDuplicating, setIsDuplicating] = useState(false)
+  const [deleteDialogCourse, setDeleteDialogCourse] = useState<Course | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const getPaymentFrequencyLabel = (freq?: string, short = false) => {
     if (!freq) return ''
@@ -435,6 +437,32 @@ export default function CoursesPage() {
       toast.error('Error de conexión al duplicar el curso')
     } finally {
       setIsDuplicating(false)
+    }
+  }
+
+  const handleDeleteCourse = async () => {
+    if (!deleteDialogCourse) return
+    setIsDeleting(true)
+    try {
+      const res = await fetch(`/api/courses/${deleteDialogCourse.id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success(`Curso "${deleteDialogCourse.title}" eliminado correctamente`)
+        const deletedId = deleteDialogCourse.id
+        setDeleteDialogCourse(null)
+        if (selectedCourse?.id === deletedId) {
+          setIsEditDialogOpen(false)
+          setIsViewDialogOpen(false)
+          setSelectedCourse(null)
+        }
+        await fetchCourses()
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Error al eliminar el curso')
+      }
+    } catch (e) {
+      toast.error('Error de conexión al eliminar el curso')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -1948,6 +1976,15 @@ export default function CoursesPage() {
                                 <FileSpreadsheet className="h-4 w-4" />
                               </Button>
                               <EnrollmentForm courseId={course.id} onSuccess={fetchCourses} />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                title="Eliminar curso"
+                                onClick={() => setDeleteDialogCourse(course)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -2121,6 +2158,80 @@ export default function CoursesPage() {
                 {isDuplicating
                   ? <><Loader2 className="h-4 w-4 animate-spin mr-1.5" />Duplicando...</>
                   : <><Copy className="h-4 w-4 mr-1.5" />Crear Copia</>
+                }
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Dialog */}
+        <Dialog open={!!deleteDialogCourse} onOpenChange={(open) => { if (!open) setDeleteDialogCourse(null) }}>
+          <DialogContent className="sm:max-w-[460px] p-0 overflow-hidden border-none shadow-2xl">
+            <DialogHeader className="p-6 bg-red-50/70 border-b border-red-100">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-red-100 border border-red-200 flex items-center justify-center text-red-600">
+                  <Trash2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold text-slate-900">Eliminar Curso</DialogTitle>
+                  <DialogDescription className="text-slate-600 text-xs mt-0.5">
+                    Esta acción eliminará el curso de forma definitiva
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="p-6 space-y-4 bg-white">
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                <div className="flex items-start gap-2.5">
+                  <BookOpen className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Curso a eliminar</p>
+                    <p className="text-sm font-bold text-slate-900 leading-snug">{deleteDialogCourse?.title}</p>
+                    <p className="text-[11px] font-mono text-slate-500 mt-0.5">{deleteDialogCourse?.code}</p>
+                  </div>
+                </div>
+              </div>
+
+              {(deleteDialogCourse?._count?.enrollments ?? (deleteDialogCourse?.enrollments?.length ?? 0)) > 0 && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-1.5 text-xs text-amber-900">
+                  <div className="flex items-center gap-2 font-bold text-amber-800">
+                    <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                    <span>¡Atención! Contiene matrículas</span>
+                  </div>
+                  <p className="text-amber-700 leading-relaxed pl-6">
+                    Este curso tiene <b>{deleteDialogCourse?._count?.enrollments ?? deleteDialogCourse?.enrollments?.length}</b> alumno(s) matriculado(s). Al eliminarlo se suprimirán sus inscripciones asociadas.
+                  </p>
+                </div>
+              )}
+
+              <div className="p-4 bg-red-50/50 border border-red-100 rounded-xl text-xs text-red-700 space-y-1">
+                <p className="font-bold">¿Qué sucederá?</p>
+                <p className="text-slate-600 leading-relaxed">
+                  Se eliminarán permanentemente el curso, sus módulos, horarios asignados y matrículas. Esta acción no se puede deshacer.
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter className="p-4 bg-slate-50 border-t flex items-center justify-end gap-2 shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDeleteDialogCourse(null)}
+                className="h-10 text-xs font-bold"
+                disabled={isDeleting}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleDeleteCourse}
+                disabled={isDeleting}
+                className="h-10 px-5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md shadow-red-200"
+              >
+                {isDeleting
+                  ? <><Loader2 className="h-4 w-4 animate-spin mr-1.5" />Eliminando...</>
+                  : <><Trash2 className="h-4 w-4 mr-1.5" />Eliminar Definitivamente</>
                 }
               </Button>
             </DialogFooter>
@@ -2406,16 +2517,30 @@ export default function CoursesPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="bg-slate-50 px-8 py-5 flex items-center justify-end gap-3 no-print border-t shrink-0">
-                    <Button variant="outline" className="h-11 rounded-xl font-bold uppercase text-[10px] tracking-widest border-slate-300" onClick={handlePrint}>
-                      <Printer className="mr-2 h-4 w-4" /> Imprimir / PDF
+                  <div className="bg-slate-50 px-8 py-5 flex items-center justify-between no-print border-t shrink-0">
+                    <Button
+                      variant="ghost"
+                      className="h-11 rounded-xl font-bold uppercase text-[10px] tracking-widest text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => {
+                        if (selectedCourse) {
+                          setIsViewDialogOpen(false)
+                          setDeleteDialogCourse(selectedCourse)
+                        }
+                      }}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" /> Eliminar Curso
                     </Button>
-                    <Button variant="outline" className="h-11 rounded-xl font-bold uppercase text-[10px] tracking-widest border-slate-300" onClick={() => handleExportPDF(selectedCourse)}>
-                      <Download className="mr-2 h-4 w-4" /> Descargar Imagen PDF
-                    </Button>
-                    <Button className="h-11 bg-slate-900 hover:bg-black rounded-xl font-bold uppercase text-[10px] tracking-widest px-8" onClick={() => setIsViewDialogOpen(false)}>
-                      Cerrar
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      <Button variant="outline" className="h-11 rounded-xl font-bold uppercase text-[10px] tracking-widest border-slate-300" onClick={handlePrint}>
+                        <Printer className="mr-2 h-4 w-4" /> Imprimir / PDF
+                      </Button>
+                      <Button variant="outline" className="h-11 rounded-xl font-bold uppercase text-[10px] tracking-widest border-slate-300" onClick={() => handleExportPDF(selectedCourse)}>
+                        <Download className="mr-2 h-4 w-4" /> Descargar Imagen PDF
+                      </Button>
+                      <Button className="h-11 bg-slate-900 hover:bg-black rounded-xl font-bold uppercase text-[10px] tracking-widest px-8" onClick={() => setIsViewDialogOpen(false)}>
+                        Cerrar
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </>
@@ -3109,13 +3234,29 @@ export default function CoursesPage() {
                 </div>
               </div>
 
-              <DialogFooter className="p-6 bg-slate-50 border-t flex items-center justify-end gap-3 shrink-0">
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} className="px-8 h-12 rounded-xl font-bold uppercase text-xs">
-                  Descartar
+              <DialogFooter className="p-6 bg-slate-50 border-t flex items-center justify-between shrink-0">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    if (selectedCourse) {
+                      setIsEditDialogOpen(false)
+                      setDeleteDialogCourse(selectedCourse)
+                    }
+                  }}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 h-12 px-5 rounded-xl font-bold uppercase text-xs flex items-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Eliminar Curso
                 </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700 px-12 h-12 rounded-xl shadow-xl shadow-blue-200 font-black uppercase text-xs tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]">
-                  Actualizar Curso
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} className="px-8 h-12 rounded-xl font-bold uppercase text-xs">
+                    Descartar
+                  </Button>
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700 px-12 h-12 rounded-xl shadow-xl shadow-blue-200 font-black uppercase text-xs tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    Actualizar Curso
+                  </Button>
+                </div>
               </DialogFooter>
             </form>
           </DialogContent>
