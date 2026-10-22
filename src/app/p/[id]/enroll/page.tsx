@@ -265,6 +265,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
             isFractioned: !!frac,
             paymentFrequencyLabel: frac ? 'Fraccionado' : 'Pago Único',
             discountApplied: hasDiscount ? `-${totalDiscountPercentage}% (${discountReasonText})` : undefined,
+            beneficiary: 'UGT Servicios Públicos',
             iban: iban,
             paymentConcept: paymentConcept,
             enrollmentDate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }),
@@ -916,13 +917,13 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
                                             </p>
                                         </div>
 
-                                        {/* Titular */}
+                                        {/* Titular / Beneficiario */}
                                         <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
                                             <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                                                Titular de la Cuenta
+                                                Beneficiario
                                             </p>
                                             <p className="text-sm font-bold text-slate-800 leading-snug">
-                                                UGT Servicios Públicos de Castilla y León
+                                                UGT Servicios Públicos
                                             </p>
                                             <p className="text-[11px] text-slate-500">
                                                 Entidad: Unicaja Banco

@@ -21,6 +21,7 @@ export interface ReceiptData {
     discountApplied?: string
     iban: string
     paymentConcept: string
+    beneficiary?: string
     enrollmentDate?: string
     referenceId?: string
 }
@@ -224,13 +225,13 @@ export function generateReceiptPdf(data: ReceiptData): jsPDF {
     doc.text('3. INSTRUCCIONES DE PAGO Y TRANSFERENCIA BANCARIA', margin, y)
 
     y += 3
-    const paymentBoxHeight = 44
+    const paymentBoxHeight = data.discountApplied ? 58 : 52
     doc.setFillColor(254, 242, 242) // red-50
     doc.setDrawColor(252, 165, 165) // red-300
     doc.setLineWidth(0.6)
     doc.roundedRect(margin, y, contentWidth, paymentBoxHeight, 2.5, 2.5, 'FD')
 
-    rowY = y + 6
+    rowY = y + 5.5
     // Importe destacado
     const amountToPay = data.firstPaymentAmount && data.isFractioned ? data.firstPaymentAmount : data.totalAmount
 
@@ -252,18 +253,34 @@ export function generateReceiptPdf(data: ReceiptData): jsPDF {
     }
 
     if (data.discountApplied) {
-        rowY += 5
+        rowY += 4.5
         doc.setFont('helvetica', 'italic')
         doc.setFontSize(7.5)
         doc.setTextColor(21, 128, 61)
         doc.text(`Descuento aplicado: ${data.discountApplied}`, col1, rowY)
     }
 
-    // Cuenta Bancaria (IBAN)
-    rowY += 7.5
+    // Beneficiario
+    rowY += 6.5
     doc.setFillColor(255, 255, 255)
     doc.setDrawColor(226, 232, 240)
-    doc.roundedRect(col1, rowY - 4, contentWidth - 8, 10, 1.5, 1.5, 'FD')
+    doc.roundedRect(col1, rowY - 3.5, contentWidth - 8, 8, 1.5, 1.5, 'FD')
+
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8)
+    doc.setTextColor(100, 116, 139)
+    doc.text('BENEFICIARIO:', col1 + 3, rowY + 2)
+
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(9.5)
+    doc.setTextColor(15, 23, 42)
+    doc.text(data.beneficiary || 'UGT Servicios Públicos', col1 + 52, rowY + 2)
+
+    // Cuenta Bancaria (IBAN)
+    rowY += 9.5
+    doc.setFillColor(255, 255, 255)
+    doc.setDrawColor(226, 232, 240)
+    doc.roundedRect(col1, rowY - 3.5, contentWidth - 8, 8, 1.5, 1.5, 'FD')
 
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(8)
@@ -273,13 +290,13 @@ export function generateReceiptPdf(data: ReceiptData): jsPDF {
     doc.setFont('courier', 'bold')
     doc.setFontSize(10.5)
     doc.setTextColor(15, 23, 42)
-    doc.text(data.iban || 'ES59 2103 2347 4000 3377 9482', col1 + 52, rowY + 2.3)
+    doc.text(data.iban || 'ES59 2103 2347 4000 3377 9482', col1 + 52, rowY + 2.2)
 
     // Concepto Obligatorio
-    rowY += 12
+    rowY += 10.5
     doc.setFillColor(254, 226, 226) // red-100
     doc.setDrawColor(239, 68, 68)
-    doc.roundedRect(col1, rowY - 4, contentWidth - 8, 10, 1.5, 1.5, 'FD')
+    doc.roundedRect(col1, rowY - 3.5, contentWidth - 8, 9, 1.5, 1.5, 'FD')
 
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(8)
