@@ -10,9 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MainLayout } from "@/components/layout/main-layout"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
 import { CertificateGenerator } from "@/components/certificates/certificate-generator"
+import { BatchEmailDialog } from "@/components/enrollment/batch-email-dialog"
 import { generatePaymentConfirmationPdf } from "@/lib/payment-pdf"
 import {
   Users,
@@ -25,7 +27,11 @@ import {
   FileText,
   Plus,
   Award,
-  Eye
+  Eye,
+  Mail,
+  Search,
+  Filter,
+  CheckSquare
 } from "lucide-react"
 
 interface Enrollment {
@@ -59,6 +65,53 @@ export default function EnrollmentsPage() {
   const [paymentPdfDialog, setPaymentPdfDialog] = useState<{ open: boolean; enrollment: Enrollment | null; amount: string; totalAmount: string }>({
     open: false, enrollment: null, amount: '', totalAmount: ''
   })
+  const [selectedEnrollmentIds, setSelectedEnrollmentIds] = useState<string[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('ALL')
+  const [isBatchEmailOpen, setIsBatchEmailOpen] = useState(false)
+
+  // Filtrado de matrículas
+  const filteredEnrollments = enrollments.filter(e => {
+    const matchesStatus = statusFilter === 'ALL' || e.status === statusFilter
+    const term = searchTerm.toLowerCase().trim()
+    if (!term) return matchesStatus
+
+    const matchesSearch =
+      (e.studentName && e.studentName.toLowerCase().includes(term)) ||
+      (e.courseName && e.courseName.toLowerCase().includes(term)) ||
+      (e.student?.dni && e.student.dni.toLowerCase().includes(term)) ||
+      (e.student?.email && e.student.email.toLowerCase().includes(term)) ||
+      (e.course?.code && e.course.code.toLowerCase().includes(term))
+
+    return matchesStatus && matchesSearch
+  })
+
+  // Matrículas seleccionadas completas
+  const selectedEnrollmentsList = enrollments.filter(e => selectedEnrollmentIds.includes(e.id))
+
+  // Cantidad de destinatarios con correo único entre los seleccionados
+  const selectedStudentEmailsCount = new Set(
+    selectedEnrollmentsList
+      .map(e => e.student?.email?.trim().toLowerCase())
+      .filter((email): email is string => !!email && email.includes('@'))
+  ).size
+
+  const handleToggleSelectAll = () => {
+    const currentFilteredIds = filteredEnrollments.map(e => e.id)
+    const allFilteredSelected = currentFilteredIds.length > 0 && currentFilteredIds.every(id => selectedEnrollmentIds.includes(id))
+
+    if (allFilteredSelected) {
+      setSelectedEnrollmentIds(prev => prev.filter(id => !currentFilteredIds.includes(id)))
+    } else {
+      setSelectedEnrollmentIds(prev => Array.from(new Set([...prev, ...currentFilteredIds])))
+    }
+  }
+
+  const handleToggleSelect = (id: string, checked: boolean) => {
+    setSelectedEnrollmentIds(prev =>
+      checked ? [...prev, id] : prev.filter(item => item !== id)
+    )
+  }
 
   useEffect(() => {
     fetchEnrollments()
@@ -554,10 +607,98 @@ export default function EnrollmentsPage() {
         {/* Lista de Matrículas */}
         <Card>
           <CardHeader>
-            <CardTitle>Matrículas Recientes</CardTitle>
-            <CardDescription>
-              Listado de todas las matrículas registradas
-            </CardDescription>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <CardTitle>Matrículas Recientes</CardTitle>
+                <CardDescription>
+                  Listado de todas las matrículas registradas ({filteredEnrollments.length} de {enrollments.length})
+                </CardDescription>
+              </div>
+
+              {/* Barra de Filtros y Búsqueda */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div className="relative min-w-[220px]">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar alumno, DNI o curso..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-8 text-sm h-9"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-2.5 top-2.5 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-[170px] text-xs h-9">
+                    <SelectValue placeholder="Filtrar por estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Todos los estados</SelectItem>
+                    <SelectItem value="PENDING">Pago Pendiente</SelectItem>
+                    <SelectItem value="ENROLLED">Inscrito</SelectItem>
+                    <SelectItem value="IN_PROGRESS">En Progreso</SelectItem>
+                    <SelectItem value="COMPLETED">Completado</SelectItem>
+                    <SelectItem value="CANCELLED">Cancelado</SelectItem>
+                    <SelectItem value="DROPPED">Abandonado</SelectItem>
+                    <SelectItem value="FAILED">Reprobado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Barra de Selección y Acción Masiva */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 mt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="select-all-enrollments"
+                  checked={
+                    filteredEnrollments.length > 0 &&
+                    filteredEnrollments.every(e => selectedEnrollmentIds.includes(e.id))
+                  }
+                  onCheckedChange={handleToggleSelectAll}
+                  disabled={filteredEnrollments.length === 0}
+                />
+                <Label
+                  htmlFor="select-all-enrollments"
+                  className="text-xs font-medium cursor-pointer select-none text-slate-700 dark:text-slate-300"
+                >
+                  Seleccionar todas ({filteredEnrollments.length})
+                </Label>
+              </div>
+
+              {selectedEnrollmentIds.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 animate-in fade-in duration-200">
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 px-2.5 py-1 text-xs">
+                    {selectedEnrollmentIds.length} seleccionada{selectedEnrollmentIds.length !== 1 ? 's' : ''}
+                  </Badge>
+
+                  <Button
+                    size="sm"
+                    onClick={() => setIsBatchEmailOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-xs h-8 text-xs"
+                  >
+                    <Mail className="h-3.5 w-3.5 mr-1.5" />
+                    Enviar Correo a Seleccionados ({selectedStudentEmailsCount})
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setSelectedEnrollmentIds([])}
+                    className="h-8 text-xs text-slate-500 hover:text-slate-900"
+                  >
+                    Deseleccionar
+                  </Button>
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -565,72 +706,138 @@ export default function EnrollmentsPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                 <p className="mt-2 text-sm text-muted-foreground">Cargando matrículas...</p>
               </div>
+            ) : filteredEnrollments.length === 0 ? (
+              <div className="text-center py-12 border border-dashed rounded-lg">
+                <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-40" />
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">No se encontraron matrículas</p>
+                <p className="text-xs text-muted-foreground mt-1">Prueba a cambiar el término de búsqueda o el filtro de estado.</p>
+              </div>
             ) : (
-              <div className="space-y-4">
-                {enrollments.map((enrollment) => (
-                  <div key={enrollment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex-shrink-0">
-                        {getStatusIcon(enrollment.status)}
-                      </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <h3 className="font-medium">{enrollment.studentName}</h3>
-                          {getStatusBadge(enrollment.status)}
-                          {enrollment.discountPercentage && (
-                            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">
-                              -{enrollment.discountPercentage}%
-                            </Badge>
-                          )}
+              <div className="space-y-3">
+                {filteredEnrollments.map((enrollment) => {
+                  const isSelected = selectedEnrollmentIds.includes(enrollment.id)
+                  const hasEmail = Boolean(enrollment.student?.email && enrollment.student.email.includes('@'))
+
+                  return (
+                    <div
+                      key={enrollment.id}
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg transition-colors gap-3 ${
+                        isSelected
+                          ? 'border-blue-400 bg-blue-50/40 dark:bg-blue-950/20 shadow-xs'
+                          : 'hover:bg-slate-50/60 dark:hover:bg-slate-900/40'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3.5 min-w-0">
+                        {/* Casilla de Selección */}
+                        <div className="flex items-center">
+                          <Checkbox
+                            id={`enrollment-check-${enrollment.id}`}
+                            checked={isSelected}
+                            onCheckedChange={(checked) => handleToggleSelect(enrollment.id, !!checked)}
+                            aria-label={`Seleccionar matrícula de ${enrollment.studentName}`}
+                          />
                         </div>
-                        <p className="text-sm text-muted-foreground">{enrollment.courseName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Matriculado el {new Date(enrollment.enrollmentDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <div className="text-sm font-medium">{enrollment.progress}%</div>
-                        <div className="w-20 bg-slate-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${enrollment.status === 'COMPLETED' ? 'bg-green-500' :
-                              enrollment.status === 'IN_PROGRESS' || enrollment.status === 'ENROLLED' ? 'bg-blue-500' :
-                                enrollment.status === 'PENDING' ? 'bg-yellow-400' :
-                                  enrollment.status === 'CANCELLED' ? 'bg-slate-300' : 'bg-red-500'
-                              }`}
-                            style={{ width: `${enrollment.progress}%` }}
-                          ></div>
+
+                        <div className="flex-shrink-0">
+                          {getStatusIcon(enrollment.status)}
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <label
+                              htmlFor={`enrollment-check-${enrollment.id}`}
+                              className="font-medium cursor-pointer hover:text-blue-600 truncate"
+                            >
+                              {enrollment.studentName}
+                            </label>
+                            {getStatusBadge(enrollment.status)}
+                            {enrollment.discountPercentage && (
+                              <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[11px] py-0">
+                                -{enrollment.discountPercentage}%
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate">{enrollment.courseName}</p>
+                          <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                            <span>Matriculado el {new Date(enrollment.enrollmentDate).toLocaleDateString()}</span>
+                            {hasEmail ? (
+                              <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 font-mono text-[11px]">
+                                • <Mail className="h-3 w-3 inline text-slate-400" />
+                                {enrollment.student?.email}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-amber-700 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-900">
+                                Sin email
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-500 hover:bg-red-50 border-red-100"
-                        onClick={async () => {
-                          if (confirm('¿Estás seguro de que deseas eliminar esta matriculación?')) {
-                            try {
-                              const res = await fetch(`/api/enrollments/${enrollment.id}`, { method: 'DELETE' })
-                              if (res.ok) fetchEnrollments()
-                            } catch (e) {
-                              console.error(e)
+
+                      <div className="flex items-center justify-between sm:justify-end space-x-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-0 border-slate-100">
+                        <div className="text-right">
+                          <div className="text-xs font-medium">{enrollment.progress}%</div>
+                          <div className="w-16 bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
+                            <div
+                              className={`h-1.5 rounded-full ${enrollment.status === 'COMPLETED' ? 'bg-green-500' :
+                                enrollment.status === 'IN_PROGRESS' || enrollment.status === 'ENROLLED' ? 'bg-blue-500' :
+                                  enrollment.status === 'PENDING' ? 'bg-yellow-400' :
+                                    enrollment.status === 'CANCELLED' ? 'bg-slate-300' : 'bg-red-500'
+                                }`}
+                              style={{ width: `${enrollment.progress}%` }}
+                            ></div>
+                          </div>
+                        </div>
+
+                        {/* Botón rápido para enviar correo a este alumno */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-blue-600 border-blue-200 hover:bg-blue-50 dark:hover:bg-blue-950"
+                          title="Enviar correo a este alumno"
+                          onClick={() => {
+                            setSelectedEnrollmentIds([enrollment.id])
+                            setIsBatchEmailOpen(true)
+                          }}
+                        >
+                          <Mail className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 border-red-100"
+                          title="Eliminar matrícula"
+                          onClick={async () => {
+                            if (confirm('¿Estás seguro de que deseas eliminar esta matriculación?')) {
+                              try {
+                                const res = await fetch(`/api/enrollments/${enrollment.id}`, { method: 'DELETE' })
+                                if (res.ok) {
+                                  setSelectedEnrollmentIds(prev => prev.filter(id => id !== enrollment.id))
+                                  fetchEnrollments()
+                                }
+                              } catch (e) {
+                                console.error(e)
+                              }
                             }
-                          }
-                        }}
-                      >
-                        <XCircle className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedEnrollment(enrollment)}
-                      >
-                        <Eye className="h-4 w-4" />
-                        Ver Detalles
-                      </Button>
+                          }}
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={() => setSelectedEnrollment(enrollment)}
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1" />
+                          Ver Detalles
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </CardContent>
@@ -708,6 +915,16 @@ export default function EnrollmentsPage() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Diálogo para envío masivo de correos a seleccionados */}
+    <BatchEmailDialog
+      isOpen={isBatchEmailOpen}
+      onOpenChange={setIsBatchEmailOpen}
+      selectedEnrollments={selectedEnrollmentsList}
+      onSuccess={() => {
+        setSelectedEnrollmentIds([])
+      }}
+    />
     </>
   )
 }

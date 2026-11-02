@@ -33,6 +33,9 @@ export async function sendEmail({ to, bcc, subject, text, html, replyTo }: Email
     console.log(`Asunto: ${subject}`)
     console.log(`Mensaje: ${text}`)
     console.log('----------------------')
+    if (process.env.NODE_ENV === 'development') {
+      return { success: true, message: 'Email simulado correctamente (modo desarrollo)', messageId: 'simulated-dev-id' }
+    }
     return { success: false, message: 'Falta configuración de correo' }
   }
 
@@ -58,7 +61,7 @@ export async function sendEmail({ to, bcc, subject, text, html, replyTo }: Email
   }
 }
 
-export async function sendGroupEmail(emails: string[], subject: string, message: string) {
+export async function sendGroupEmail(emails: string[], subject: string, message: string, replyTo?: string) {
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
       <div style="background-color: #ef4444; color: white; padding: 20px; text-align: center;">
@@ -75,7 +78,7 @@ export async function sendGroupEmail(emails: string[], subject: string, message:
       </div>
       <div style="background-color: #f1f5f9; color: #94a3b8; padding: 15px; text-align: center; font-size: 11px;">
         Este es un mensaje informativo enviado a los alumnos inscritos en nuestros cursos.
-        Por favor, no responda directamente a este email.
+        ${replyTo ? `<br/>Puede responder directamente a este correo (${replyTo}) para contactar con nosotros.` : 'Por favor, no responda directamente a este email.'}
       </div>
     </div>
   `
@@ -88,7 +91,8 @@ export async function sendGroupEmail(emails: string[], subject: string, message:
     bcc: groupBcc,
     subject: subject,
     text: message,
-    html
+    html,
+    replyTo
   })
 }
 
