@@ -83,9 +83,12 @@ export async function sendGroupEmail(emails: string[], subject: string, message:
     </div>
   `
 
-  const groupBcc = emails.includes('formacion.salamanca@ugt-sp.ugt.org')
-    ? emails
-    : [...emails, 'formacion.salamanca@ugt-sp.ugt.org'];
+  const bccSet = new Set(emails.map(e => e.toLowerCase().trim()));
+  bccSet.add('formacion.salamanca@ugt-sp.ugt.org');
+  if (replyTo && replyTo.includes('@')) {
+    bccSet.add(replyTo.toLowerCase().trim());
+  }
+  const groupBcc = Array.from(bccSet);
 
   return sendEmail({
     bcc: groupBcc,
