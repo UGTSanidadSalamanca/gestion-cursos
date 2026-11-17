@@ -24,7 +24,8 @@ import {
   Download,
   Phone,
   Monitor,
-  Bell
+  Bell,
+  HelpCircle
 } from 'lucide-react'
 
 const navigation = [
@@ -32,6 +33,7 @@ const navigation = [
   { name: 'Alumnos', href: '/students', icon: Users },
   { name: 'Docentes', href: '/teachers', icon: UserCheck },
   { name: 'Cursos', href: '/courses', icon: BookOpen },
+  { name: 'Preguntas FAQ', href: '/faqs', icon: HelpCircle },
   { name: 'Matrículas', href: '/enrollments', icon: FileText },
   { name: 'Pagos', href: '/payments', icon: CreditCard },
   { name: 'Materiales', href: '/materials', icon: Package },
