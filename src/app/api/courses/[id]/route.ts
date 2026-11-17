@@ -109,6 +109,8 @@ export async function PUT(
             offerBadge,
             customHtml,
             imageUrl,
+            showFaqs,
+            includeGlobalFaqs,
             // @ts-ignore
             modules = [],
             // @ts-ignore
@@ -158,6 +160,8 @@ export async function PUT(
                 offerBadge: offerBadge || null,
                 customHtml: customHtml || null,
                 imageUrl: imageUrl !== undefined ? (imageUrl || null) : undefined,
+                showFaqs: showFaqs !== undefined ? Boolean(showFaqs) : undefined,
+                includeGlobalFaqs: includeGlobalFaqs !== undefined ? Boolean(includeGlobalFaqs) : undefined,
                 modules: {
                     deleteMany: {},
                     create: modules.map((m: any) => ({

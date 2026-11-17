@@ -88,6 +88,8 @@ export async function POST(request: NextRequest) {
       offerBadge,
       customHtml,
       imageUrl,
+      showFaqs = true,
+      includeGlobalFaqs = true,
       modules = [],
       schedules = []
     } = body
@@ -134,6 +136,8 @@ export async function POST(request: NextRequest) {
         offerBadge: offerBadge || null,
         customHtml: customHtml || null,
         imageUrl: imageUrl !== undefined ? (imageUrl || null) : undefined,
+        showFaqs: showFaqs !== undefined ? Boolean(showFaqs) : true,
+        includeGlobalFaqs: includeGlobalFaqs !== undefined ? Boolean(includeGlobalFaqs) : true,
         modules: {
           deleteMany: {},
           create: modules.map((m: any) => ({
@@ -193,6 +197,8 @@ export async function POST(request: NextRequest) {
         offerBadge: offerBadge || null,
         customHtml: customHtml || null,
         imageUrl: imageUrl || null,
+        showFaqs: showFaqs !== undefined ? Boolean(showFaqs) : true,
+        includeGlobalFaqs: includeGlobalFaqs !== undefined ? Boolean(includeGlobalFaqs) : true,
         modules: {
           create: modules.map((m: any) => ({
             title: m.title,

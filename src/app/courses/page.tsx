@@ -59,6 +59,7 @@ import * as XLSX from "xlsx"
 import { GroupEmailDialog } from "@/components/courses/group-email-dialog"
 import { CourseImagePicker } from "@/components/courses/course-image-picker"
 import { EnrollmentForm } from "@/components/enrollment/enrollment-form"
+import { CourseFaqManager } from "@/components/faqs/course-faq-manager"
 import { toast } from "sonner"
 import { jsPDF } from "jspdf"
 import html2canvas from "html2canvas"
@@ -214,6 +215,8 @@ export default function CoursesPage() {
     offerBadge: '',
     customHtml: '',
     imageUrl: '',
+    showFaqs: true,
+    includeGlobalFaqs: true,
     hasMinStudents: false,
     minStudents: '',
     maxStudents: '30',
@@ -629,6 +632,8 @@ export default function CoursesPage() {
       offerBadge: '',
       customHtml: '',
       imageUrl: '',
+      showFaqs: true,
+      includeGlobalFaqs: true,
       hasMinStudents: false,
       minStudents: '',
       maxStudents: '30',
@@ -700,6 +705,8 @@ export default function CoursesPage() {
       offerBadge: course.offerBadge || '',
       customHtml: course.customHtml || '',
       imageUrl: course.imageUrl || '',
+      showFaqs: (course as any).showFaqs ?? true,
+      includeGlobalFaqs: (course as any).includeGlobalFaqs ?? true,
       hasMinStudents: !!(course.minStudents && course.minStudents > 0),
       minStudents: course.minStudents != null ? course.minStudents.toString() : '',
       maxStudents: (course.maxStudents || 0).toString(),
@@ -3217,6 +3224,20 @@ export default function CoursesPage() {
                     )}
                   </div>
                 </div>
+
+                {/* Sección: Preguntas Frecuentes (FAQ) */}
+                {selectedCourse && (
+                  <div className="space-y-4 pt-6 border-t text-left">
+                    <CourseFaqManager
+                      courseId={selectedCourse.id}
+                      courseTitle={courseFormData.title || selectedCourse.title}
+                      showFaqs={courseFormData.showFaqs !== false}
+                      includeGlobalFaqs={courseFormData.includeGlobalFaqs !== false}
+                      onToggleShowFaqs={(val) => setCourseFormData({ ...courseFormData, showFaqs: val })}
+                      onToggleIncludeGlobal={(val) => setCourseFormData({ ...courseFormData, includeGlobalFaqs: val })}
+                    />
+                  </div>
+                )}
 
                 {/* Sección 7: Área Privada */}
                 <div className="space-y-4 pt-6 border-t text-left pb-4">

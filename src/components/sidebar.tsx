@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   BarChart3,
   BookOpen,
+  HelpCircle,
   Users,
   UserCheck,
   Truck,
@@ -49,6 +50,11 @@ const navItems = [
     title: "Cursos",
     href: "/courses",
     icon: BookOpen,
+  },
+  {
+    title: "Preguntas FAQ",
+    href: "/faqs",
+    icon: HelpCircle,
   },
   {
     title: "Matrículas",

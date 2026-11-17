@@ -41,6 +41,7 @@ import { QRCodeSVG } from "qrcode.react"
 import { jsPDF } from "jspdf"
 import html2canvas from "html2canvas"
 import { formatTimeUTC, formatPrice } from "@/lib/utils"
+import { FaqAccordion } from "@/components/faqs/faq-accordion"
 
 interface DiscountRule {
     id?: string
@@ -93,6 +94,16 @@ interface PublicCourse {
         endTime: string
         classroom?: string
         isRecurring?: boolean
+    }[]
+    showFaqs?: boolean
+    includeGlobalFaqs?: boolean
+    faqs?: {
+        id: string
+        question: string
+        answer: string
+        category?: string
+        order?: number
+        isActive?: boolean
     }[]
 }
 
@@ -738,6 +749,15 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                     />
                                 </CardContent>
                             </Card>
+                        )}
+
+                        {/* Bloque de Preguntas Frecuentes (FAQ) */}
+                        {course.showFaqs !== false && course.faqs && course.faqs.length > 0 && (
+                            <FaqAccordion
+                                faqs={course.faqs}
+                                title="Preguntas frecuentes"
+                                subtitle="Resolvemos las dudas más habituales sobre este curso."
+                            />
                         )}
 
                         {/* Card: Condiciones de Inscripción y Contratación */}

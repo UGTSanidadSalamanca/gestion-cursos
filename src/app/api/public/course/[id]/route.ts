@@ -45,6 +45,8 @@ export async function GET(
                 offerBadge: true,
                 customHtml: true,
                 imageUrl: true,
+                showFaqs: true,
+                includeGlobalFaqs: true,
                 modules: {
                     select: {
                         title: true,
@@ -70,8 +72,45 @@ export async function GET(
             return NextResponse.json({ error: 'Course not found' }, { status: 404 })
         }
 
-        return NextResponse.json(course)
+        // Obtener preguntas frecuentes si el bloque está activo para este curso
+        let faqs: any[] = []
+        if (course.showFaqs !== false) {
+            const courseFaqs = await db.faq.findMany({
+                where: { courseId: id, isActive: true },
+                orderBy: [
+                    { category: 'asc' },
+                    { order: 'asc' },
+                    { createdAt: 'asc' }
+                ]
+            })
+
+            let globalFaqs: any[] = []
+            if (course.includeGlobalFaqs !== false) {
+                globalFaqs = await db.faq.findMany({
+                    where: { courseId: null, isActive: true },
+                    orderBy: [
+                        { category: 'asc' },
+                        { order: 'asc' },
+                        { createdAt: 'asc' }
+                    ]
+                })
+            }
+
+            // Si una pregunta específica coincide con una global, prevalece la versión específica del curso
+            const specificQuestions = new Set(courseFaqs.map(f => f.question.toLowerCase().trim()))
+            const nonDuplicateGlobals = globalFaqs.filter(
+                g => !specificQuestions.has(g.question.toLowerCase().trim())
+            )
+
+            faqs = [...courseFaqs, ...nonDuplicateGlobals]
+        }
+
+        return NextResponse.json({
+            ...course,
+            faqs
+        })
     } catch (error) {
+        console.error('Error fetching course:', error)
         return NextResponse.json({ error: 'Error fetching course' }, { status: 500 })
     }
 }

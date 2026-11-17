@@ -135,6 +135,9 @@ model Course {
   enrollments       Enrollment[]
   payments          Payment[]
   schedules         Schedule[]
+  showFaqs          Boolean          @default(true)
+  includeGlobalFaqs Boolean          @default(true)
+  faqs              Faq[]
 
   @@map("courses")
 }
@@ -468,3 +471,21 @@ enum NotificationCategory {
   SECURITY
   MAINTENANCE
 }
+
+model Faq {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String   @default("General")
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  courseId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course    Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@index([category])
+  @@map("faqs")
+}
+
