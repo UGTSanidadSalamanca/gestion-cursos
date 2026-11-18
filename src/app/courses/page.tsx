@@ -103,6 +103,9 @@ interface Course {
   price?: number
   priceUnit?: string
   paymentFrequency?: string
+  hasRegistrationFee?: boolean
+  registrationFee?: number | null
+  affiliateRegistrationFee?: number | null
   affiliatePrice?: number
   isActive: boolean
   startDate?: string
@@ -193,6 +196,9 @@ export default function CoursesPage() {
     price: '',
     priceUnit: '',
     paymentFrequency: '',
+    hasRegistrationFee: false,
+    registrationFee: '',
+    affiliateRegistrationFee: '',
     affiliatePrice: '',
     startDate: '',
     startDateHasDay: true,
@@ -488,6 +494,9 @@ export default function CoursesPage() {
           price: courseFormData.price ? parseFloat(courseFormData.price) : null,
           priceUnit: courseFormData.priceUnit,
           paymentFrequency: courseFormData.paymentFrequency,
+          hasRegistrationFee: courseFormData.hasRegistrationFee,
+          registrationFee: courseFormData.hasRegistrationFee && courseFormData.registrationFee ? parseFloat(courseFormData.registrationFee) : null,
+          affiliateRegistrationFee: courseFormData.hasRegistrationFee && courseFormData.affiliateRegistrationFee ? parseFloat(courseFormData.affiliateRegistrationFee) : null,
           affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
           minStudents: courseFormData.hasMinStudents && courseFormData.minStudents ? parseInt(courseFormData.minStudents) : null,
           maxStudents: courseFormData.maxStudents ? parseInt(courseFormData.maxStudents) : 0,
@@ -532,6 +541,9 @@ export default function CoursesPage() {
           price: courseFormData.price ? parseFloat(courseFormData.price) : null,
           priceUnit: courseFormData.priceUnit,
           paymentFrequency: courseFormData.paymentFrequency,
+          hasRegistrationFee: courseFormData.hasRegistrationFee,
+          registrationFee: courseFormData.hasRegistrationFee && courseFormData.registrationFee ? parseFloat(courseFormData.registrationFee) : null,
+          affiliateRegistrationFee: courseFormData.hasRegistrationFee && courseFormData.affiliateRegistrationFee ? parseFloat(courseFormData.affiliateRegistrationFee) : null,
           affiliatePrice: courseFormData.affiliatePrice ? parseFloat(courseFormData.affiliatePrice) : null,
           minStudents: courseFormData.hasMinStudents && courseFormData.minStudents ? parseInt(courseFormData.minStudents) : null,
           maxStudents: courseFormData.maxStudents ? parseInt(courseFormData.maxStudents) : 0,
@@ -610,6 +622,9 @@ export default function CoursesPage() {
       price: '',
       priceUnit: '',
       paymentFrequency: '',
+      hasRegistrationFee: false,
+      registrationFee: '',
+      affiliateRegistrationFee: '',
       affiliatePrice: '',
       startDate: '',
       startDateHasDay: true,
@@ -676,6 +691,9 @@ export default function CoursesPage() {
       price: course.price != null ? course.price.toString() : '',
       priceUnit: course.priceUnit || '',
       paymentFrequency: course.paymentFrequency || '',
+      hasRegistrationFee: course.hasRegistrationFee ?? false,
+      registrationFee: course.registrationFee != null ? course.registrationFee.toString() : '',
+      affiliateRegistrationFee: course.affiliateRegistrationFee != null ? course.affiliateRegistrationFee.toString() : '',
       affiliatePrice: course.affiliatePrice != null ? course.affiliatePrice.toString() : '',
       startDate: course.startDate ? (typeof course.startDate === 'string' ? course.startDate.split('T')[0] : (course.startDate as any).toISOString().split('T')[0]) : '',
       startDateHasDay: course.startDateHasDay ?? true,
@@ -1173,6 +1191,68 @@ export default function CoursesPage() {
                           <Label htmlFor="affiliatePrice" className="text-xs font-bold text-green-600 uppercase">Precio Afiliado (€)</Label>
                           <Input id="affiliatePrice" type="number" step="0.01" value={courseFormData.affiliatePrice} onChange={(e) => setCourseFormData({ ...courseFormData, affiliatePrice: e.target.value })} className="bg-green-50/30 border-green-100 h-11 font-bold text-green-700" />
                         </div>
+                        {/* Toggle: Sistema de Matrícula Inicial */}
+                        <div className="col-span-1 md:col-span-4">
+                          <div className="flex flex-col gap-3 p-4 bg-indigo-50/40 border border-indigo-200/70 rounded-xl">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-xs font-bold text-indigo-900 uppercase">Configurar Matrícula Inicial</Label>
+                                <p className="text-[11px] text-indigo-700 mt-0.5">
+                                  Establece una matrícula inicial al inscribirse, y a partir de ahí la forma de pago establecida (mensualidades, plazos, pago único, etc.).
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCourseFormData({
+                                    ...courseFormData,
+                                    hasRegistrationFee: !courseFormData.hasRegistrationFee
+                                  })
+                                }}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+                                  courseFormData.hasRegistrationFee ? 'bg-indigo-600' : 'bg-slate-300'
+                                }`}
+                              >
+                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                                  courseFormData.hasRegistrationFee ? 'translate-x-5' : 'translate-x-0'
+                                }`} />
+                              </button>
+                            </div>
+                            {courseFormData.hasRegistrationFee && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-indigo-200/50">
+                                <div className="space-y-1.5">
+                                  <Label htmlFor="create-registrationFee" className="text-xs font-bold text-slate-700 uppercase">
+                                    Matrícula General (€)
+                                  </Label>
+                                  <Input
+                                    id="create-registrationFee"
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="Ej: 50.00"
+                                    value={courseFormData.registrationFee}
+                                    onChange={(e) => setCourseFormData({ ...courseFormData, registrationFee: e.target.value })}
+                                    className="bg-white border-indigo-200 h-11 font-bold text-slate-900"
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <Label htmlFor="create-affiliateRegistrationFee" className="text-xs font-bold text-green-700 uppercase">
+                                    Matrícula Afiliados UGT (€)
+                                  </Label>
+                                  <Input
+                                    id="create-affiliateRegistrationFee"
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="0.00 (Gratis si se deja en 0)"
+                                    value={courseFormData.affiliateRegistrationFee}
+                                    onChange={(e) => setCourseFormData({ ...courseFormData, affiliateRegistrationFee: e.target.value })}
+                                    className="bg-green-50/50 border-green-200 h-11 font-bold text-green-700"
+                                  />
+                                  <p className="text-[10px] text-green-600">Deja en 0 o vacío si la matrícula es gratuita para afiliados.</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                         {/* Toggle: Activar descuentos */}
                         <div className="col-span-1 md:col-span-4">
                           <div className="flex flex-col gap-3 p-4 bg-emerald-50/40 border border-emerald-200/70 rounded-xl">
@@ -1447,22 +1527,63 @@ export default function CoursesPage() {
                         </div>
 
                         {(() => {
+                          const hasReg = courseFormData.hasRegistrationFee;
+                          const regGen = parseFloat(courseFormData.registrationFee) || 0;
+                          const regAfi = parseFloat(courseFormData.affiliateRegistrationFee) || 0;
+                          const genPrice = parseFloat(courseFormData.price) || 0;
+                          const afiPrice = parseFloat(courseFormData.affiliatePrice) || 0;
+
                           const count = courseFormData.paymentFrequency === '2_PAYMENTS' ? 2 :
                             courseFormData.paymentFrequency === '3_PAYMENTS' ? 3 :
                               courseFormData.paymentFrequency === '4_PAYMENTS' ? 4 :
                                 courseFormData.paymentFrequency === '5_PAYMENTS' ? 5 :
                                   courseFormData.paymentFrequency === '6_PAYMENTS' ? 6 : 0;
-                          if (count > 0) {
-                            const genPrice = parseFloat(courseFormData.price) || 0;
-                            const afiPrice = parseFloat(courseFormData.affiliatePrice) || 0;
+
+                          const isMonthly = courseFormData.paymentFrequency === 'MONTHLY' || courseFormData.priceUnit === 'MONTH';
+
+                          if (hasReg || count > 0) {
                             return (
-                              <div className="col-span-1 md:col-span-4 p-3 bg-violet-50/70 border border-violet-200/80 rounded-xl text-xs text-violet-900 flex items-center gap-2">
-                                <span className="font-bold">ℹ️ Desglose automático de cuotas:</span>
-                                <span>
-                                  {count} plazos de {afiPrice > 0 ? `${formatPrice(afiPrice / count)} € (Afiliados)` : ''}
-                                  {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
-                                  {genPrice > 0 ? `${formatPrice(genPrice / count)} € (General)` : ''}
-                                </span>
+                              <div className="col-span-1 md:col-span-4 p-3.5 bg-violet-50/80 border border-violet-200/90 rounded-xl text-xs text-violet-950 space-y-1.5">
+                                <div className="flex items-center gap-2 font-bold text-violet-900">
+                                  <span>ℹ️ Desglose del sistema de pagos:</span>
+                                </div>
+                                {hasReg && (
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-700">
+                                    <span className="font-semibold text-violet-900">• Matrícula inicial:</span>
+                                    <span>General: <strong className="text-slate-900">{formatPrice(regGen)} €</strong></span>
+                                    <span>·</span>
+                                    <span>Afiliados UGT: <strong className="text-emerald-700">{regAfi > 0 ? `${formatPrice(regAfi)} €` : 'Gratis (0 €)'}</strong></span>
+                                  </div>
+                                )}
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-700">
+                                  <span className="font-semibold text-violet-900">• {hasReg ? 'A partir de ahí:' : 'Cuotas:'}</span>
+                                  {count > 0 ? (
+                                    <span>
+                                      {count} plazos de {afiPrice > 0 ? `${formatPrice(afiPrice / count)} € (Afiliados)` : ''}
+                                      {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
+                                      {genPrice > 0 ? `${formatPrice(genPrice / count)} € (General)` : ''}
+                                    </span>
+                                  ) : isMonthly ? (
+                                    <span>
+                                      Mensualidad de {afiPrice > 0 ? `${formatPrice(afiPrice)} €/mes (Afiliados)` : ''}
+                                      {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
+                                      {genPrice > 0 ? `${formatPrice(genPrice)} €/mes (General)` : ''}
+                                    </span>
+                                  ) : (
+                                    <span>
+                                      Pago único de {afiPrice > 0 ? `${formatPrice(afiPrice)} € (Afiliados)` : ''}
+                                      {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
+                                      {genPrice > 0 ? `${formatPrice(genPrice)} € (General)` : ''}
+                                    </span>
+                                  )}
+                                </div>
+                                {hasReg && (genPrice > 0 || afiPrice > 0) && (
+                                  <div className="pt-1 border-t border-violet-200/60 text-[11px] text-violet-800 font-medium">
+                                    Total del curso: General: <strong>{formatPrice(regGen + genPrice)} €</strong>
+                                    {afiPrice > 0 ? ` · Afiliados UGT: ` : ''}
+                                    {afiPrice > 0 ? <strong className="text-emerald-700">{formatPrice(regAfi + afiPrice)} €</strong> : ''}
+                                  </div>
+                                )}
                               </div>
                             );
                           }
@@ -1908,6 +2029,11 @@ export default function CoursesPage() {
                                   {course.paymentFrequency && ` (${getPaymentFrequencyLabel(course.paymentFrequency, true)})`}
                                 </span>
                               )}
+                              {course.hasRegistrationFee && (
+                                <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200/60 w-fit">
+                                  + Matrícula {course.registrationFee ? `${formatPrice(course.registrationFee)} €` : ''}
+                                </span>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
@@ -2323,6 +2449,18 @@ export default function CoursesPage() {
                         </div>
                       </div>
                     </div>
+
+                    {selectedCourse.hasRegistrationFee && (
+                      <div className="p-3.5 mb-6 bg-indigo-50/70 border border-indigo-200 rounded-2xl flex flex-wrap items-center justify-between gap-2 text-xs text-indigo-900">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold uppercase tracking-wider text-[10px] bg-indigo-200/70 text-indigo-900 px-2 py-0.5 rounded">Matrícula Inicial</span>
+                          <span>General: <strong className="text-slate-900">{formatPrice(selectedCourse.registrationFee || 0)} €</strong></span>
+                          <span>·</span>
+                          <span>Afiliados UGT: <strong className="text-emerald-700">{(selectedCourse.affiliateRegistrationFee || 0) > 0 ? `${formatPrice(selectedCourse.affiliateRegistrationFee)} €` : 'Gratis (0 €)'}</strong></span>
+                        </div>
+                        <span className="text-[11px] text-indigo-700 italic">+ forma de pago establecida</span>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                       {selectedCourse.startDate && (
@@ -2748,6 +2886,68 @@ export default function CoursesPage() {
                       <Label htmlFor="edit-affiliatePrice" className="text-xs font-bold text-green-600 uppercase">Precio Afiliado (€)</Label>
                       <Input id="edit-affiliatePrice" type="number" step="0.01" value={courseFormData.affiliatePrice} onChange={(e) => setCourseFormData({ ...courseFormData, affiliatePrice: e.target.value })} className="bg-green-50/30 border-green-100 h-11 font-bold text-green-700" />
                     </div>
+                    {/* Toggle: Sistema de Matrícula Inicial (edit) */}
+                    <div className="col-span-1 md:col-span-4">
+                      <div className="flex flex-col gap-3 p-4 bg-indigo-50/40 border border-indigo-200/70 rounded-xl">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-xs font-bold text-indigo-900 uppercase">Configurar Matrícula Inicial</Label>
+                            <p className="text-[11px] text-indigo-700 mt-0.5">
+                              Establece una matrícula inicial al inscribirse, y a partir de ahí la forma de pago establecida (mensualidades, plazos, pago único, etc.).
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCourseFormData({
+                                ...courseFormData,
+                                hasRegistrationFee: !courseFormData.hasRegistrationFee
+                              })
+                            }}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+                              courseFormData.hasRegistrationFee ? 'bg-indigo-600' : 'bg-slate-300'
+                            }`}
+                          >
+                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                              courseFormData.hasRegistrationFee ? 'translate-x-5' : 'translate-x-0'
+                            }`} />
+                          </button>
+                        </div>
+                        {courseFormData.hasRegistrationFee && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-indigo-200/50">
+                            <div className="space-y-1.5">
+                              <Label htmlFor="edit-registrationFee" className="text-xs font-bold text-slate-700 uppercase">
+                                Matrícula General (€)
+                              </Label>
+                              <Input
+                                id="edit-registrationFee"
+                                type="number"
+                                step="0.01"
+                                placeholder="Ej: 50.00"
+                                value={courseFormData.registrationFee}
+                                onChange={(e) => setCourseFormData({ ...courseFormData, registrationFee: e.target.value })}
+                                className="bg-white border-indigo-200 h-11 font-bold text-slate-900"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label htmlFor="edit-affiliateRegistrationFee" className="text-xs font-bold text-green-700 uppercase">
+                                Matrícula Afiliados UGT (€)
+                              </Label>
+                              <Input
+                                id="edit-affiliateRegistrationFee"
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00 (Gratis si se deja en 0)"
+                                value={courseFormData.affiliateRegistrationFee}
+                                onChange={(e) => setCourseFormData({ ...courseFormData, affiliateRegistrationFee: e.target.value })}
+                                className="bg-green-50/50 border-green-200 h-11 font-bold text-green-700"
+                              />
+                              <p className="text-[10px] text-green-600">Deja en 0 o vacío si la matrícula es gratuita para afiliados.</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     {/* Toggle: Activar descuentos (edit) */}
                     <div className="col-span-1 md:col-span-4">
                       <div className="flex flex-col gap-3 p-4 bg-emerald-50/40 border border-emerald-200/70 rounded-xl">
@@ -3018,22 +3218,63 @@ export default function CoursesPage() {
                       />
                     </div>
                     {(() => {
+                      const hasReg = courseFormData.hasRegistrationFee;
+                      const regGen = parseFloat(courseFormData.registrationFee) || 0;
+                      const regAfi = parseFloat(courseFormData.affiliateRegistrationFee) || 0;
+                      const genPrice = parseFloat(courseFormData.price) || 0;
+                      const afiPrice = parseFloat(courseFormData.affiliatePrice) || 0;
+
                       const count = courseFormData.paymentFrequency === '2_PAYMENTS' ? 2 :
                         courseFormData.paymentFrequency === '3_PAYMENTS' ? 3 :
                           courseFormData.paymentFrequency === '4_PAYMENTS' ? 4 :
                             courseFormData.paymentFrequency === '5_PAYMENTS' ? 5 :
                               courseFormData.paymentFrequency === '6_PAYMENTS' ? 6 : 0;
-                      if (count > 0) {
-                        const genPrice = parseFloat(courseFormData.price) || 0;
-                        const afiPrice = parseFloat(courseFormData.affiliatePrice) || 0;
+
+                      const isMonthly = courseFormData.paymentFrequency === 'MONTHLY' || courseFormData.priceUnit === 'MONTH';
+
+                      if (hasReg || count > 0) {
                         return (
-                          <div className="col-span-1 md:col-span-4 p-3 bg-violet-50/70 border border-violet-200/80 rounded-xl text-xs text-violet-900 flex items-center gap-2">
-                            <span className="font-bold">ℹ️ Desglose automático de cuotas:</span>
-                            <span>
-                              {count} plazos de {afiPrice > 0 ? `${formatPrice(afiPrice / count)} € (Afiliados)` : ''}
-                              {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
-                              {genPrice > 0 ? `${formatPrice(genPrice / count)} € (General)` : ''}
-                            </span>
+                          <div className="col-span-1 md:col-span-4 p-3.5 bg-violet-50/80 border border-violet-200/90 rounded-xl text-xs text-violet-950 space-y-1.5">
+                            <div className="flex items-center gap-2 font-bold text-violet-900">
+                              <span>ℹ️ Desglose del sistema de pagos:</span>
+                            </div>
+                            {hasReg && (
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-700">
+                                <span className="font-semibold text-violet-900">• Matrícula inicial:</span>
+                                <span>General: <strong className="text-slate-900">{formatPrice(regGen)} €</strong></span>
+                                <span>·</span>
+                                <span>Afiliados UGT: <strong className="text-emerald-700">{regAfi > 0 ? `${formatPrice(regAfi)} €` : 'Gratis (0 €)'}</strong></span>
+                              </div>
+                            )}
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-700">
+                              <span className="font-semibold text-violet-900">• {hasReg ? 'A partir de ahí:' : 'Cuotas:'}</span>
+                              {count > 0 ? (
+                                <span>
+                                  {count} plazos de {afiPrice > 0 ? `${formatPrice(afiPrice / count)} € (Afiliados)` : ''}
+                                  {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
+                                  {genPrice > 0 ? `${formatPrice(genPrice / count)} € (General)` : ''}
+                                </span>
+                              ) : isMonthly ? (
+                                <span>
+                                  Mensualidad de {afiPrice > 0 ? `${formatPrice(afiPrice)} €/mes (Afiliados)` : ''}
+                                  {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
+                                  {genPrice > 0 ? `${formatPrice(genPrice)} €/mes (General)` : ''}
+                                </span>
+                              ) : (
+                                <span>
+                                  Pago único de {afiPrice > 0 ? `${formatPrice(afiPrice)} € (Afiliados)` : ''}
+                                  {afiPrice > 0 && genPrice > 0 ? ' y ' : ''}
+                                  {genPrice > 0 ? `${formatPrice(genPrice)} € (General)` : ''}
+                                </span>
+                              )}
+                            </div>
+                            {hasReg && (genPrice > 0 || afiPrice > 0) && (
+                              <div className="pt-1 border-t border-violet-200/60 text-[11px] text-violet-800 font-medium">
+                                Total del curso: General: <strong>{formatPrice(regGen + genPrice)} €</strong>
+                                {afiPrice > 0 ? ` · Afiliados UGT: ` : ''}
+                                {afiPrice > 0 ? <strong className="text-emerald-700">{formatPrice(regAfi + afiPrice)} €</strong> : ''}
+                              </div>
+                            )}
                           </div>
                         );
                       }

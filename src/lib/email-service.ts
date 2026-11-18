@@ -112,6 +112,8 @@ export async function notifyNewEnrollment(data: {
   discountPercentage?: number | null
   discountReason?: string | null
   priceUnit?: string | null
+  hasRegistrationFee?: boolean
+  registrationFee?: number | null
 }) {
   const adminEmail = 'fespugtsalamanca@gmail.com'
 
@@ -148,7 +150,7 @@ export async function notifyNewEnrollment(data: {
     CURSO Y PAGO:
     - Código/Expediente: ${data.courseCode || '---'}
     - Curso: ${data.courseName}
-    - Tarifa base: ${basePriceText || priceText} (${data.isAffiliated ? 'Afiliado UGT' : 'General'})
+    ${data.hasRegistrationFee ? `- Matrícula inicial: ${data.registrationFee !== undefined && data.registrationFee !== null && data.registrationFee > 0 ? `${formatPrice(data.registrationFee)}€` : 'Gratis (0€)'}\n    ` : ''}- Tarifa base: ${basePriceText || priceText} (${data.isAffiliated ? 'Afiliado UGT' : 'General'})
     ${hasDiscount ? `- Descuento solicitado: -${data.discountPercentage}% (${data.discountReason || 'Motivo general'})\n    - Importe final neto: ${priceText}` : `- Importe indicado: ${priceText}`}
     - Estado: PENDIENTE DE PAGO
     
@@ -177,6 +179,7 @@ export async function notifyNewEnrollment(data: {
           <h2 style="margin-top: 0; font-size: 16px; color: #1e40af;">Curso y Pago</h2>
           ${data.courseCode ? `<p style="margin: 4px 0 8px 0; font-size: 13px; color: #64748b;"><strong>Código/Expediente:</strong> <span style="font-family: monospace; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">${data.courseCode}</span></p>` : ''}
           <p style="margin: 8px 0; font-size: 16px; font-weight: bold; color: #1e3a8a;">${data.courseName}</p>
+          ${data.hasRegistrationFee ? `<p style="margin: 6px 0; color: #4338ca;"><strong>Matrícula inicial:</strong> <span style="font-weight: bold;">${data.registrationFee !== undefined && data.registrationFee !== null && data.registrationFee > 0 ? `${formatPrice(data.registrationFee)}€` : 'Gratis (0€)'}</span></p>` : ''}
           <p style="margin: 8px 0; color: #64748b;"><strong>Tarifa base:</strong> ${basePriceText || priceText} (${data.isAffiliated ? 'Afiliado UGT' : 'General'})</p>
           ${hasDiscount ? `
             <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 10px; margin: 10px 0;">

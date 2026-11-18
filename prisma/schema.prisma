@@ -120,6 +120,9 @@ model Course {
   syllabusUrl       String?
   priceUnit                String?
   paymentFrequency         String?
+  hasRegistrationFee       Boolean          @default(false)
+  registrationFee          Float?
+  affiliateRegistrationFee Float?
   availableForNonMembers   Boolean          @default(true)
   hasDiscounts             Boolean          @default(false)
   discountDescription      String?

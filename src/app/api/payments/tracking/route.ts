@@ -37,22 +37,27 @@ export async function GET(request: NextRequest) {
             const priceUnit = enrollment.course.priceUnit?.toUpperCase() || 'MONTH'
             const paymentFrequency = enrollment.course.paymentFrequency?.toUpperCase() || 'MONTHLY'
 
+            const hasReg = enrollment.course.hasRegistrationFee
+            const regFee = hasReg
+                ? (isAffiliated ? (enrollment.course.affiliateRegistrationFee ?? 0) : (enrollment.course.registrationFee ?? 0))
+                : 0
+
             // Calculate how many periods have passed since enrollment or course start
             const startDate = enrollment.course.startDate || enrollment.enrollmentDate
             const now = new Date()
             const monthsDiff = (now.getFullYear() - startDate.getFullYear()) * 12 + (now.getMonth() - startDate.getMonth()) + 1
 
-            let expectedToDate = 0
+            let expectedToDate = regFee
             if (priceUnit.includes('MONTH')) {
-                expectedToDate = price * monthsDiff
+                expectedToDate += price * monthsDiff
             } else if (priceUnit.includes('TRIMESTR') || priceUnit.includes('QUARTER')) {
                 const trimesters = Math.ceil(monthsDiff / 3)
-                expectedToDate = price * trimesters
+                expectedToDate += price * trimesters
             } else if (priceUnit.includes('YEAR') || priceUnit.includes('ANUAL')) {
                 const years = Math.ceil(monthsDiff / 12)
-                expectedToDate = price * years
+                expectedToDate += price * years
             } else {
-                expectedToDate = price // Default to single payment if FULL or unknown
+                expectedToDate += price // Default to single payment if FULL or unknown
             }
 
             return {
@@ -62,9 +67,11 @@ export async function GET(request: NextRequest) {
                 studentEmail: enrollment.student.email,
                 courseId: enrollment.courseId,
                 courseTitle: enrollment.course.title,
-                coursePrice: price,
+                coursePrice: price + regFee,
                 priceUnit,
                 paymentFrequency,
+                hasRegistrationFee: hasReg,
+                registrationFee: regFee,
                 paidTotal,
                 expectedToDate,
                 pendingAmount: Math.max(0, expectedToDate - paidTotal),

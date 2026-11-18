@@ -18,6 +18,8 @@ export interface ReceiptData {
     paymentCount?: number
     isFractioned?: boolean
     paymentFrequencyLabel?: string
+    hasRegistrationFee?: boolean
+    registrationFee?: number
     discountApplied?: string
     iban: string
     paymentConcept: string
@@ -233,7 +235,7 @@ export function generateReceiptPdf(data: ReceiptData): jsPDF {
 
     rowY = y + 5.5
     // Importe destacado
-    const amountToPay = data.firstPaymentAmount && data.isFractioned ? data.firstPaymentAmount : data.totalAmount
+    const amountToPay = data.firstPaymentAmount !== undefined ? data.firstPaymentAmount : data.totalAmount
 
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(8.5)
@@ -245,7 +247,12 @@ export function generateReceiptPdf(data: ReceiptData): jsPDF {
     doc.setTextColor(185, 28, 28)
     doc.text(`${formatPrice(amountToPay)} €`, col1 + 45, rowY)
 
-    if (data.isFractioned && data.paymentCount) {
+    if (data.hasRegistrationFee && (data.registrationFee ?? 0) > 0 && amountToPay === data.registrationFee) {
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(8)
+        doc.setTextColor(154, 52, 18)
+        doc.text(`(En concepto de Matrícula Inicial · Resto según forma de pago)`, col1 + 65, rowY - 0.5)
+    } else if (data.isFractioned && data.paymentCount) {
         doc.setFont('helvetica', 'normal')
         doc.setFontSize(8)
         doc.setTextColor(154, 52, 18)

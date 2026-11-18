@@ -152,7 +152,11 @@ export async function POST(request: NextRequest) {
                 price: finalPrice,
                 discountPercentage: wantsDiscount ? requestedDiscountPercentage : null,
                 discountReason: wantsDiscount ? requestedDiscountConcept : null,
-                priceUnit: enrollment.course.priceUnit
+                priceUnit: enrollment.course.priceUnit,
+                hasRegistrationFee: enrollment.course.hasRegistrationFee,
+                registrationFee: enrollment.course.hasRegistrationFee
+                    ? (!!isAffiliated ? (enrollment.course.affiliateRegistrationFee ?? 0) : (enrollment.course.registrationFee ?? 0))
+                    : null
             })
         } catch (emailErr) {
             console.error('Error enviando email de nueva inscripción:', emailErr)

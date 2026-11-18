@@ -52,6 +52,9 @@ interface PublicCourse {
     price?: number
     affiliatePrice?: number
     paymentFrequency?: string
+    hasRegistrationFee?: boolean
+    registrationFee?: number
+    affiliateRegistrationFee?: number
     duration?: number
     durationPeriod?: string
     startDate?: string
@@ -158,6 +161,17 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
 
     const frac = getFractionInfo(activePrice, course?.paymentFrequency)
 
+    const hasReg = Boolean(course?.hasRegistrationFee)
+    const regFee = hasReg
+        ? (formData.isAffiliated ? (course?.affiliateRegistrationFee ?? 0) : (course?.registrationFee ?? 0))
+        : 0
+
+    const initialPaymentAmount = hasReg && regFee > 0
+        ? regFee
+        : (frac ? frac.installmentPrice : (activePrice !== undefined ? activePrice : 0))
+
+    const totalCourseAmount = hasReg ? regFee + (activePrice || 0) : (activePrice || 0)
+
     const currentYear = new Date().getFullYear()
     const paymentConcept = course ? `${course.code}${currentYear}` : ''
     const iban = 'ES59 2103 2347 4000 3377 9482'
@@ -259,11 +273,13 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
             courseLevel: course?.level || undefined,
             duration: course?.duration || undefined,
             durationPeriod: course?.durationPeriod || undefined,
-            totalAmount: activePrice || 0,
-            firstPaymentAmount: frac ? frac.installmentPrice : undefined,
+            totalAmount: totalCourseAmount,
+            firstPaymentAmount: initialPaymentAmount,
             paymentCount: frac ? frac.count : undefined,
             isFractioned: !!frac,
             paymentFrequencyLabel: frac ? 'Fraccionado' : 'Pago Único',
+            hasRegistrationFee: hasReg,
+            registrationFee: regFee,
             discountApplied: hasDiscount ? `-${totalDiscountPercentage}% (${discountReasonText})` : undefined,
             beneficiary: 'UGT Servicios Públicos',
             iban: iban,
@@ -715,18 +731,40 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
                                         </Badge>
                                     </div>
 
+                                    {hasReg && (
+                                        <div className="py-2 px-3 bg-white/70 border border-slate-200/70 rounded-xl flex items-center justify-between text-xs">
+                                            <span className="font-semibold text-slate-700">Matrícula inicial:</span>
+                                            <span className="font-bold text-slate-900">
+                                                {regFee > 0 ? `${formatPrice(regFee)} €` : 'Gratis (0 € para afiliados)'}
+                                            </span>
+                                        </div>
+                                    )}
+
                                     <div className="pt-2 border-t border-slate-200 flex items-baseline justify-between">
                                         <div>
                                             <p className="text-3xl font-black text-red-600">
-                                                {frac ? frac.mainDisplay : (activePrice !== undefined ? `${formatPrice(activePrice)} €` : '—')}
-                                                {frac && (
+                                                {formatPrice(initialPaymentAmount)} €
+                                                {hasReg && regFee > 0 ? (
+                                                    <span className="text-xs font-bold text-slate-500 ml-1.5">
+                                                        (Matrícula Inicial)
+                                                    </span>
+                                                ) : frac ? (
                                                     <span className="text-xs font-bold text-slate-500 ml-1.5">
                                                         (1.er Plazo de {frac.count})
                                                     </span>
-                                                )}
+                                                ) : null}
                                             </p>
                                             <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                                                {frac ? frac.totalText : `Total del curso: ${formatPrice(activePrice)} € (Pago único)`}
+                                                {hasReg ? (
+                                                    <>
+                                                        Total del curso: {formatPrice(totalCourseAmount)} €
+                                                        {frac ? ` (Matrícula + ${frac.count} plazos de ${frac.mainDisplay})` : ` (Matrícula + ${formatPrice(activePrice)} € resto)`}
+                                                    </>
+                                                ) : frac ? (
+                                                    frac.totalText
+                                                ) : (
+                                                    `Total del curso: ${formatPrice(activePrice)} € (Pago único)`
+                                                )}
                                             </p>
                                         </div>
 
@@ -908,12 +946,14 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ id: str
                                                 <Euro className="h-3 w-3" /> Importe a transferir
                                             </p>
                                             <p className="text-2xl font-black text-red-700">
-                                                {frac ? frac.mainDisplay : (activePrice !== undefined ? `${formatPrice(activePrice)} €` : '—')}
+                                                {formatPrice(initialPaymentAmount)} €
                                             </p>
                                             <p className="text-[11px] text-red-950 font-medium">
-                                                {frac
-                                                    ? `1.er plazo de ${frac.count} cuotas (${frac.totalText})`
-                                                    : `Abono completo del curso (Tarifa ${formData.isAffiliated ? 'Afiliado UGT' : 'General'})`}
+                                                {hasReg && regFee > 0
+                                                    ? `En concepto de Matrícula Inicial (Resto de ${formatPrice(activePrice)} € según forma de pago acordada)`
+                                                    : frac
+                                                        ? `1.er plazo de ${frac.count} cuotas (${frac.totalText})`
+                                                        : `Abono completo del curso (Tarifa ${formData.isAffiliated ? 'Afiliado UGT' : 'General'})`}
                                             </p>
                                         </div>
 

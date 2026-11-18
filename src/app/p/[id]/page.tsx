@@ -62,6 +62,9 @@ interface PublicCourse {
     price?: number
     priceUnit?: string
     paymentFrequency?: string
+    hasRegistrationFee?: boolean
+    registrationFee?: number
+    affiliateRegistrationFee?: number
     affiliatePrice?: number
     startDate?: string
     startDateHasDay?: boolean
@@ -894,6 +897,19 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                         <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider mb-1.5">
                                             <Award className="h-3 w-3" /> Tarifa Afiliados UGT
                                         </div>
+                                        {course.hasRegistrationFee && (
+                                            <div className="mb-2">
+                                                {(course.affiliateRegistrationFee || 0) > 0 ? (
+                                                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-200/80 text-emerald-900 text-[11px] font-bold">
+                                                        Matrícula inicial: {formatPrice(course.affiliateRegistrationFee)} €
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-200/80 text-emerald-900 text-[11px] font-black tracking-wide">
+                                                        🎉 Matrícula GRATIS para afiliados
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
                                         {course.affiliatePrice && course.affiliatePrice > 0 ? (
                                             (() => {
                                                 const frac = getFractionInfo(course.affiliatePrice, course.paymentFrequency);
@@ -904,10 +920,12 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                 {frac.mainDisplay} <span className="text-xs font-bold text-emerald-800">/ plazo</span>
                                                             </p>
                                                             <div className="inline-block px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-900 text-[11px] font-bold">
-                                                                {frac.count} plazos de {frac.mainDisplay}
+                                                                {course.hasRegistrationFee ? `A partir de matrícula: ` : ''}{frac.count} plazos de {frac.mainDisplay}
                                                             </div>
                                                             <p className="text-[11px] font-semibold text-emerald-800/80 pt-0.5">
-                                                                Total del curso: {formatPrice(frac.totalPrice)} €
+                                                                {course.hasRegistrationFee
+                                                                    ? `Total: ${formatPrice((course.affiliateRegistrationFee || 0) + frac.totalPrice)} € (Matrícula + ${frac.count} plazos)`
+                                                                    : `Total del curso: ${formatPrice(frac.totalPrice)} €`}
                                                             </p>
                                                         </div>
                                                     );
@@ -919,6 +937,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                         </p>
                                                         <p className="text-xs font-semibold text-emerald-800/80">
                                                             {[getPriceUnitLabel(course.priceUnit), getFrequencyLabel(course.paymentFrequency)].filter(Boolean).join(' · ') || 'Precio total'}
+                                                            {course.hasRegistrationFee && ' (tras matrícula inicial)'}
                                                         </p>
                                                     </div>
                                                 );
@@ -934,6 +953,13 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                             <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
                                                 Precio General (No Afiliados)
                                             </p>
+                                            {course.hasRegistrationFee && (
+                                                <div className="mb-2">
+                                                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-slate-200/80 text-slate-800 text-[11px] font-bold">
+                                                        Matrícula inicial: {formatPrice(course.registrationFee || 0)} €
+                                                    </span>
+                                                </div>
+                                            )}
                                             {course.price && course.price > 0 ? (
                                                 (() => {
                                                     const frac = getFractionInfo(course.price, course.paymentFrequency);
@@ -944,7 +970,9 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                                     {frac.mainDisplay} <span className="text-xs font-medium text-slate-500">/ plazo</span>
                                                                 </p>
                                                                 <p className="text-xs font-medium text-slate-600">
-                                                                    Total: {formatPrice(frac.totalPrice)} € ({frac.count} plazos de {frac.mainDisplay})
+                                                                    {course.hasRegistrationFee
+                                                                        ? `Total: ${formatPrice((course.registrationFee || 0) + frac.totalPrice)} € (Matrícula + ${frac.count} plazos)`
+                                                                        : `Total: ${formatPrice(frac.totalPrice)} € (${frac.count} plazos de ${frac.mainDisplay})`}
                                                                 </p>
                                                             </div>
                                                         );
@@ -956,6 +984,7 @@ export default function PublicCoursePage({ params }: { params: Promise<{ id: str
                                                             </p>
                                                             <p className="text-xs font-medium text-slate-500">
                                                                 {[getPriceUnitLabel(course.priceUnit), getFrequencyLabel(course.paymentFrequency)].filter(Boolean).join(' · ') || 'Precio total'}
+                                                                {course.hasRegistrationFee && ' (tras matrícula inicial)'}
                                                             </p>
                                                         </div>
                                                     );
